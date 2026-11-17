@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+.nicegui/
+.pytest_cache/
+.DS_Store
+data/
