@@ -19,6 +19,7 @@ from pathlib import Path
 
 from . import accounts
 from .accounts import AccountError
+from .leaderboard import MIN_GAMES
 
 log = logging.getLogger('prophecy.persistence')
 
@@ -220,6 +221,20 @@ class Store:
         rows = self._with_retry('SELECT code, finished_at, name, score, place, players, rounds, correct '
                                 'FROM results WHERE account = ? ORDER BY finished_at DESC', (key,))
         names = ('code', 'finished_at', 'name', 'score', 'place', 'players', 'rounds', 'correct')
+        return [dict(zip(names, row)) for row in rows]
+
+    def leaderboard_rows(self, min_games: int = MIN_GAMES) -> list[dict]:
+        """Each account's totals over all finished games, for accounts with at least min_games games.
+
+        Guests and bots have no account, so they never appear. The name is the account's username.
+        """
+        rows = self._with_retry('SELECT r.account, a.username, COUNT(*), '
+                                'SUM(CASE WHEN r.place = 1 THEN 1 ELSE 0 END), SUM(r.score), MAX(r.score), '
+                                'SUM(r.rounds), SUM(r.correct) '
+                                'FROM results r JOIN accounts a ON a.key = r.account '
+                                'GROUP BY r.account, a.username HAVING COUNT(*) >= ? '
+                                'ORDER BY r.account', (min_games,))
+        names = ('account', 'name', 'games', 'wins', 'points', 'best', 'rounds', 'correct')
         return [dict(zip(names, row)) for row in rows]
 
     def _upsert(self, code: str, data: bytes) -> None:
