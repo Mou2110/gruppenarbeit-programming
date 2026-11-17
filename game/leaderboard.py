@@ -2,5 +2,5 @@
 from __future__ import annotations
 
 
-def rank(rows: list[dict]) -> list[dict]:
+def rank(rows: list[dict], sort_by: str = 'win_rate') -> list[dict]:
     raise NotImplementedError
