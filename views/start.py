@@ -200,6 +200,8 @@ async def start_page() -> None:
                     with ui.element('div').classes('acctrow'):
                         button('My stats', lambda: ui.navigate.to('/stats'), cls='primary small', marker='stats')
                         button('Sign out', do_sign_out, cls='primary small ghostbtn', marker='signout')
+                    button('See the leaderboard', lambda: ui.navigate.to('/leaderboard'),
+                           cls='primary small ghostbtn', marker='leaderboard')
                 else:
                     ui.html('<p>Playing as a guest. With an account your stats are saved and you can get back '
                             'into your games from any device.</p>', sanitize=False)
@@ -207,6 +209,8 @@ async def start_page() -> None:
                     with ui.element('div').classes('acctrow'):
                         button('Sign in', signin.open, cls='primary small', marker='signin')
                         button('Create account', register.open, cls='primary small ghostbtn', marker='register')
+                    button('See the leaderboard', lambda: ui.navigate.to('/leaderboard'),
+                           cls='primary small ghostbtn', marker='leaderboard')
 
         steps = ''.join(f'<div class="step"><span class="stepnum">{i}</span><b>{title}</b><span>{text}</span></div>'
                         for i, (title, text) in enumerate(HOW_IT_WORKS, start=1))

@@ -7,7 +7,7 @@ from nicegui import run, ui
 
 from game.lobby import registry
 
-from .common import ICON_BACK, current_account, esc, icon_button, message_page, page_frame
+from .common import ICON_BACK, ICON_SCORES, current_account, esc, icon_button, message_page, page_frame
 
 
 def summary(results: list[dict]) -> dict:
@@ -47,6 +47,8 @@ async def stats_page() -> None:
         with ui.element('div').classes('pagehead'):
             icon_button(ICON_BACK, 'Back to start', lambda: ui.navigate.to('/'))
             ui.html(f'<h1>{esc(account[1])}</h1>', sanitize=False)
+            ui.element('div').classes('spacer')
+            icon_button(ICON_SCORES, 'Leaderboard', lambda: ui.navigate.to('/leaderboard'), marker='leaderboard')
 
         tiles = [('Games', s['games']), ('Wins', s['wins']), ('Win rate', f"{s['win_rate']}%"),
                  ('Avg points', s['avg_score']), ('Best', s['best_score']), ('Bids hit', f"{s['bid_rate']}%")]
