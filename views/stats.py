@@ -27,15 +27,38 @@ def summary(results: list[dict]) -> dict:
 
 
 def form(results: list[dict], limit: int = 10) -> list[dict]:
-    raise NotImplementedError
+    """The last games as a row, oldest on the left. results come newest first.
+
+    kind: 'win' (place 1, also shared), 'last' (last place) or 'mid' (everything in between).
+    """
+    row = []
+    for r in reversed(results[:limit]):
+        kind = 'win' if r['place'] == 1 else 'last' if r['place'] == r['players'] else 'mid'
+        row.append({'place': r['place'], 'players': r['players'], 'kind': kind})
+    return row
 
 
 def win_streaks(results: list[dict]) -> tuple[int, int]:
-    raise NotImplementedError
+    """(current, best) number of wins in a row. results come newest first."""
+    current = 0
+    for r in results:
+        if r['place'] != 1:
+            break
+        current += 1
+    best = run = 0
+    for r in results:
+        run = run + 1 if r['place'] == 1 else 0
+        best = max(best, run)
+    return current, best
 
 
 def streak_text(current: int, best: int) -> str:
-    raise NotImplementedError
+    """The sentence under the form."""
+    if best == 0:
+        return 'No wins yet'
+    if current == 0:
+        return f'No current streak · Best streak: {best}'
+    return f"Current streak: {current} {'win' if current == 1 else 'wins'} in a row · Best streak: {best}"
 
 
 def _date(timestamp: float) -> str:
@@ -66,6 +89,14 @@ async def stats_page() -> None:
                  ('Avg points', s['avg_score']), ('Best', s['best_score']), ('Bids hit', f"{s['bid_rate']}%")]
         ui.html('<div class="tiles">' + ''.join(f'<div class="tile"><b>{esc(v)}</b><span>{t}</span></div>'
                                                for t, v in tiles) + '</div>', sanitize=False)
+
+        if results:
+            dots = ''.join(f'<span class="fdot {g["kind"]}" title="{g["place"]}. of {g["players"]}">{g["place"]}</span>'
+                           for g in form(results))
+            ui.html(f'<h2 class="h2">Form</h2><div class="streak">Last 10 games, newest on the right</div>'
+                    f'<div class="formrow">{dots}</div>'
+                    f'<div class="streak">{esc(streak_text(*win_streaks(results)))}</div>',
+                    sanitize=False).classes('mt-s')
 
         ui.html('<h2 class="h2">Recent games</h2>', sanitize=False).classes('mt-s')
         if not results:

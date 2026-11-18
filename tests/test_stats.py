@@ -111,9 +111,9 @@ def test_only_wins_makes_current_and_best_streak_equal_to_all_games():
 
 
 @pytest.mark.parametrize('current, best, text', [
-    (3, 5, 'Current streak: 3 wins in a row · Best: 5'),
-    (1, 1, 'Current streak: 1 win in a row · Best: 1'),
-    (0, 4, 'No current streak · Best: 4'),
+    (3, 5, 'Current streak: 3 wins in a row · Best streak: 5'),
+    (1, 1, 'Current streak: 1 win in a row · Best streak: 1'),
+    (0, 4, 'No current streak · Best streak: 4'),
     (0, 0, 'No wins yet'),
 ])
 def test_streak_text(current, best, text):
