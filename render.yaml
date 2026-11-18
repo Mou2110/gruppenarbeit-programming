@@ -1,0 +1,8 @@
+# Settings for the hosting service Render (https://render.com)
+services:
+  - type: web
+    name: prophecy
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
