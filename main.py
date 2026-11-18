@@ -6,6 +6,7 @@ from nicegui import app, ui
 
 from game.lobby import registry
 from game.persistence import make_store
+from views.leaderboard import leaderboard_page
 from views.lobby import lobby_page
 from views.start import start_page
 from views.stats import stats_page
@@ -58,6 +59,11 @@ async def index() -> None:
 @ui.page('/stats')
 async def stats() -> None:
     await stats_page()
+
+
+@ui.page('/leaderboard')
+async def leaderboard(sort: str = '') -> None:
+    await leaderboard_page(sort)
 
 
 @ui.page('/lobby/{code}')
