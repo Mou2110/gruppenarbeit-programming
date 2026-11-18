@@ -392,6 +392,9 @@ button[disabled] { cursor: not-allowed; }
 .sortbtn:hover { background: #24365F; }
 .sortbtn.on { background: #F2C14E; border-color: #F2C14E; color: #18284F; }
 .lbitem { grid-template-columns: 28px 1fr auto; }
+.profile-link { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+.profile-link:hover, .profile-link:focus-visible { color: #F2C14E; }
+.profile-link:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .lbitem em { font-style: normal; color: #F2C14E; font-size: 12px; }
 .lbitem.me { box-shadow: inset 0 0 0 2px #F2C14E; }
 .lbplace { font-family: 'DM Serif Display', serif; font-size: 20px; text-align: center; }
