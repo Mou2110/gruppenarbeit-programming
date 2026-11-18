@@ -26,6 +26,18 @@ def summary(results: list[dict]) -> dict:
     }
 
 
+def form(results: list[dict], limit: int = 10) -> list[dict]:
+    raise NotImplementedError
+
+
+def win_streaks(results: list[dict]) -> tuple[int, int]:
+    raise NotImplementedError
+
+
+def streak_text(current: int, best: int) -> str:
+    raise NotImplementedError
+
+
 def _date(timestamp: float) -> str:
     return time.strftime('%d.%m.%Y', time.localtime(timestamp))
 

@@ -1,9 +1,11 @@
-"""Tests for the numbers on the stats page (summary() in views/stats.py).
+"""Tests for the stats page (views/stats.py): the numbers (summary), the form and the win streaks.
 
 Each result is one finished game of the signed-in player, as the database returns it.
 """
+import pytest
+
 from game.leaderboard import rank
-from views.stats import summary
+from views.stats import form, streak_text, summary, win_streaks
 
 
 def result(place, score, rounds=10, correct=5):
@@ -58,3 +60,61 @@ def test_stats_page_and_leaderboard_show_the_same_numbers():
     on_leaderboard = rank([row])[0]
     for key in ('games', 'wins', 'win_rate', 'avg_score', 'best_score', 'bid_rate'):
         assert on_stats_page[key] == on_leaderboard[key], key
+
+
+# ---------------------------------------------------------------- Form and win streaks
+# The database returns the player's games newest first (see persistence.results_for).
+
+
+def game(place, players=4):
+    return {'place': place, 'players': players}
+
+
+def test_no_games_gives_no_form_and_no_streaks():
+    assert form([]) == []
+    assert win_streaks([]) == (0, 0)
+
+
+def test_form_shows_the_last_ten_games_oldest_on_the_left():
+    newest_first = [game(1), game(2), game(3), game(4), game(1), game(2), game(3), game(4), game(1), game(2),
+                    game(3), game(4)]   # 12 games: the two oldest (place 3 and 4) are left out
+    assert [g['place'] for g in form(newest_first)] == [2, 1, 4, 3, 2, 1, 4, 3, 2, 1]
+
+
+def test_form_colours_win_last_place_and_everything_in_between():
+    newest_first = [game(1, players=3), game(3, players=3), game(2, players=3), game(6, players=6),
+                    game(2, players=6)]
+    assert [g['kind'] for g in form(newest_first)] == ['mid', 'last', 'mid', 'last', 'win']
+
+
+def test_a_shared_first_place_is_a_win_in_the_form():
+    assert form([game(1)])[0]['kind'] == 'win'
+
+
+def test_current_streak_counts_the_newest_wins_in_a_row():
+    newest_first = [game(1), game(1), game(1), game(2), game(1)]
+    assert win_streaks(newest_first) == (3, 3)
+
+
+def test_a_lost_newest_game_ends_the_current_streak():
+    newest_first = [game(2), game(1), game(1)]
+    assert win_streaks(newest_first) == (0, 2)
+
+
+def test_the_best_streak_stays_after_the_streak_is_broken():
+    newest_first = [game(1), game(3), game(1), game(1), game(1), game(1), game(2)]
+    assert win_streaks(newest_first) == (1, 4)
+
+
+def test_only_wins_makes_current_and_best_streak_equal_to_all_games():
+    assert win_streaks([game(1)] * 6) == (6, 6)
+
+
+@pytest.mark.parametrize('current, best, text', [
+    (3, 5, 'Current streak: 3 wins in a row · Best: 5'),
+    (1, 1, 'Current streak: 1 win in a row · Best: 1'),
+    (0, 4, 'No current streak · Best: 4'),
+    (0, 0, 'No wins yet'),
+])
+def test_streak_text(current, best, text):
+    assert streak_text(current, best) == text
