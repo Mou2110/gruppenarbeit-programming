@@ -1,33 +1,33 @@
 # Who owns each file? GitHub automatically requests their review on pull requests.
-# Replace GITHUB-NAME-1 ... 4 with your GitHub usernames (including the @ prefix).
+# Replace Erikwinova ... 4 with your GitHub usernames (including the @ prefix).
 
 # Part 1 · Game logic
-/game/cards.py           @GITHUB-NAME-1
-/game/rules.py           @GITHUB-NAME-1
-/game/scoring.py         @GITHUB-NAME-1
-/game/engine.py          @GITHUB-NAME-1
-/game/bots.py            @GITHUB-NAME-1
-/tests/test_rules.py     @GITHUB-NAME-1
-/tests/test_special_rules.py  @GITHUB-NAME-1
-/tests/test_engine.py    @GITHUB-NAME-1
-/tests/test_engine_specials.py  @GITHUB-NAME-1
-/tests/test_simulation.py  @GITHUB-NAME-1
-/tests/test_bots.py      @GITHUB-NAME-1
+/game/cards.py           @Erikwinova
+/game/rules.py           @Erikwinova
+/game/scoring.py         @Erikwinova
+/game/engine.py          @Erikwinova
+/game/bots.py            @Erikwinova
+/tests/test_rules.py     @Erikwinova
+/tests/test_special_rules.py  @Erikwinova
+/tests/test_engine.py    @Erikwinova
+/tests/test_engine_specials.py  @Erikwinova
+/tests/test_simulation.py  @Erikwinova
+/tests/test_bots.py      @Erikwinova
 
 # Part 2 · Accounts & database
-/game/accounts.py        @GITHUB-NAME-2
-/game/persistence.py     @GITHUB-NAME-2
-/tests/test_accounts.py  @GITHUB-NAME-2
+/game/accounts.py        @Mou2110
+/game/persistence.py     @Mou2110
+/tests/test_accounts.py  @Mou2110
 
 # Part 3 · Multiplayer
-/game/lobby.py           @GITHUB-NAME-3
-/tests/test_lobby.py     @GITHUB-NAME-3
-/tests/test_persistence.py  @GITHUB-NAME-3
-/requirements.txt        @GITHUB-NAME-3
-/render.yaml             @GITHUB-NAME-3
+/game/lobby.py           @83675-Coder
+/tests/test_lobby.py     @83675-Coder
+/tests/test_persistence.py  @83675-Coder
+/requirements.txt        @83675-Coder
+/render.yaml             @83675-Coder
 
 # Part 4 · User interface
-/views/                  @GITHUB-NAME-4
-/static/                 @GITHUB-NAME-4
-/main.py                 @GITHUB-NAME-4
-/.github/                @GITHUB-NAME-4
+/views/                  @mandaguy12
+/static/                 @mandaguy12
+/main.py                 @mandaguy12
+/.github/                @mandaguy12

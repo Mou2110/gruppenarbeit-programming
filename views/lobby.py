@@ -205,7 +205,7 @@ async def lobby_page(code: str) -> None:
             ui.html('<label class="flabel" for="name-input">Your name</label>', sanitize=False)
             field = ui.input(value=me.name if me else '', on_change=lambda e: rename(e.value)) \
                 .props('id=name-input dark outlined dense maxlength=16').classes('namefield').mark('name')
-            if account:  # signed in: der Name ist der Benutzername
+            if account:  # signed in: the account username is shown
                 field.props('readonly hint="Signed in"')
         players_part()
         settings_part()
