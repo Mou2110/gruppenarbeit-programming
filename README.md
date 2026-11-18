@@ -8,10 +8,10 @@ accounts are stored in a Supabase (PostgreSQL) database.
 
 | Part | Responsible | Content | Files |
 |---|---|---|---|
-| 1 · Game logic | NAME 1 | Cards, rules, trick winner, game flow, scoring, bots | `game/cards.py`, `rules.py`, `scoring.py`, `engine.py`, `bots.py` + tests |
-| 2 · Accounts & database | NAME 2 | Sign-up / sign-in, password hashing, saving to SQLite / PostgreSQL | `game/accounts.py`, `game/persistence.py`, `tests/test_accounts.py` |
-| 3 · Multiplayer | NAME 3 | Lobbies, ready status, bot moves, chat, restoring after a restart, hosting | `game/lobby.py`, `tests/test_lobby.py`, `tests/test_persistence.py`, `requirements.txt`, `render.yaml` |
-| 4 · User interface | NAME 4 | Start page, lobby, game table, card design, animations, stats, server start | `views/`, `static/styles.css`, `main.py` |
+| 1 · Game logic | Erikwinova | Cards, rules, trick winner, game flow, scoring, bots | `game/cards.py`, `rules.py`, `scoring.py`, `engine.py`, `bots.py` + tests |
+| 2 · Accounts & database | Mou2110 | Sign-up / sign-in, password hashing, saving to SQLite / PostgreSQL | `game/accounts.py`, `game/persistence.py`, `tests/test_accounts.py` |
+| 3 · Multiplayer | 83675-Coder | Lobbies, ready status, bot moves, chat, restoring after a restart, hosting | `game/lobby.py`, `tests/test_lobby.py`, `tests/test_persistence.py`, `requirements.txt`, `render.yaml` |
+| 4 · User interface | mandaguy12 | Start page, lobby, game table, card design, animations, stats, server start | `views/`, `static/styles.css`, `main.py` |
 
 The parts build on each other: 1 and 2 are independent, 3 uses 1 and 2, and the interface (4) uses everything.
 
