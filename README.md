@@ -11,7 +11,7 @@ accounts are stored in a Supabase (PostgreSQL) database.
 | Name | Student number | GitHub |
 |---|---|---|
 | Erik Wischnewski | 81880 | Erikwinova |
-| Moritz TODO | TODO | Mou2110 |
+| Moritz Gömmel | 78188 | Mou2110 |
 | Keno Hartkamp | 83675 | 83675-Coder |
 | Jakob Werner Prestel | 78098 | mandaguy12 |
 
