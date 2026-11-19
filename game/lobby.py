@@ -77,6 +77,7 @@ class Lobby:
         self.pause_until = 0.0
         self.next_auto_at = 0.0
         self.votes: set[str] = set()                 # who pressed "continue" after the round
+        self.left: set[str] = set()                  # who left the running game for good (counts as last)
         self.connections: dict[str, int] = {}        # open browser tabs per player
         self.last_seen: dict[str, float] = {}
         self.listeners: dict[object, Callable[[], None]] = {}
@@ -129,6 +130,7 @@ class Lobby:
         self.chat_listeners, self.last_chat = {}, {}
         self.__dict__.setdefault('chat', [])          # lobbies that were saved before the chat existed
         self.__dict__.setdefault('chat_count', len(self.chat))
+        self.__dict__.setdefault('left', set())       # lobbies that were saved before leavers were tracked
 
     def restored(self, clock: Callable[[], float]) -> 'Lobby':
         """After loading: reset the times. Everyone first gets time to reconnect."""
@@ -257,6 +259,7 @@ class Lobby:
             self.members.remove(member)
         else:
             member.is_bot = True  # during the game a bot takes over the seat
+            self.left.add(member_id)  # ... but the result still counts for them, in last place
         if self.is_host(member_id):
             self.host_id = next((m.id for m in self.humans()), None)
         self._changed()
@@ -336,6 +339,7 @@ class Lobby:
                          no_matching_bids=self.settings.no_matching_bids,
                          rng=random.Random())
         self.votes = set()
+        self.left = set()
         self.pause_until = 0.0
         self.next_auto_at = self.clock() + BOT_DELAY
         self._changed()
@@ -498,10 +502,12 @@ class LobbyRegistry:
             if game is not None and game.phase == Phase.GAME_OVER:
                 if code not in self.recorded:
                     self.recorded.add(code)
-                    bots_ = {m.id for m in lobby.members if m.is_bot}
+                    # Players who left keep their account: they are saved in last place.
+                    bots_ = {m.id for m in lobby.members if m.is_bot and m.id not in lobby.left}
                     self.store.record_game(code, game.round_number, [
                         {'name': p.name, 'score': p.score, 'bot': p.id in bots_,
                          'account': None if p.id in bots_ else account_of(p.id),
+                         'left': p.id in lobby.left,
                          'correct': sum(1 for s in p.round_scores if s > 0)} for p in game.players])
             else:
                 self.recorded.discard(code)

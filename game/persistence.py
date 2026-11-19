@@ -169,9 +169,11 @@ class Store:
         self._with_retry('INSERT INTO finished_games (code, finished_at, rounds, players) VALUES (?, ?, ?, ?)',
                          (code, now, rounds, players_json))
         players = json.loads(players_json)
+        stayed = [p for p in players if not p.get('left')]
         for p in players:
             if p.get('account'):
-                place = 1 + sum(other['score'] > p['score'] for other in players)
+                # Whoever left the game for good is last; everyone else is ranked among those who stayed.
+                place = len(players) if p.get('left') else 1 + sum(other['score'] > p['score'] for other in stayed)
                 self._with_retry('INSERT INTO results (account, code, finished_at, name, score, place, players, '
                                  'rounds, correct) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                                  (p['account'], code, now, p['name'], p['score'], place, len(players),
