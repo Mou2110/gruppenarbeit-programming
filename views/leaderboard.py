@@ -1,12 +1,11 @@
-"""Leaderboard page: all players with an account and at least 5 finished games.
-
-The ranking rule lives in game/leaderboard.py. This page only reads the sort order from the
-address (/leaderboard?sort=bid_rate), asks the database for the totals and draws the rows.
-"""
+"""Public leaderboard and player profiles based on finished games."""
 from __future__ import annotations
+
+from urllib.parse import quote
 
 from nicegui import run, ui
 
+from game.accounts import username_key
 from game.leaderboard import MIN_GAMES, SORT_KEYS, rank
 from game.lobby import registry
 
@@ -50,6 +49,7 @@ def view_rows(board: list[dict], sort_by: str, me: str | None) -> list[dict]:
     return [{
         'place': entry['place'],
         'name': entry['name'],
+        'profile_url': f'/players/{quote(entry["account"], safe="")}',
         'detail': f"{entry['games']} games · {entry['wins']} {'win' if entry['wins'] == 1 else 'wins'}",
         'value': display_value(entry, sort_by),
         'me': me is not None and entry['account'] == me,
@@ -58,7 +58,9 @@ def view_rows(board: list[dict], sort_by: str, me: str | None) -> list[dict]:
 
 
 def _row_html(row: dict) -> str:
-    name = esc(row['name']) + (' <em>(you)</em>' if row['me'] else '')
+    name = f'<a class="profile-link" href="{esc(row["profile_url"])}">{esc(row["name"])}</a>'
+    if row['me']:
+        name += ' <em>(you)</em>'
     return (f'<div class="gitem lbitem{" me" if row["me"] else ""}">'
             f'<span class="lbplace{" top" if row["top"] else ""}">{row["place"]}</span>'
             f'<div>{name}<small>{esc(row["detail"])}</small></div>'
@@ -105,3 +107,37 @@ async def leaderboard_page(sort: str | None = None) -> None:
             return
         ui.html('<div class="glist">' + ''.join(_row_html(row) for row in rows) + '</div>',
                 sanitize=False).classes('mt-s')
+
+
+def profile_entry(rows: list[dict], username: str) -> dict | None:
+    """Find the requested account among eligible players and format its public totals."""
+    key = username_key(username)
+    for row in rows:
+        if row['account'] == key and row['games'] >= MIN_GAMES:
+            return rank([row])[0]
+    return None
+
+
+async def profile_page(username: str) -> None:
+    store = registry.store
+    if store is None:
+        message_page('Player profile unavailable', 'The database is not available.')
+        return
+    try:
+        rows = await run.io_bound(store.leaderboard_rows)
+    except Exception:
+        message_page('Player profile unavailable', 'The database could not be reached. Please try again later.')
+        return
+    entry = profile_entry(rows, username)
+    if entry is None:
+        message_page('Player profile not found', 'Profiles are available for players listed on the leaderboard.')
+        return
+
+    with page_frame():
+        with ui.element('div').classes('pagehead'):
+            icon_button(ICON_BACK, 'Back to leaderboard', lambda: ui.navigate.to('/leaderboard'))
+            ui.html(f'<h1>{esc(entry["name"])}</h1>', sanitize=False)
+
+        tiles = ''.join(f'<div class="tile"><b>{esc(display_value(entry, key))}</b>'
+                        f'<span>{esc(label)}</span></div>' for key, label in SORT_LABELS.items())
+        ui.html(f'<div class="tiles">{tiles}</div>', sanitize=False)
