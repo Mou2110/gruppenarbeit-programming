@@ -3,6 +3,7 @@ import asyncio
 
 from nicegui import app, ui
 from nicegui.testing import user_simulation
+from nicegui.testing.general import prepare_simulation
 
 from game.lobby import LobbyRegistry
 from views import lobby, start
@@ -36,6 +37,7 @@ def test_rules_can_be_read_during_play_without_leaving_the_table(monkeypatch, tm
 
     async def check():
         async with user_simulation() as user:
+            prepare_simulation()
             ui.page('/')(start.start_page)
             ui.page('/lobby/{code}')(lobby.lobby_page)
             home = await user.open('/')
@@ -63,6 +65,7 @@ def test_rules_can_be_read_during_play_without_leaving_the_table(monkeypatch, tm
             phase = game.phase
             with user.client:
                 game_lobby._changed()
+            await asyncio.sleep(0)
             assert trigger.is_deleted
             assert dialog.value and not dialog.is_deleted
 

@@ -1,5 +1,9 @@
 """The rules reference shared by the start page and the game table."""
 
+from nicegui import ui
+
+from .common import ICON_CLOSE, icon_button
+
 SUIT_CHIPS = ''.join(f'<span class="mini s-{s}">{name}</span>' for s, name in
                      [('sea', 'Sea'), ('sardine', 'Sardine'), ('olive', 'Olive'), ('sun', 'Sun')])
 
@@ -40,3 +44,15 @@ def rules_content() -> str:
     specials = ''.join(f'<div class="spec"><span class="swatch {css}"></span><p><b>{name}</b> · {text}</p></div>'
                        for css, name, text in SPECIALS)
     return f'{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}</div>'
+
+
+def game_rules_dialog() -> ui.dialog:
+    with ui.dialog().props('aria-labelledby=game-rules-title').mark('game-rules-dialog') as dialog:
+        with ui.element('div').classes('panel rules-dialog-panel'):
+            with ui.element('div').classes('rules-dialog-header'):
+                ui.html('<h2 id="game-rules-title">Game rules</h2>', sanitize=False)
+                icon_button(ICON_CLOSE, 'Close game rules', dialog.close, marker='close-game-rules') \
+                    .props('autofocus title="Close game rules"')
+            ui.html(rules_content(), sanitize=False).classes('rules-dialog-body') \
+                .props('tabindex=0 role=region aria-labelledby=game-rules-title')
+    return dialog
