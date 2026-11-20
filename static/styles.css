@@ -264,6 +264,54 @@ button[disabled] { cursor: not-allowed; }
 .waiting { text-align: center; font-weight: 600; }
 
 /* ===== Start page ===== */
+.pg:has(> .prophecy-home) { background: #0b0f18; }
+.tbl.prophecy-home { max-width: 1280px; padding: 12px clamp(16px, 3.7vw, 48px) 32px; gap: 16px; }
+.prophecy-splash {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  min-height: clamp(515px, 54vw, 620px);
+  overflow: hidden;
+}
+.prophecy-portrait {
+  position: absolute;
+  inset: -3% -4% -11% 29%;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(90deg, transparent, #000 35%, #000 89%, transparent);
+}
+.prophecy-portrait img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 21%;
+}
+.prophecy-intro {
+  position: relative;
+  z-index: 2;
+  width: 55%;
+  padding: 40px 20px 64px clamp(26px, 5.1vw, 72px);
+}
+.prophecy-intro h1 { margin: 0; font: 400 clamp(65px, 9.2vw, 126px)/.95 'DM Serif Display', Georgia, serif; }
+.prophecy-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 346px;
+  margin-top: 26px;
+}
+.prophecy-actions .linkbtn { grid-column: 1 / -1; justify-self: start; }
+.prophecy-home .prophecy-deck { position: absolute; right: 23%; bottom: 6%; z-index: 1; margin: 0; }
+@media (max-width: 700px) {
+  .prophecy-splash { display: block; min-height: 0; }
+  .prophecy-portrait { inset: 0 0 auto; height: clamp(295px, 67vw, 440px); }
+  .prophecy-intro { width: 100%; padding: clamp(240px, 53vw, 346px) 12px 24px; }
+  .prophecy-home .prophecy-deck { top: clamp(152px, 36vw, 253px); right: 7%; bottom: auto; }
+}
+
 .hero { display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; padding-top: 28px; }
 .herocards { display: flex; justify-content: center; margin-bottom: 18px; }
 .herocards .card:nth-child(1) { transform: rotate(-14deg) translate(14px, 10px); }

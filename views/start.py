@@ -39,6 +39,22 @@ def start_practice(lobbies, pid: str, name: str, players: int):
     return lobby
 
 
+def _hero_actions() -> ui.element:
+    """Render the portrait and introduction, then return their action container."""
+    with ui.element('section').classes('prophecy-splash').props('aria-labelledby=prophecy-title'):
+        ui.html(
+            '<img src="/static/prophet/lowered.jpg" alt="" fetchpriority="high">',
+            sanitize=False,
+        ).classes('prophecy-portrait').props('aria-hidden=true')
+        ui.html(''.join(HERO), sanitize=False).classes('herocards prophecy-deck').props('aria-hidden=true')
+        with ui.element('div').classes('prophecy-intro'):
+            ui.html('<h1 id="prophecy-title">Prophecy</h1>'
+                    '<p class="tagline">Predict exactly how many tricks you will win. '
+                    'Every round you get one card more.</p>'
+                    '<span class="meta">3–6 players · about 45 minutes</span>', sanitize=False)
+            return ui.element('div').classes('prophecy-actions')
+
+
 def _lobby_status(lobby) -> tuple[str, str]:
     names = ', '.join(m.name for m in lobby.members)
     if lobby.game is None:
@@ -130,13 +146,9 @@ async def start_page() -> None:
         button('Join', join, marker='join-confirm')
         button('Cancel', dialog.close, cls='primary ghostbtn')
 
-    with page_frame():
-        with ui.element('div').classes('hero'):
-            ui.html(f'<div class="herocards">{"".join(HERO)}</div><h1>Prophecy</h1>'
-                    '<p class="tagline">Predict exactly how many tricks you will win. '
-                    'Every round you get one card more.</p>'
-                    '<span class="meta">3–6 players · about 45 minutes</span>', sanitize=False)
-        with ui.element('div').classes('stack'):
+    with page_frame() as frame:
+        frame.classes('prophecy-home')
+        with _hero_actions():
             button('Create lobby', create_lobby, cls='primary big', marker='create')
             button('Join lobby', dialog.open, cls='primary ghostbtn big', marker='join')
             button('Practice against bots', practice_dialog.open, cls='linkbtn', marker='practice')
