@@ -204,4 +204,6 @@ async def start_page() -> None:
         ui.html(f'<h2 class="h2">How it works</h2><div class="steps">{steps}</div>', sanitize=False) \
             .classes('section plain')
 
-        ui.html(f'<h2>Rules</h2>{rules_content()}', sanitize=False).classes('panel rules')
+        ui.html('<h2>Rules</h2><p class="rules-hint">Open a topic to read it.</p>'
+                f'<div class="rulegrid">{rules_content(collapsible=True)}</div>', sanitize=False) \
+            .classes('panel rules')

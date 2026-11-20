@@ -7,6 +7,7 @@ from nicegui.testing.general import prepare_simulation
 
 from game.lobby import LobbyRegistry
 from views import lobby, start
+from views.rules import RULES
 
 
 def test_rules_can_be_read_during_play_without_leaving_the_table(monkeypatch, tmp_path):
@@ -56,7 +57,8 @@ def test_rules_can_be_read_during_play_without_leaving_the_table(monkeypatch, tm
             assert dialog.value
             with user.scope(marker='game-rules-dialog'):
                 content = next(iter(user.find(kind=ui.html, content='<h3>Bidding</h3>').elements)).content
-                assert content in home_rules
+                # the same rule texts as on the start page (there they are collapsible)
+                assert all(text in home_rules and text in content for _, text in RULES)
                 assert '<h3>Trump</h3>' in content
                 assert '<h3>Special cards (optional)</h3>' in content
 
