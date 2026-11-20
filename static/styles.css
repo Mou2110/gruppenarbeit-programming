@@ -633,3 +633,34 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   .hand { min-height: 122px; padding-top: 14px; }
   .tbl:has(.board) .a-left, .tbl:has(.board) .a-right { padding-top: 16px; }
 }
+
+/* Time limit: countdown in the last 30 seconds of a move (bottom right, above the chat) */
+.turntimer { position: fixed; right: 16px; bottom: calc(var(--chat-h) + 12px); z-index: 30; padding: 8px 14px; border-radius: 999px;
+  background: #18284F; border: 1px solid #3A4C7A; color: #fff; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+.turntimer b { font-variant-numeric: tabular-nums; }
+.turntimer.mine { background: #F2C14E; border-color: #F2C14E; color: #1B1B1B; }
+@media (max-width: 600px) {  /* phone: compact, inside the chat row next to the send button, so no card is covered */
+  .turntimer { bottom: 8px; right: 58px; z-index: 41; padding: 6px 10px; box-shadow: none; }
+  .turntimer .long { display: none; }
+}
+.sizebtns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 4px 0 12px; }
+.sizebtns .numbtn { width: 100%; height: 48px; font-size: 18px; }
+/* Start page: the rules are one block that opens with a click; two columns on wide screens */
+.rules-toggle > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+.rules-toggle > summary::-webkit-details-marker { display: none; }
+.rules-toggle > summary::after { content: '+'; font-size: 26px; line-height: 1; color: #1F3F8F; }
+.rules-toggle[open] > summary::after { content: '\2212'; }
+.rules-toggle[open] > summary { margin-bottom: 16px; }
+.rulegrid { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: start; }
+@media (min-width: 900px) { .rulegrid { grid-template-columns: 1fr 1fr; column-gap: 28px; } }
+/* Bonus card CR7: our own drawing (from behind, no photo) */
+.art-cr7 .special-art { background: url("card-art/cr7.svg") center / cover no-repeat; }
+.art-cr7 .special-art::after { content: 'SIUUU'; position: absolute; left: 0; right: 0; bottom: 4%; text-align: center;
+  color: #FFD700; font: 700 var(--lbl, 9px)/1 Inter, sans-serif; letter-spacing: .08em; text-shadow: 0 1px 2px #000; }
+/* The hidden extra special card in the rules: its own small box that has to be opened separately */
+details.rule.extra { border: 1px dashed #B58A49; border-radius: 10px; padding: 8px 12px; }
+details.rule.extra > summary { list-style: none; cursor: pointer; }
+details.rule.extra > summary::-webkit-details-marker { display: none; }
+details.rule.extra > summary h3 { margin: 0; font-style: italic; color: #8A6A35; }
+details.rule.extra > summary h3::after { content: ' ?'; }
+details.rule.extra[open] > summary h3::after { content: ''; }

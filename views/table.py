@@ -13,26 +13,43 @@ from functools import partial
 
 from nicegui import ui
 
-from game.cards import Card, Kind, Suit
+from game.cards import Card, Kind, Suit, hand_order
 from game.engine import GameError
 from game.lobby import Lobby
-from game.rules import Play, lead_suit, trick_winner
+from game.rules import trick_has_bomb, Play, lead_suit, trick_winner
 
 from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_emblem, suit_icon
 from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 
 ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
 
-SUIT_ORDER = {Suit.SEA: 0, Suit.SARDINE: 1, Suit.OLIVE: 2, Suit.SUN: 3}
-SPECIAL_ORDER = {Kind.DRAGON: (0, 0), Kind.WIZARD: (0, 1), Kind.SHAPESHIFTER: (0, 2), Kind.JUGGLER: (6, 0),
-                 Kind.CLOUD: (6, 1), Kind.JESTER: (9, 0), Kind.FAIRY: (9, 1), Kind.BOMB: (9, 2), Kind.WEREWOLF: (9, 3)}
 
 
-def _hand_order(card: Card) -> tuple[int, float]:
-    """Sort order for the player hand: strong special cards first, then suits, Jester-like cards last."""
-    if card.is_number:
-        return (1 + SUIT_ORDER[card.suit], card.value)
-    return SPECIAL_ORDER[card.kind]
+
+# When CR7 is played, every browser says "Siuuu". Spoken by the browser itself (Web Speech API), so there is
+# no audio file and no recording of anyone's voice. Browsers without speech simply stay silent.
+SIUUU_JS = ("if (window.speechSynthesis) { const u = new SpeechSynthesisUtterance('Siuuuuu!');"
+            " u.rate = 0.6; u.pitch = 1.4; window.speechSynthesis.speak(u); }")
+
+
+def cheer_for_cr7(v: dict, state: dict, game_number: int) -> bool:
+    """True once per round when CR7 lands on the table (also as the last card of a trick).
+
+    Remembers game AND round: after a rematch, round 3 is a new round 3 (found by Jakob).
+    """
+    on_table = list(v['trick']) + list(v['last_trick'] or [])
+    key = (game_number, v['round'])
+    if not any(p.card.kind == Kind.CR7 for p in on_table) or state.get('siuuu_at') == key:
+        return False
+    state['siuuu_at'] = key
+    return True
+
+
+def trick_bombed(plays: list[Play]) -> bool:
+    """Does the Bomb take effect in this trick? (Not if CR7 is in it.)"""
+    return trick_has_bomb(plays)
+
+_hand_order = hand_order   # order of the hand from left to right (game/cards.py)
 
 
 def _name(v: dict, index: int | None) -> str:
@@ -134,7 +151,7 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
             return '<span class="hint">Waiting for bids…</span>'
         return ''
     best = trick_winner(plays, v['trump'])
-    bombed = any(p.card.kind == Kind.BOMB for p in plays)
+    bombed = trick_bombed(plays)
     parts = []
     for pos, play in enumerate(plays):
         if play.card.kind == Kind.BOMB:
@@ -243,6 +260,8 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     if v['pass_count'] != state.get('seen_pass', v['pass_count']) and v['received'] is not None:
         ui.notify(f'You received {card_name(v["received"])}', type='info', position='top')
     state['seen_pass'] = v['pass_count']
+    if cheer_for_cr7(v, state, lobby.game_number):
+        ui.run_javascript(SIUUU_JS)
 
     def act(action: str, **kwargs) -> None:
         state['pending'] = None

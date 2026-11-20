@@ -15,8 +15,9 @@ from dataclasses import dataclass, field
 
 from . import bots
 from .accounts import account_of
-from .cards import SPECIAL_KINDS, Kind, Suit
+from .cards import OPTIONAL_KINDS, SPECIAL_KINDS, Kind, Suit, hand_order
 from .engine import Game, GameError, Phase
+from .rules import legal_cards
 
 MIN_PLAYERS, MAX_PLAYERS = 3, 6
 NAME_MAX = 16
@@ -26,6 +27,8 @@ BOT_NAMES = ['Marta', 'Joana', 'Tiago', 'Inês', 'Rui', 'Sofia']
 BOT_DELAY = 0.9       # seconds between two automatic moves
 TRICK_PAUSE = 1.6     # how long a finished trick stays visible to everyone
 ABSENT_GRACE = 5.0    # how long someone may be offline (e.g. reloading the page) before they count as "away"
+TURN_LIMIT = 120.0    # seconds a human has for a move; then a bot makes this one move for them
+TIMER_SHOWN = 30.0    # the countdown only appears in the last seconds, so nobody feels rushed
 
 
 class LobbyError(Exception):
@@ -42,9 +45,10 @@ class Member:
 
 @dataclass
 class Settings:
-    special_cards: list[Kind] = field(default_factory=lambda: list(SPECIAL_KINDS))
+    special_cards: list[Kind] = field(default_factory=lambda: list(SPECIAL_KINDS))  # bonus cards start switched off
     clairvoyance: bool = True       # clairvoyance in round 1
     no_matching_bids: bool = True   # bids must not add up to the number of tricks
+    turn_timer: bool = True         # time limit per move (TURN_LIMIT); older saved lobbies get the default
 
 
 CHAT_MAX = 200     # characters per message
@@ -76,6 +80,8 @@ class Lobby:
         self.clock = clock
         self.pause_until = 0.0
         self.next_auto_at = 0.0
+        self.turn_started = 0.0                      # when the game started waiting for the current move
+        self.game_number = 0                         # counts the games in this lobby (1, 2, ... after rematches)
         self.votes: set[str] = set()                 # who pressed "continue" after the round
         self.left: set[str] = set()                  # who left the running game for good (counts as last)
         self.connections: dict[str, int] = {}        # open browser tabs per player
@@ -131,6 +137,8 @@ class Lobby:
         self.__dict__.setdefault('chat', [])          # lobbies that were saved before the chat existed
         self.__dict__.setdefault('chat_count', len(self.chat))
         self.__dict__.setdefault('left', set())       # lobbies that were saved before leavers were tracked
+        self.__dict__.setdefault('turn_started', 0.0)  # lobbies that were saved before the time limit
+        self.__dict__.setdefault('game_number', 0)     # lobbies that were saved before games were counted
 
     def restored(self, clock: Callable[[], float]) -> 'Lobby':
         """After loading: reset the times. Everyone first gets time to reconnect."""
@@ -139,6 +147,7 @@ class Lobby:
         self.created = now
         self.pause_until = 0.0
         self.next_auto_at = now + BOT_DELAY
+        self.turn_started = now                      # after a restart everyone gets the full time again
         self.last_seen = {m.id: now for m in self.members}
         return self
 
@@ -302,16 +311,19 @@ class Lobby:
         self._changed()
 
     def update_settings(self, by: str, *, special_cards: list[Kind] | None = None,
-                        clairvoyance: bool | None = None, no_matching_bids: bool | None = None) -> None:
+                        clairvoyance: bool | None = None, no_matching_bids: bool | None = None,
+                        turn_timer: bool | None = None) -> None:
         """Change the settings (host only). Afterwards everyone has to press "Ready" again."""
         self._require_host(by)
         self._require_waiting()
         if special_cards is not None:
-            self.settings.special_cards = [k for k in SPECIAL_KINDS if k in special_cards]
+            self.settings.special_cards = [k for k in OPTIONAL_KINDS if k in special_cards]
         if clairvoyance is not None:
             self.settings.clairvoyance = clairvoyance
         if no_matching_bids is not None:
             self.settings.no_matching_bids = no_matching_bids
+        if turn_timer is not None:
+            self.settings.turn_timer = turn_timer
         for member in self.humans():
             member.ready = False
         self._changed()
@@ -342,6 +354,8 @@ class Lobby:
         self.left = set()
         self.pause_until = 0.0
         self.next_auto_at = self.clock() + BOT_DELAY
+        self.turn_started = self.clock()
+        self.game_number += 1
         self._changed()
 
     # ------------------------------------------------------------ Game
@@ -381,6 +395,7 @@ class Lobby:
             self.next_auto_at = self.pause_until
         else:
             self.next_auto_at = now + BOT_DELAY
+        self.turn_started = max(now, self.pause_until)  # the next move gets the full time
 
     rematch: set = frozenset()  # who pressed "play again" (class default keeps old saved lobbies working)
 
@@ -413,6 +428,7 @@ class Lobby:
         if game.phase == Phase.ROUND_OVER:
             game.next_round()
             self.next_auto_at = self.clock() + BOT_DELAY
+            self.turn_started = self.clock()
         else:
             self.game = None  # back to the waiting room
             for member in self.humans():
@@ -441,12 +457,85 @@ class Lobby:
                 changed = True
             elif self._check_votes():
                 changed = True
+            elif self._time_is_up():
+                changed = True
         if changed:
             self._changed()
         return changed
 
+    # ------------------------------------------------------------ Time limit
+
+    def waiting_on(self) -> list[str]:
+        """The humans the game is waiting for right now (their move, or "continue" after a round)."""
+        game = self.game
+        if game is None:
+            return []
+        if game.phase in (Phase.ROUND_OVER, Phase.GAME_OVER):
+            return [m.id for m in self.waiting_for_votes()]
+        if game.phase == Phase.PASSING:
+            return [p.id for p in game.players if game.must_pass(p.id) and not self._plays_automatically(p.id)]
+        player_id = game.players[game.current].id
+        return [] if self._plays_automatically(player_id) else [player_id]
+
+    def seconds_left(self) -> float | None:
+        """How long the humans in waiting_on() still have. None if the game is not waiting for a human."""
+        if self.game is None or not self.settings.turn_timer or self.is_paused() or not self.waiting_on():
+            return None
+        return min(TURN_LIMIT, TURN_LIMIT - (self.clock() - self.turn_started))
+
+    def turn_timer(self) -> tuple[list[str], int] | None:
+        """What the countdown shows: who is running out of time and how many seconds are left.
+        Only in the last TIMER_SHOWN seconds; before that, nobody is put under pressure."""
+        left = self.seconds_left()
+        if left is None or left > TIMER_SHOWN:
+            return None
+        return self.waiting_on(), max(0, round(left))
+
+    def _time_is_up(self) -> bool:
+        """Time over: a bot makes this one move, or "continue" is pressed for whoever has not pressed it."""
+        left = self.seconds_left()
+        if left is None or left > 0:
+            return False
+        if self.game.phase in (Phase.ROUND_OVER, Phase.GAME_OVER):
+            self.votes |= set(self.waiting_on())
+            return self._check_votes()
+        return self._timeout_move()
+
+    def _timeout_move(self) -> bool:
+        """The move made for a human whose time is up. Deliberately simple, not a clever bot move,
+        so that being slow never pays off: the first allowed card from the left of the hand,
+        the lowest allowed bid, the first suit, the Shapeshifter as a Jester."""
+        game = self.game
+        first_suit = next(iter(Suit))
+        tricks_before = (game.round_number, len(game.tricks_played))
+        if game.phase == Phase.PASSING:
+            for player in game.players:
+                if game.must_pass(player.id) and not self._plays_automatically(player.id):
+                    game.pass_card(player.id, min(player.hand, key=hand_order).id)
+            self._after_move(tricks_before)
+            return True
+        player = game.players[game.current]
+        if game.phase in (Phase.WEREWOLF, Phase.CHOOSING_TRUMP):
+            game.choose_trump(player.id, first_suit)
+        elif game.phase == Phase.BIDDING:
+            game.place_bid(player.id, min(game.allowed_bids()))
+        elif game.phase == Phase.ADJUSTING:
+            game.adjust_bid(player.id, game.adjust_options()[0])
+        elif game.awaiting_choice is not None:
+            card = game.trick[-1].card
+            if card.needs_suit_choice:
+                game.declare(player.id, suit=first_suit)
+            else:
+                game.declare(player.id, as_wizard=False)
+        else:
+            card = min(legal_cards(player.hand, game.trick), key=hand_order)
+            game.play_card(player.id, card.id, suit=first_suit if card.needs_suit_choice else None,
+                           as_wizard=False if card.needs_role_choice else None)
+        self._after_move(tricks_before)
+        return True
+
     def _auto_move(self) -> bool:
-        """Makes a move for a bot or absent player if it is their turn."""
+        """Makes a move for a bot if it is their turn."""
         game = self.game
         phase = game.phase
         if phase in (Phase.ROUND_OVER, Phase.GAME_OVER):

@@ -28,10 +28,22 @@ class Kind(str, Enum):
     WEREWOLF = 'werewolf'          # is swapped for the trump card before bidding
     JUGGLER = 'juggler'            # 7½ in a suit of your choice, afterwards everyone passes a card
     CLOUD = 'cloud'                # 9¾ in a suit of your choice, the winner changes their bid by 1
+    # Our own bonus joke card (not in the original game)
+    CR7 = 'cr7'                    # always wins the trick – only the Bomb stops it
 
 
 SPECIAL_KINDS = (Kind.SHAPESHIFTER, Kind.DRAGON, Kind.FAIRY, Kind.BOMB,
                  Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD)
+# Our own bonus cards (not in the original game). Like special cards they are optional, one each.
+BONUS_KINDS = (Kind.CR7,)
+OPTIONAL_KINDS = SPECIAL_KINDS + BONUS_KINDS
+
+# Order of the cards in a player's hand, from left to right: strong special cards first,
+# then the suits (low to high), Jester-like cards last. Used by the table and by the time limit.
+SUIT_ORDER = {Suit.SEA: 0, Suit.SARDINE: 1, Suit.OLIVE: 2, Suit.SUN: 3}
+SPECIAL_ORDER = {Kind.CR7: (0, -1), Kind.DRAGON: (0, 0), Kind.WIZARD: (0, 1), Kind.SHAPESHIFTER: (0, 2),
+                 Kind.JUGGLER: (6, 0), Kind.CLOUD: (6, 1), Kind.JESTER: (9, 0), Kind.FAIRY: (9, 1),
+                 Kind.BOMB: (9, 2), Kind.WEREWOLF: (9, 3)}
 
 # Juggler and Cloud have a fixed value between two number cards.
 SPECIAL_VALUES = {Kind.JUGGLER: 7.5, Kind.CLOUD: 9.75}
@@ -63,7 +75,7 @@ class Card:
 
     @property
     def is_special(self) -> bool:
-        return self.kind in SPECIAL_KINDS
+        return self.kind in OPTIONAL_KINDS
 
     @property
     def needs_suit_choice(self) -> bool:
@@ -82,6 +94,13 @@ class Card:
         return self.kind.value.capitalize()
 
 
+def hand_order(card: Card) -> tuple[int, float]:
+    """Sort key for a hand: the card that is shown furthest left comes first."""
+    if card.is_number:
+        return (1 + SUIT_ORDER[card.suit], card.value)
+    return SPECIAL_ORDER[card.kind]
+
+
 def build_deck(special_cards: Iterable[Kind] = ()) -> list[Card]:
     """Builds the deck (not shuffled).
 
@@ -96,7 +115,7 @@ def build_deck(special_cards: Iterable[Kind] = ()) -> list[Card]:
         deck.append(Card(id=f'wizard-{i}', kind=Kind.WIZARD))
         deck.append(Card(id=f'jester-{i}', kind=Kind.JESTER))
     for kind in dict.fromkeys(special_cards):  # dict.fromkeys removes duplicate entries
-        if kind not in SPECIAL_KINDS:
+        if kind not in OPTIONAL_KINDS:
             raise ValueError(f'{kind} is not a special card.')
         deck.append(Card(id=kind.value, kind=kind))
     return deck

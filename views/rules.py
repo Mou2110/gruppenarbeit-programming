@@ -34,25 +34,38 @@ SPECIALS = [
     (Kind.WEREWOLF, 'Swap it for the trump card before bidding and choose the trump yourself.'),
 ]
 
+BONUS = [
+    (Kind.CR7, 'Always wins.'),
+]
+
+
+def _card_row(kind: Kind, text: str) -> str:
+    card = Card(kind.value, kind)
+    name = KIND_LABEL[kind]
+    if card.needs_suit_choice:
+        name += f' {CARD_RANK[kind]}'
+    return f'<div class="spec">{card_html(card, "sm")}<p><b>{name}</b> · {text}</p></div>'
+
 
 def rules_content() -> str:
-    """Render the full rules reference, including special cards."""
+    """Render the full rules reference, including special cards and the bonus card."""
     examples = [Card(f'{suit.value}-12', Kind.NUMBER, suit, 12) for suit in Suit]
     examples.extend(Card(kind.value, kind) for kind in (Kind.WIZARD, Kind.JESTER))
     faces = ''.join(card_html(card, 'sm') for card in examples)
     deck = ('<div class="rule"><h3>The cards</h3><p>Four suits numbered 1 to 13, plus 4 Wizards and 4 Jesters. '
             'Wizards usually win and Jesters usually lose. Neither has a suit.</p>'
             f'<div class="rule-card-samples">{faces}</div></div>')
-
     rules = ''.join(f'<div class="rule"><h3>{title}</h3><p>{text}</p></div>' for title, text in RULES)
-    specials = []
-    for kind, text in SPECIALS:
-        card = Card(kind.value, kind)
-        name = KIND_LABEL[kind]
-        if card.needs_suit_choice:
-            name += f' {CARD_RANK[kind]}'
-        specials.append(f'<div class="spec">{card_html(card, "sm")}<p><b>{name}</b> · {text}</p></div>')
-    return f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{"".join(specials)}</div>'
+    specials = ''.join(_card_row(kind, text) for kind, text in SPECIALS)
+    bonus = ''.join(_card_row(kind, text) for kind, text in BONUS)
+    return (f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}</div>'
+            f'<details class="rule extra"><summary><h3>(Extra special card)</h3></summary>{bonus}</details>')
+
+
+def rules_toggle() -> str:
+    """Start page: all rules in one block that starts closed and opens with a click (no JavaScript)."""
+    return ('<details class="rules-toggle"><summary><h2>Rules</h2></summary>'
+            f'<div class="rulegrid">{rules_content()}</div></details>')
 
 
 def game_rules_dialog() -> ui.dialog:

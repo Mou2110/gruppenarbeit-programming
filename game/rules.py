@@ -14,14 +14,14 @@ from .cards import SPECIAL_VALUES, Card, Kind, Suit
 
 # How a card behaves when it is led (see rulebook):
 # - Like a Wizard: afterwards everyone may play anything.
-WIZARD_LIKE = (Kind.WIZARD, Kind.DRAGON)
+WIZARD_LIKE = (Kind.WIZARD, Kind.DRAGON, Kind.CR7)
 # - Like a Jester: the next card decides.
 JESTER_LIKE = (Kind.JESTER, Kind.FAIRY, Kind.BOMB)
 # - Cards with value and suit: their suit must be followed.
 VALUE_KINDS = (Kind.NUMBER, Kind.JUGGLER, Kind.CLOUD)
 
 # Turned up as the trump card: for these cards the dealer chooses the trump suit.
-DEALER_CHOOSES = (Kind.WIZARD, Kind.SHAPESHIFTER, Kind.DRAGON, Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD)
+DEALER_CHOOSES = (Kind.WIZARD, Kind.SHAPESHIFTER, Kind.DRAGON, Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD, Kind.CR7)
 
 
 @dataclass(frozen=True)
@@ -137,6 +137,9 @@ def trick_winner(trick: Sequence[Play | Card], trump: Suit | None) -> int:
         raise ValueError('An empty trick has no winner.')
     kinds = [p.acts_as for p in plays]
 
+    if Kind.CR7 in kinds:              # our bonus card always wins, even against the Bomb
+        return kinds.index(Kind.CR7)
+
     if Kind.DRAGON in kinds:
         if Kind.FAIRY in kinds:
             return kinds.index(Kind.FAIRY)
@@ -164,5 +167,6 @@ def trick_winner(trick: Sequence[Play | Card], trump: Suit | None) -> int:
 
 
 def trick_has_bomb(trick: Sequence[Play | Card]) -> bool:
-    """True if the Bomb is in the trick: then nobody gets the trick."""
-    return any(p.card.kind == Kind.BOMB for p in _as_plays(trick))
+    """True if the Bomb is in the trick: then nobody gets the trick. Our bonus card CR7 even beats the Bomb."""
+    kinds = [p.card.kind for p in _as_plays(trick)]
+    return Kind.BOMB in kinds and Kind.CR7 not in kinds
