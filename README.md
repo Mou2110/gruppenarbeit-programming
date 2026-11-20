@@ -4,7 +4,18 @@ A digital multiplayer trick-taking card game based on the rules of *Wizard* (25t
 including special cards – built with Python and NiceGUI. Playable online via Render; game states and
 accounts are stored in a Supabase (PostgreSQL) database.
 
-## Team and responsibilities
+**Live app:** https://prophecy-game.onrender.com (free Render plan: the first visit after a break can take up to a minute)
+
+## Team
+
+| Name | Student number | GitHub |
+|---|---|---|
+| Erik Wischnewski | 81880 | Erikwinova |
+| Moritz Gömmel | 78188 | Mou2110 |
+| Keno Hartkamp | 83675 | 83675-Coder |
+| Jakob Werner Prestel | 78098 | mandaguy12 |
+
+## Responsibilities
 
 | Part | Responsible | Content | Files |
 |---|---|---|---|
@@ -22,21 +33,31 @@ views/ (4)  ──►  game/lobby.py (3)  ──►  game/engine.py … (1)
 
 ## Running the app
 
+NiceGUI needs Python 3.11 or newer. [uv](https://docs.astral.sh/uv/) takes care of that:
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python main.py
+uv run --python 3.13 --with-requirements requirements.txt python main.py
 ```
 
 Then open http://localhost:8080 in the browser. Every browser tab is a separate player;
 **Practice against bots** starts a game against three computer opponents right away.
+Locally the data is stored in a SQLite file; online it is stored in PostgreSQL (Supabase) via `DATABASE_URL`.
 
 ## Tests
 
 ```bash
-pytest
+uv run --python 3.13 --with-requirements requirements.txt pytest
 ```
+
+GitHub runs all tests on every push (tab "Actions"), and `main` only gets changes that pass them.
+
+**What the tests cover:** the game rules and scoring, bots, accounts and passwords, lobbies (joining, ready,
+leaving, bots taking over, chat limits), saving and restoring games, and the leaderboard and stats numbers.
+For each of these there are tests for allowed actions, rejected actions (wrong turn, invalid bid, unknown
+player, wrong password) and edge cases (ties, too few players, empty data).
+
+**What they do not cover:** the page layout itself (`views/start.py`, `views/lobby.py`, `views/table.py`)
+is checked by hand in the browser, not by automatic tests. The logic behind the pages is tested.
 
 ## Working together
 
@@ -52,3 +73,5 @@ pytest
 - Lobbies with a 4-character code, bots and chat
 - Games survive server restarts; if a player is away, the game waits for them
 - Optional accounts with statistics and "Your games" to rejoin
+- Leaderboard: win rate by default (at least 5 finished games), sortable by every statistic, ties share a place
+- Player profiles and, on the stats page, the last 10 games as a form row with win streaks
