@@ -28,10 +28,10 @@ def test_number_cards_preserve_their_live_value_and_suit(suit):
 
 
 @pytest.mark.parametrize('kind', [Kind.JUGGLER, Kind.CLOUD])
-def test_assigning_a_suit_labels_the_face_without_covering_its_art(kind):
+def test_assigning_a_suit_keeps_the_art_and_shows_the_chosen_suit(kind):
     face = card_html(Card(kind.value, kind), chosen=Suit.SUN)
     assert f'art-{kind.value}' in face
-    assert 'class="chosen-suit' not in face
+    assert 'class="chosen-suit s-sun"' in face
     assert f'aria-label="{KIND_LABEL[kind]} as Sun"' in face
 
 

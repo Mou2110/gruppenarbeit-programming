@@ -3,6 +3,7 @@ import pytest
 
 from game.cards import Card, Kind, Suit
 from game.rules import Play
+from views.cards import SUIT_LABEL, card_html, suit_icon
 from views.table import _trick_html, _trump_html
 
 
@@ -14,6 +15,16 @@ def test_trump_shows_the_suit_without_the_revealed_card(revealed):
     assert '<span class="ts">Olive</span>' in html
     assert html.count('<svg') == 1
     assert 'class="card ' not in html
+
+
+@pytest.mark.parametrize('suit', list(Suit))
+def test_trump_uses_the_same_painted_emblem_as_the_number_cards(suit):
+    card = Card(f'{suit.value}-8', Kind.NUMBER, suit, 8)
+    emblem = f'<span class="suit-emblem">{suit_icon(suit)}</span>'
+    assert emblem in card_html(card)
+    trump = _trump_html({'phase': 'playing', 'trump': suit, 'trump_card': card})
+    assert f'<span class="trump-symbol s-{suit.value}">{emblem}</span>' in trump
+    assert f'<span class="ts">{SUIT_LABEL[suit]}</span>' in trump
 
 
 @pytest.mark.parametrize('phase, trump, label', [
@@ -30,14 +41,14 @@ def test_trump_without_a_confirmed_suit_shows_only_its_status(phase, trump, labe
 
 @pytest.mark.parametrize('kind', [Kind.JUGGLER, Kind.CLOUD])
 @pytest.mark.parametrize('chosen', [None, Suit.SARDINE])
-def test_trick_labels_the_chosen_suit_below_the_card(kind, chosen):
+def test_played_special_cards_keep_their_existing_suit_badge(kind, chosen):
     view = {'phase': 'playing', 'trump': Suit.OLIVE, 'my_index': 0,
             'players': [{'name': name} for name in ('Ana', 'Marta', 'Tiago')],
             'trick': [Play(0, Card(kind.value, kind), suit=chosen)]}
     html = _trick_html(view, paused=False)
     assert f'art-{kind.value}' in html
-    assert '<svg' not in html
+    assert 'class="as"' not in html
     if chosen is None:
-        assert 'class="as"' not in html
+        assert 'class="chosen-suit' not in html
     else:
-        assert '<span class="as">as Sardine</span>' in html
+        assert 'class="chosen-suit s-sardine"' in html
