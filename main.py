@@ -8,6 +8,7 @@ from nicegui import app, ui
 from game.lobby import registry
 from game.persistence import make_store
 from views.common import BrowserGone
+from views.invites import watch_invites
 from views.leaderboard import leaderboard_page, profile_page
 from views.lobby import lobby_page
 from views.start import start_page
@@ -67,30 +68,35 @@ def ignore_gone_browser():
 async def index() -> None:
     with ignore_gone_browser():
         await start_page()
+        await watch_invites()   # signed in: counts as online and sees invites from friends
 
 
 @ui.page('/stats')
 async def stats() -> None:
     with ignore_gone_browser():
         await stats_page()
+        await watch_invites()   # signed in: counts as online and sees invites from friends
 
 
 @ui.page('/leaderboard')
 async def leaderboard(sort: str = '') -> None:
     with ignore_gone_browser():
         await leaderboard_page(sort)
+        await watch_invites()   # signed in: counts as online and sees invites from friends
 
 
 @ui.page('/players/{username}')
 async def player_profile(username: str) -> None:
     with ignore_gone_browser():
         await profile_page(username)
+        await watch_invites()   # signed in: counts as online and sees invites from friends
 
 
 @ui.page('/lobby/{code}')
 async def lobby(code: str) -> None:
     with ignore_gone_browser():
         await lobby_page(code)
+        await watch_invites()   # signed in: counts as online and sees invites from friends
 
 
 # Persist game state: online in the database (DATABASE_URL), locally in data/prophecy.db.

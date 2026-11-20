@@ -9,16 +9,18 @@ import json
 from collections.abc import Callable
 from functools import partial
 
-from nicegui import ui
+from nicegui import run as background, ui
 
 from game.cards import Kind
 from game.lobby import MAX_PLAYERS, MIN_PLAYERS, LobbyError, clean_name, registry
+from game.presence import InviteError, presence
 
 from .common import (
     ICON_BACK, ICON_CHECK, ICON_CLOSE, ICON_COPY, ICON_PLUS, ICON_SHARE, button, esc, icon_button, message_page,
     current_account, page_frame, player_id, remembered_name, save_name,
 )
 from .cards import svg
+from .invites import invitable
 from .rules import game_rules_dialog
 from .table import render_table
 
@@ -75,6 +77,12 @@ async def lobby_page(code: str) -> None:
             return
     lobby.connect(pid)
     state: dict = {'mode': None}
+    friends: list[dict] = []
+    if account and registry.store is not None:
+        try:
+            friends = await background.io_bound(registry.store.friends_of, account[0])
+        except Exception:
+            friends = []  # without the database there is simply no "Invite friends" list
     # Touch device (phone/tablet)? A card is selected first and played with the second tap.
     try:
         state['touch'] = bool(await ui.run_javascript("matchMedia('(pointer: coarse)').matches", timeout=2))
@@ -121,7 +129,33 @@ async def lobby_page(code: str) -> None:
             "else { navigator.clipboard.writeText(url); }")
         ui.notify('Link ready to share', type='positive')
 
+    def invite(friend: dict) -> None:
+        try:
+            presence.invite(account[0], account[1], friend['account'], lobby.code)
+        except InviteError as error:
+            ui.notify(str(error), type='warning')
+            return
+        ui.notify(f"Invite sent to {friend['name']}", type='positive')
+
     # ------------------------------------------------------------ Warteraum
+    @ui.refreshable
+    def invite_part() -> None:
+        """Friends who are online right now and can be invited with one click."""
+        if not friends:
+            return
+        candidates = invitable(friends, lobby)
+        with ui.element('div').classes('section'):
+            ui.html('<div class="sechead"><span>Invite friends</span></div>', sanitize=False)
+            if not candidates:
+                ui.html('<p class="muted small">None of your friends is online right now.</p>', sanitize=False)
+            for friend in candidates:
+                with ui.element('div').classes('prow'):
+                    ui.html(f'<div class="avatar av-sm">{esc(friend["name"][:1].upper())}</div>'
+                            f'<span class="pn">{esc(friend["name"])} <span class="muted">(online)</span></span>',
+                            sanitize=False).classes('prow-main')
+                    button('Invite', partial(invite, friend), cls='primary small', marker='invite-friend') \
+                        .classes('px-4')
+
     @ui.refreshable
     def players_part() -> None:
         is_host = lobby.is_host(pid)
@@ -214,6 +248,9 @@ async def lobby_page(code: str) -> None:
             if account:  # signed in: the account username is shown
                 field.props('readonly hint="Signed in"')
         players_part()
+        invite_part()
+        if friends:
+            ui.timer(3.0, invite_part.refresh)  # friends come online or go offline
         settings_part()
         ready_part()
 
@@ -266,6 +303,7 @@ async def lobby_page(code: str) -> None:
             table_part.refresh()
         else:
             players_part.refresh()
+            invite_part.refresh()
             settings_part.refresh()
             ready_part.refresh()
 

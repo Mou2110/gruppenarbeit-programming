@@ -8,6 +8,7 @@ from nicegui import run, ui
 from game.accounts import AccountError
 from game.leaderboard import MIN_GAMES
 from game.lobby import registry
+from game.presence import presence
 
 from .common import ICON_BACK, ICON_SCORES, button, current_account, esc, icon_button, message_page, page_frame
 
@@ -71,11 +72,13 @@ def _count(number: int, word: str) -> str:
     return f"{number} {word}{'' if number == 1 else 's'}"
 
 
-def friend_html(friend: dict) -> str:
+def friend_html(friend: dict, online: bool = False) -> str:
     """Name and totals of one friend. The name links to the profile if the friend has one."""
     name = esc(friend['name'])
     if friend['games'] >= MIN_GAMES:
         name = f'<a class="profile-link" href="/players/{esc(friend["account"])}">{name}</a>'
+    if online:
+        name += ' <span class="online-dot" style="color: #5BD38B">● online</span>'
     return f"<div>{name}<small>{_count(friend['games'], 'game')} · {_count(friend['wins'], 'win')}</small></div>"
 
 
@@ -115,7 +118,7 @@ def friends_section(key: str, friends: list[dict]) -> None:
     with ui.element('div').classes('glist mt-s'):
         for friend in friends:
             with ui.element('div').classes('gitem'):
-                ui.html(friend_html(friend), sanitize=False)
+                ui.html(friend_html(friend, presence.is_online(friend['account'])), sanitize=False)
                 ui.element('span')
                 button('Remove', lambda friend=friend['account']: remove(friend), cls='primary small ghostbtn px-4',
                        marker=f'remove-{friend["account"]}').style('color: #fff')
