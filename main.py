@@ -1,11 +1,13 @@
 """App entry point: starts the NiceGUI web server."""
 import os
+from contextlib import contextmanager
 from pathlib import Path
 
 from nicegui import app, ui
 
 from game.lobby import registry
 from game.persistence import make_store
+from views.common import BrowserGone
 from views.leaderboard import leaderboard_page, profile_page
 from views.lobby import lobby_page
 from views.start import start_page
@@ -51,35 +53,51 @@ ui.add_head_html(
 )
 
 
+@contextmanager
+def ignore_gone_browser():
+    """Pages need a connected browser. Link previews (e.g. WhatsApp, iMessage) never connect –
+    then the page is simply not built, instead of logging an error."""
+    try:
+        yield
+    except BrowserGone:
+        pass
+
+
 @ui.page('/')
 async def index() -> None:
-    await start_page()
+    with ignore_gone_browser():
+        await start_page()
 
 
 @ui.page('/stats')
 async def stats() -> None:
-    await stats_page()
+    with ignore_gone_browser():
+        await stats_page()
 
 
 @ui.page('/leaderboard')
 async def leaderboard(sort: str = '') -> None:
-    await leaderboard_page(sort)
+    with ignore_gone_browser():
+        await leaderboard_page(sort)
 
 
 @ui.page('/players/{username}')
 async def player_profile(username: str) -> None:
-    await profile_page(username)
+    with ignore_gone_browser():
+        await profile_page(username)
 
 
 @ui.page('/lobby/{code}')
 async def lobby(code: str) -> None:
-    await lobby_page(code)
+    with ignore_gone_browser():
+        await lobby_page(code)
 
 
 # Persist game state: online in the database (DATABASE_URL), locally in data/prophecy.db.
 store = make_store(BASE)
 app.on_startup(lambda: registry.attach_store(store))
-app.on_shutdown(store.flush)
+# lambda: NiceGUI would otherwise pass the app itself as the first argument (the timeout).
+app.on_shutdown(lambda: store.flush())
 
 # Advance all lobbies regularly (bots take turns, pauses end) and save changes.
 app.timer(0.25, registry.tick_all)

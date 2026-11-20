@@ -1,5 +1,4 @@
 # Who owns each file? GitHub automatically requests their review on pull requests.
-# Replace Erikwinova ... 4 with your GitHub usernames (including the @ prefix).
 
 # Part 1 · Game logic
 /game/cards.py           @Erikwinova
