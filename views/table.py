@@ -19,7 +19,7 @@ from game.lobby import Lobby
 from game.rules import Play, lead_suit, trick_winner
 
 from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_icon
-from .common import ICON_EXIT, ICON_SCORES, button, esc, icon_button
+from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 
 ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
 
@@ -229,7 +229,8 @@ def _me_html(v: dict) -> str:
 
 # ------------------------------------------------------------------- The table
 
-def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[], None]) -> None:
+def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[], None],
+                 open_rules: Callable[[], None]) -> None:
     """Renders the table for player pid. state holds data specific to this browser tab."""
     v = lobby.game.view_for(pid)
     paused = lobby.is_paused()
@@ -453,11 +454,13 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
             button('Stay', partial(set_state, 'confirm_leave', False), cls='linkbtn authswitch')
 
     # --- complete table ---
-    with ui.element('div').classes('topbar'):
+    with ui.element('div').classes('topbar game-topbar'):
         icon_button(ICON_EXIT, 'Leave game', partial(set_state, 'confirm_leave', True))
         ui.html(f'<div class="rinfo"><b>Round {v["round"]} of {v["total_rounds"]}</b>'
                 f'<span>{_phase_text(v)}</span></div>', sanitize=False)
-        icon_button(ICON_SCORES, 'Scoreboard', partial(set_state, 'scores_open', True))
+        with ui.element('div').classes('game-topbar-actions'):
+            icon_button(ICON_SCORES, 'Scoreboard', partial(set_state, 'scores_open', True), marker='scoreboard')
+            icon_button(ICON_INFO, 'Game rules', open_rules, marker='open-game-rules').props('title="Game rules"')
 
     with ui.element('div').classes('board'):
         ui.html(_trump_html(v), sanitize=False).classes('a-trump')

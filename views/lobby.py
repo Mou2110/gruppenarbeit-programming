@@ -5,9 +5,9 @@ clicks "Ready", or plays a card - all tabs are redrawn.
 """
 from __future__ import annotations
 
-from functools import partial
-
 import json
+from collections.abc import Callable
+from functools import partial
 
 from nicegui import ui
 
@@ -19,6 +19,7 @@ from .common import (
     current_account, page_frame, player_id, remembered_name, save_name,
 )
 from .cards import svg
+from .rules import game_rules_dialog
 from .table import render_table
 
 SPECIAL_OPTIONS = [
@@ -213,15 +214,17 @@ async def lobby_page(code: str) -> None:
 
     # ------------------------------------------------------------ Umschalten Warteraum / Spiel
     @ui.refreshable
-    def table_part() -> None:
-        render_table(lobby, pid, state, table_part.refresh)
+    def table_part(open_rules: Callable[[], None]) -> None:
+        render_table(lobby, pid, state, table_part.refresh, open_rules)
 
     @ui.refreshable
     def content() -> None:
         state['mode'] = mode()
         with page_frame():
             if state['mode'] == 'game':
-                table_part()
+                # Keep the open dialog outside the table refreshed by moves and bot turns.
+                rules = game_rules_dialog()
+                table_part(rules.open)
             else:
                 waiting_room()
 
