@@ -32,6 +32,8 @@ SPECIALS = [
     (Kind.JUGGLER, 'Counts in a suit you pick. After its trick, everyone passes one card to the left.'),
     (Kind.CLOUD, 'Counts in a suit you pick. Whoever wins its trick must change their bid by one right away.'),
     (Kind.WEREWOLF, 'Swap it for the trump card before bidding and choose the trump yourself.'),
+    (Kind.CR7, 'Our bonus joke card, off unless the host adds it. Always wins the trick, even against the Dragon. '
+               'Only the Bomb stops him. Siuuu!'),
 ]
 
 

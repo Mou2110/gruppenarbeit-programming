@@ -19,6 +19,8 @@ def _needs_tricks(view: dict) -> bool:
 
 def _win_strength(card: Card, trump: Suit | None) -> float:
     """How well a card wins a trick (higher = better)."""
+    if card.kind == Kind.CR7:
+        return 300
     if card.kind == Kind.DRAGON:
         return 200
     if card.kind in (Kind.WIZARD, Kind.SHAPESHIFTER):
@@ -79,7 +81,7 @@ def _estimate_tricks(view: dict) -> int:
     trump = view['trump']
     sure = 0
     for card in hand:
-        if card.kind in (Kind.DRAGON, Kind.WIZARD, Kind.SHAPESHIFTER):
+        if card.kind in (Kind.CR7, Kind.DRAGON, Kind.WIZARD, Kind.SHAPESHIFTER):
             sure += 1
         elif card.is_number and trump is not None and card.suit == trump and card.value >= 10:
             sure += 1

@@ -8,6 +8,7 @@ SUIT_LABEL = {Suit.SEA: 'Sea', Suit.SARDINE: 'Sardine', Suit.OLIVE: 'Olive', Sui
 KIND_LABEL = {
     Kind.WIZARD: 'Wizard', Kind.JESTER: 'Jester', Kind.SHAPESHIFTER: 'Shapeshifter', Kind.DRAGON: 'Dragon',
     Kind.FAIRY: 'Fairy', Kind.BOMB: 'Bomb', Kind.WEREWOLF: 'Werewolf', Kind.JUGGLER: 'Juggler', Kind.CLOUD: 'Cloud',
+    Kind.CR7: 'CR7',
 }
 
 # Symbols as SVG paths (24x24).
@@ -22,6 +23,7 @@ SUIT_PATHS = {
 CARD_RANK = {
     Kind.WIZARD: 'W', Kind.JESTER: 'J', Kind.SHAPESHIFTER: 'S', Kind.DRAGON: 'D',
     Kind.FAIRY: 'F', Kind.BOMB: 'B', Kind.WEREWOLF: 'WW', Kind.JUGGLER: '7½', Kind.CLOUD: '9¾',
+    Kind.CR7: '7',
 }
 
 

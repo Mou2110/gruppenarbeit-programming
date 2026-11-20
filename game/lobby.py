@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 
 from . import bots
 from .accounts import account_of
-from .cards import SPECIAL_KINDS, Kind, Suit
+from .cards import OPTIONAL_KINDS, SPECIAL_KINDS, Kind, Suit
 from .engine import Game, GameError, Phase
 
 MIN_PLAYERS, MAX_PLAYERS = 3, 6
@@ -44,7 +44,7 @@ class Member:
 
 @dataclass
 class Settings:
-    special_cards: list[Kind] = field(default_factory=lambda: list(SPECIAL_KINDS))
+    special_cards: list[Kind] = field(default_factory=lambda: list(SPECIAL_KINDS))  # bonus cards start switched off
     clairvoyance: bool = True       # clairvoyance in round 1
     no_matching_bids: bool = True   # bids must not add up to the number of tricks
 
@@ -312,7 +312,7 @@ class Lobby:
         self._require_host(by)
         self._require_waiting()
         if special_cards is not None:
-            self.settings.special_cards = [k for k in SPECIAL_KINDS if k in special_cards]
+            self.settings.special_cards = [k for k in OPTIONAL_KINDS if k in special_cards]
         if clairvoyance is not None:
             self.settings.clairvoyance = clairvoyance
         if no_matching_bids is not None:
