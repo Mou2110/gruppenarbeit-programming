@@ -20,6 +20,7 @@
 /game/leaderboard.py     @Mou2110
 /tests/test_leaderboard.py  @Mou2110
 /tests/test_stats.py     @Mou2110
+/tests/test_rematch.py   @Mou2110
 
 # Part 3 · Multiplayer
 /game/lobby.py           @83675-Coder
