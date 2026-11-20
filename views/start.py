@@ -7,7 +7,7 @@ from nicegui import ui
 
 from game.accounts import AccountError
 from game.cards import Card, Kind, Suit
-from game.lobby import MAX_PLAYERS, registry
+from game.lobby import MAX_PLAYERS, MIN_PLAYERS, registry
 
 from .cards import card_html
 from .common import (
@@ -24,6 +24,20 @@ HOW_IT_WORKS = [
     ('Play', 'Everyone plays one card per trick. The highest card wins it.'),
     ('Score', 'Hit your bid exactly to earn points. Miss it and you lose some.'),
 ]
+
+PRACTICE_SIZES = list(range(MIN_PLAYERS, MAX_PLAYERS + 1))   # players at the table, you included
+
+
+def start_practice(lobbies, pid: str, name: str, players: int):
+    """A practice game: you plus bots up to the chosen number of players. It starts right away."""
+    if players not in PRACTICE_SIZES:
+        raise ValueError(f'A table has {MIN_PLAYERS} to {MAX_PLAYERS} players.')
+    lobby = lobbies.create(pid, name)
+    for _ in range(players - 1):
+        lobby.add_bot(pid)
+    lobby.set_ready(pid, True)  # starts the game immediately
+    return lobby
+
 
 def _lobby_status(lobby) -> tuple[str, str]:
     names = ', '.join(m.name for m in lobby.members)
@@ -81,12 +95,18 @@ async def start_page() -> None:
         lobby = registry.create(pid, name)
         ui.navigate.to(f'/lobby/{lobby.code}')
 
-    def practice() -> None:
-        lobby = registry.create(pid, name)
-        for _ in range(3):
-            lobby.add_bot(pid)
-        lobby.set_ready(pid, True)  # starts the game immediately
+    def practice(players: int) -> None:
+        lobby = start_practice(registry, pid, name, players)
         ui.navigate.to(f'/lobby/{lobby.code}')
+
+    with ui.dialog() as practice_dialog, ui.element('div').classes('panel dialogpanel'):
+        ui.html('<h2>Practice against bots</h2><p>How many players at the table? You play, bots fill the other '
+                'seats.</p>', sanitize=False)
+        with ui.element('div').classes('sizebtns'):
+            for size in PRACTICE_SIZES:
+                button(str(size), partial(practice, size), cls='numbtn', marker=f'practice-{size}',
+                       label=f'{size} players')
+        button('Cancel', practice_dialog.close, cls='primary ghostbtn')
 
     def join() -> None:
         code = (code_input.value or '').strip().upper()
@@ -119,7 +139,7 @@ async def start_page() -> None:
         with ui.element('div').classes('stack'):
             button('Create lobby', create_lobby, cls='primary big', marker='create')
             button('Join lobby', dialog.open, cls='primary ghostbtn big', marker='join')
-            button('Practice against bots', practice, cls='linkbtn', marker='practice')
+            button('Practice against bots', practice_dialog.open, cls='linkbtn', marker='practice')
 
         # Your games: return to any lobby you are in without a link or code.
         mine = registry.games_of(pid)
