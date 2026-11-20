@@ -38,6 +38,13 @@ SPECIAL_KINDS = (Kind.SHAPESHIFTER, Kind.DRAGON, Kind.FAIRY, Kind.BOMB,
 BONUS_KINDS = (Kind.CR7,)
 OPTIONAL_KINDS = SPECIAL_KINDS + BONUS_KINDS
 
+# Order of the cards in a player's hand, from left to right: strong special cards first,
+# then the suits (low to high), Jester-like cards last. Used by the table and by the time limit.
+SUIT_ORDER = {Suit.SEA: 0, Suit.SARDINE: 1, Suit.OLIVE: 2, Suit.SUN: 3}
+SPECIAL_ORDER = {Kind.CR7: (0, -1), Kind.DRAGON: (0, 0), Kind.WIZARD: (0, 1), Kind.SHAPESHIFTER: (0, 2),
+                 Kind.JUGGLER: (6, 0), Kind.CLOUD: (6, 1), Kind.JESTER: (9, 0), Kind.FAIRY: (9, 1),
+                 Kind.BOMB: (9, 2), Kind.WEREWOLF: (9, 3)}
+
 # Juggler and Cloud have a fixed value between two number cards.
 SPECIAL_VALUES = {Kind.JUGGLER: 7.5, Kind.CLOUD: 9.75}
 
@@ -85,6 +92,13 @@ class Card:
         if self.is_number:
             return f'{self.suit.value.capitalize()} {self.value}'
         return self.kind.value.capitalize()
+
+
+def hand_order(card: Card) -> tuple[int, float]:
+    """Sort key for a hand: the card that is shown furthest left comes first."""
+    if card.is_number:
+        return (1 + SUIT_ORDER[card.suit], card.value)
+    return SPECIAL_ORDER[card.kind]
 
 
 def build_deck(special_cards: Iterable[Kind] = ()) -> list[Card]:

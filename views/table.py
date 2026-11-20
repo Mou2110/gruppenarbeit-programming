@@ -13,7 +13,7 @@ from functools import partial
 
 from nicegui import ui
 
-from game.cards import Card, Kind, Suit
+from game.cards import Card, Kind, Suit, hand_order
 from game.engine import GameError
 from game.lobby import Lobby
 from game.rules import trick_has_bomb, Play, lead_suit, trick_winner
@@ -23,9 +23,6 @@ from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 
 ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
 
-SUIT_ORDER = {Suit.SEA: 0, Suit.SARDINE: 1, Suit.OLIVE: 2, Suit.SUN: 3}
-SPECIAL_ORDER = {Kind.CR7: (0, -1), Kind.DRAGON: (0, 0), Kind.WIZARD: (0, 1), Kind.SHAPESHIFTER: (0, 2), Kind.JUGGLER: (6, 0),
-                 Kind.CLOUD: (6, 1), Kind.JESTER: (9, 0), Kind.FAIRY: (9, 1), Kind.BOMB: (9, 2), Kind.WEREWOLF: (9, 3)}
 
 
 
@@ -33,11 +30,7 @@ def trick_bombed(plays: list[Play]) -> bool:
     """Does the Bomb take effect in this trick? (Not if CR7 is in it.)"""
     return trick_has_bomb(plays)
 
-def _hand_order(card: Card) -> tuple[int, float]:
-    """Sort order for the player hand: strong special cards first, then suits, Jester-like cards last."""
-    if card.is_number:
-        return (1 + SUIT_ORDER[card.suit], card.value)
-    return SPECIAL_ORDER[card.kind]
+_hand_order = hand_order   # order of the hand from left to right (game/cards.py)
 
 
 def _name(v: dict, index: int | None) -> str:

@@ -15,8 +15,9 @@ from dataclasses import dataclass, field
 
 from . import bots
 from .accounts import account_of
-from .cards import OPTIONAL_KINDS, SPECIAL_KINDS, Kind, Suit
+from .cards import OPTIONAL_KINDS, SPECIAL_KINDS, Kind, Suit, hand_order
 from .engine import Game, GameError, Phase
+from .rules import legal_cards
 
 MIN_PLAYERS, MAX_PLAYERS = 3, 6
 NAME_MAX = 16
@@ -480,10 +481,43 @@ class Lobby:
         if self.game.phase in (Phase.ROUND_OVER, Phase.GAME_OVER):
             self.votes |= set(self.waiting_on())
             return self._check_votes()
-        return self._auto_move(force=True)
+        return self._timeout_move()
 
-    def _auto_move(self, force: bool = False) -> bool:
-        """Makes a move for a bot if it is their turn. force=True: also for a human whose time is up."""
+    def _timeout_move(self) -> bool:
+        """The move made for a human whose time is up. Deliberately simple, not a clever bot move,
+        so that being slow never pays off: the first allowed card from the left of the hand,
+        the lowest allowed bid, the first suit, the Shapeshifter as a Jester."""
+        game = self.game
+        first_suit = next(iter(Suit))
+        tricks_before = (game.round_number, len(game.tricks_played))
+        if game.phase == Phase.PASSING:
+            for player in game.players:
+                if game.must_pass(player.id) and not self._plays_automatically(player.id):
+                    game.pass_card(player.id, min(player.hand, key=hand_order).id)
+            self._after_move(tricks_before)
+            return True
+        player = game.players[game.current]
+        if game.phase in (Phase.WEREWOLF, Phase.CHOOSING_TRUMP):
+            game.choose_trump(player.id, first_suit)
+        elif game.phase == Phase.BIDDING:
+            game.place_bid(player.id, min(game.allowed_bids()))
+        elif game.phase == Phase.ADJUSTING:
+            game.adjust_bid(player.id, game.adjust_options()[0])
+        elif game.awaiting_choice is not None:
+            card = game.trick[-1].card
+            if card.needs_suit_choice:
+                game.declare(player.id, suit=first_suit)
+            else:
+                game.declare(player.id, as_wizard=False)
+        else:
+            card = min(legal_cards(player.hand, game.trick), key=hand_order)
+            game.play_card(player.id, card.id, suit=first_suit if card.needs_suit_choice else None,
+                           as_wizard=False if card.needs_role_choice else None)
+        self._after_move(tricks_before)
+        return True
+
+    def _auto_move(self) -> bool:
+        """Makes a move for a bot if it is their turn."""
         game = self.game
         phase = game.phase
         if phase in (Phase.ROUND_OVER, Phase.GAME_OVER):
@@ -492,7 +526,7 @@ class Lobby:
         if phase == Phase.PASSING:
             moved = False
             for player in game.players:
-                if game.must_pass(player.id) and (force or self._plays_automatically(player.id)):
+                if game.must_pass(player.id) and self._plays_automatically(player.id):
                     game.pass_card(player.id, bots.choose_pass(game.view_for(player.id)))
                     moved = True
             if moved:
@@ -500,7 +534,7 @@ class Lobby:
             return moved
 
         player = game.players[game.current]
-        if not (force or self._plays_automatically(player.id)):
+        if not self._plays_automatically(player.id):
             return False
         view = game.view_for(player.id)
         if phase in (Phase.WEREWOLF, Phase.CHOOSING_TRUMP):

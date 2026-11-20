@@ -1,10 +1,13 @@
 """Tests for the time limit per move.
 
 Every human has TURN_LIMIT seconds (2 minutes) for a move. The timer is only shown in the last
-TIMER_SHOWN seconds (30). When the time is up, a bot makes this one move for them; they keep their seat
-and play the next move themselves. Pressing "continue" after a round has the same limit.
+TIMER_SHOWN seconds (30). When the time is up, the game makes a simple move for them on purpose (no clever
+bot move, so being slow does not pay off): the first allowed card from the left, the lowest allowed bid.
+They keep their seat. Pressing "continue" after a round has the same limit.
 """
+from game.cards import SPECIAL_KINDS, BONUS_KINDS, hand_order
 from game.engine import Phase
+from game.rules import legal_cards
 from game.lobby import TIMER_SHOWN, TURN_LIMIT, LobbyRegistry
 
 
@@ -66,7 +69,7 @@ def test_the_game_waits_while_there_is_still_time():
     assert progress(lobby) == before
 
 
-def test_when_the_time_is_up_a_bot_makes_this_one_move():
+def test_when_the_time_is_up_a_move_is_made_for_them():
     lobby, clock = started_game()
     slow = until_a_human_must_move(lobby, clock)
     before = progress(lobby)
@@ -189,3 +192,60 @@ def test_lobbies_saved_before_the_setting_existed_have_the_time_limit_on():
     del lobby.settings.__dict__['turn_timer']          # like an old saved lobby
     restored = pickle.loads(pickle.dumps(lobby))
     assert restored.settings.turn_timer is True
+
+
+def test_when_time_is_up_while_bidding_the_lowest_allowed_bid_is_placed():
+    lobby, clock = started_game()
+    for _ in range(50):
+        slow = until_a_human_must_move(lobby, clock)
+        if lobby.game.phase == Phase.BIDDING:
+            break
+        wait(lobby, clock, TURN_LIMIT + 2)
+    game = lobby.game
+    lowest = min(game.allowed_bids())
+    wait(lobby, clock, TURN_LIMIT + 2)
+    assert next(p for p in game.players if p.id == slow).bid == lowest
+
+
+def test_when_time_is_up_while_playing_the_first_allowed_card_from_the_left_is_played():
+    lobby, clock = started_game()
+    checked = 0
+    for _ in range(400):
+        if lobby.game is None or lobby.game.round_number > 4:
+            break
+        if lobby.waiting_on() and lobby.game.phase == Phase.PLAYING and lobby.game.awaiting_choice is None:
+            game = lobby.game
+            player = game.players[game.current]
+            if len(player.hand) > 1:
+                expected = min(legal_cards(player.hand, game.trick), key=hand_order)
+                before = list(player.hand)
+                wait(lobby, clock, TURN_LIMIT + 2)
+                assert expected not in player.hand and expected in before
+                checked += 1
+                continue
+        if lobby.game.phase == Phase.ROUND_OVER:
+            lobby.vote_continue('host')
+            lobby.vote_continue('p2')
+        wait(lobby, clock, TURN_LIMIT + 2, step=TURN_LIMIT + 2)
+    assert checked >= 3
+
+
+def test_a_whole_game_can_be_finished_by_the_time_limit_alone_even_with_all_special_cards():
+    clock = FakeClock()
+    registry = LobbyRegistry(clock=clock)
+    lobby = registry.create('host', 'Erik')
+    lobby.join('p2', 'Marta')
+    for member_id in ('host', 'p2'):
+        lobby.connect(member_id)
+    lobby.add_bot('host')
+    lobby.update_settings('host', special_cards=list(SPECIAL_KINDS + BONUS_KINDS))
+    lobby.set_ready('host', True)
+    lobby.set_ready('p2', True)
+    game = lobby.game
+    for _ in range(20000):                             # nobody ever moves: every move comes from the timer
+        if game.phase == Phase.GAME_OVER:
+            break
+        clock.now += TURN_LIMIT / 2
+        lobby.tick()
+    assert game.phase == Phase.GAME_OVER
+    assert not any(m.is_bot for m in lobby.members if m.id in ('host', 'p2'))
