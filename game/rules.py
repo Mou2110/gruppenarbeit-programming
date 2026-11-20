@@ -14,14 +14,14 @@ from .cards import SPECIAL_VALUES, Card, Kind, Suit
 
 # How a card behaves when it is led (see rulebook):
 # - Like a Wizard: afterwards everyone may play anything.
-WIZARD_LIKE = (Kind.WIZARD, Kind.DRAGON)
+WIZARD_LIKE = (Kind.WIZARD, Kind.DRAGON, Kind.CR7)
 # - Like a Jester: the next card decides.
 JESTER_LIKE = (Kind.JESTER, Kind.FAIRY, Kind.BOMB)
 # - Cards with value and suit: their suit must be followed.
 VALUE_KINDS = (Kind.NUMBER, Kind.JUGGLER, Kind.CLOUD)
 
 # Turned up as the trump card: for these cards the dealer chooses the trump suit.
-DEALER_CHOOSES = (Kind.WIZARD, Kind.SHAPESHIFTER, Kind.DRAGON, Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD)
+DEALER_CHOOSES = (Kind.WIZARD, Kind.SHAPESHIFTER, Kind.DRAGON, Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD, Kind.CR7)
 
 
 @dataclass(frozen=True)
@@ -136,6 +136,9 @@ def trick_winner(trick: Sequence[Play | Card], trump: Suit | None) -> int:
     if not plays:
         raise ValueError('An empty trick has no winner.')
     kinds = [p.acts_as for p in plays]
+
+    if Kind.CR7 in kinds:              # our bonus card beats everything (with a Bomb nobody gets the trick)
+        return kinds.index(Kind.CR7)
 
     if Kind.DRAGON in kinds:
         if Kind.FAIRY in kinds:

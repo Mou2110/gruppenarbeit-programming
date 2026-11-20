@@ -12,7 +12,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 
-from .cards import SPECIAL_KINDS, Card, Kind, Suit, shuffled_deck
+from .cards import OPTIONAL_KINDS, Card, Kind, Suit, shuffled_deck
 from .rules import (
     Play, dealer_chooses_trump, legal_cards, total_rounds, trick_has_bomb, trick_winner, trump_from_card,
 )
@@ -71,7 +71,7 @@ class Game:
         if len(set(ids)) != len(ids):
             raise ValueError('Every player needs their own id.')
         self.special_cards = tuple(dict.fromkeys(special_cards))
-        if any(kind not in SPECIAL_KINDS for kind in self.special_cards):
+        if any(kind not in OPTIONAL_KINDS for kind in self.special_cards):
             raise ValueError('Unknown special card.')
 
         self.players = [PlayerState(id=pid, name=name) for pid, name in players]

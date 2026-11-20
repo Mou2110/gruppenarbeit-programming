@@ -657,3 +657,9 @@ details.rule > summary h3 { margin: 0; }
 details.rule > summary::after { content: '+'; font-size: 18px; line-height: 1; color: #1F3F8F; }
 details.rule[open] > summary::after { content: '−'; }
 details.rule[open] { padding-bottom: 14px; }
+/* Bonus joke card CR7: drawn with CSS (no photo), in the colours of Portugal */
+.art-cr7 .special-art { background: linear-gradient(160deg, #046A38 0 42%, #DA291C 42% 100%); }
+.art-cr7 .special-art::before { content: '\26BD'; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -55%);
+  font-size: calc(var(--idx) * 2.4); line-height: 1; }
+.art-cr7 .special-art::after { content: 'SIUUU'; position: absolute; left: 0; right: 0; bottom: 6%; text-align: center;
+  color: #FFD700; font: 700 var(--lbl, 9px)/1 Inter, sans-serif; letter-spacing: .08em; }

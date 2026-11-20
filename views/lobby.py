@@ -29,6 +29,7 @@ SPECIAL_OPTIONS = [
     ('Werewolf', (Kind.WEREWOLF,)),
     ('Juggler', (Kind.JUGGLER,)),
     ('Cloud', (Kind.CLOUD,)),
+    ('CR7 (bonus)', (Kind.CR7,)),                   # our joke card: always wins the trick
 ]
 
 

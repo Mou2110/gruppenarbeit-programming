@@ -24,7 +24,7 @@ from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
 
 SUIT_ORDER = {Suit.SEA: 0, Suit.SARDINE: 1, Suit.OLIVE: 2, Suit.SUN: 3}
-SPECIAL_ORDER = {Kind.DRAGON: (0, 0), Kind.WIZARD: (0, 1), Kind.SHAPESHIFTER: (0, 2), Kind.JUGGLER: (6, 0),
+SPECIAL_ORDER = {Kind.CR7: (0, -1), Kind.DRAGON: (0, 0), Kind.WIZARD: (0, 1), Kind.SHAPESHIFTER: (0, 2), Kind.JUGGLER: (6, 0),
                  Kind.CLOUD: (6, 1), Kind.JESTER: (9, 0), Kind.FAIRY: (9, 1), Kind.BOMB: (9, 2), Kind.WEREWOLF: (9, 3)}
 
 

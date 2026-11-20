@@ -28,10 +28,15 @@ class Kind(str, Enum):
     WEREWOLF = 'werewolf'          # is swapped for the trump card before bidding
     JUGGLER = 'juggler'            # 7½ in a suit of your choice, afterwards everyone passes a card
     CLOUD = 'cloud'                # 9¾ in a suit of your choice, the winner changes their bid by 1
+    # Our own bonus joke card (not in the original game)
+    CR7 = 'cr7'                    # always wins the trick – only the Bomb stops it
 
 
 SPECIAL_KINDS = (Kind.SHAPESHIFTER, Kind.DRAGON, Kind.FAIRY, Kind.BOMB,
                  Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD)
+# Our own bonus cards (not in the original game). Like special cards they are optional, one each.
+BONUS_KINDS = (Kind.CR7,)
+OPTIONAL_KINDS = SPECIAL_KINDS + BONUS_KINDS
 
 # Juggler and Cloud have a fixed value between two number cards.
 SPECIAL_VALUES = {Kind.JUGGLER: 7.5, Kind.CLOUD: 9.75}
@@ -63,7 +68,7 @@ class Card:
 
     @property
     def is_special(self) -> bool:
-        return self.kind in SPECIAL_KINDS
+        return self.kind in OPTIONAL_KINDS
 
     @property
     def needs_suit_choice(self) -> bool:
@@ -96,7 +101,7 @@ def build_deck(special_cards: Iterable[Kind] = ()) -> list[Card]:
         deck.append(Card(id=f'wizard-{i}', kind=Kind.WIZARD))
         deck.append(Card(id=f'jester-{i}', kind=Kind.JESTER))
     for kind in dict.fromkeys(special_cards):  # dict.fromkeys removes duplicate entries
-        if kind not in SPECIAL_KINDS:
+        if kind not in OPTIONAL_KINDS:
             raise ValueError(f'{kind} is not a special card.')
         deck.append(Card(id=kind.value, kind=kind))
     return deck
