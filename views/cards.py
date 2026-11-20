@@ -42,7 +42,7 @@ def card_name(card: Card) -> str:
 
 
 def card_html(card: Card, size: str = 'md', chosen: Suit | None = None) -> str:
-    """Render a face-up card and, when applicable, its chosen suit."""
+    """Render a face-up card, including the chosen suit in its accessible name."""
     label = card_name(card)
     if card.is_number:
         face = f'number-face s-{card.suit.value}'
@@ -55,7 +55,6 @@ def card_html(card: Card, size: str = 'md', chosen: Suit | None = None) -> str:
         art = '<span class="special-art"></span>'
         if card.needs_suit_choice and chosen is not None:
             label += f' as {SUIT_LABEL[chosen]}'
-            art += f'<span class="chosen-suit s-{chosen.value}">{suit_icon(chosen)}</span>'
     return (f'<div class="card card--{size} {face}" role="img" aria-label="{label}" title="{label}">'
             f'{art}<span class="card-rank">{rank}</span></div>')
 

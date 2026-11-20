@@ -89,19 +89,18 @@ def _seat_html(v: dict, index: int, lobby: Lobby) -> str:
 
 
 def _trump_html(v: dict) -> str:
-    """Top left: the revealed card and, next to it, a single-suit card showing the trump suit."""
-    card = v['trump_card']
-    face = card_html(card, 'sm') if card else '<div class="card card--sm empty"></div>'
+    """Show the current trump suit or the status while it is being chosen."""
+    symbol = ''
     if v['phase'] in ('werewolf', 'choosing_trump'):
-        suit, colour = 'Choosing…', '<div class="card card--md suitcard pending"><span class="num">?</span></div>'
+        status = 'Choosing…'
     elif v['trump']:
-        suit = SUIT_LABEL[v['trump']]
-        colour = (f'<div class="card card--md suitcard s-{v["trump"].value}" title="Trump: {suit}">'
-                  f'{suit_icon(v["trump"])}<span class="lbl">{suit}</span></div>')
+        trump = v['trump']
+        status = SUIT_LABEL[trump]
+        symbol = f'<span class="trump-symbol s-{trump.value}">{suit_icon(trump)}</span>'
     else:
-        suit, colour = 'No trump', '<div class="card card--md suitcard none"><span class="lbl">No trump</span></div>'
-    return (f'<div class="trump"><div class="trumpcards">{face}{colour}</div>'
-            f'<span class="tl">Trump</span><span class="ts">{suit}</span></div>')
+        status = 'No trump'
+    return (f'<div class="trump"><span class="tl">Trump</span>{symbol}'
+            f'<span class="ts">{status}</span></div>')
 
 
 def _lead_html(v: dict) -> str:
@@ -149,6 +148,8 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
         note = ''
         if play.card.needs_role_choice:
             note = f'<span class="as">as {"Wizard" if play.as_wizard else "Jester"}</span>'
+        elif play.card.needs_suit_choice and play.suit is not None:
+            note = f'<span class="as">as {SUIT_LABEL[play.suit]}</span>'
         x, y = _slot_position(v, play.player)
         enter, start = '', ''
         if seen is not None and play.card.id not in seen:
