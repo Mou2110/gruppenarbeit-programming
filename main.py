@@ -79,7 +79,8 @@ async def lobby(code: str) -> None:
 # Persist game state: online in the database (DATABASE_URL), locally in data/prophecy.db.
 store = make_store(BASE)
 app.on_startup(lambda: registry.attach_store(store))
-app.on_shutdown(store.flush)
+# lambda: NiceGUI would otherwise pass the app itself as the first argument (the timeout).
+app.on_shutdown(lambda: store.flush())
 
 # Advance all lobbies regularly (bots take turns, pauses end) and save changes.
 app.timer(0.25, registry.tick_all)
