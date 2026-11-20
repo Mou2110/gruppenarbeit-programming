@@ -107,3 +107,70 @@ def test_deleted_lobby_is_removed_from_store(tmp_path):
     store.flush()
     assert lobby.code not in registry.lobbies
     assert lobby.code not in store.load_lobbies()
+
+
+def finished_game_with_marta(tmp_path, during_game):
+    """Erik and Marta (both logged in) play with two bots until the end.
+
+    during_game(lobby) runs right after the start, e.g. to let Marta leave.
+    """
+    registry, lobby, clock, store = started_registry(tmp_path)
+    lobby.members[0].id = lobby.game.players[0].id = 'acct:erik'
+    lobby.host_id = 'acct:erik'
+    lobby.members[1].id = lobby.game.players[1].id = 'acct:marta'   # a bot seat becomes Marta's
+    lobby.members[1].name = lobby.game.players[1].name = 'Marta'
+    lobby.members[1].is_bot = False
+    during_game(lobby)
+    lobby.anyone_online = lambda: True                 # for the test: bots move for everyone
+    lobby._plays_automatically = lambda member_id: True
+    assert run_until(registry, clock, lambda: lobby.game.phase == Phase.GAME_OVER)
+    registry.tick_all()
+    store.flush()
+    return lobby, store
+
+
+def test_player_who_leaves_during_the_game_is_recorded_in_last_place(tmp_path):
+    lobby, store = finished_game_with_marta(tmp_path, lambda lobby: lobby.leave('acct:marta'))
+    results = store.results_for('marta')
+    assert len(results) == 1                           # leaving no longer skips the result
+    assert results[0]['place'] == results[0]['players'] == 4
+    assert results[0]['name'] == 'Marta'
+    assert len(store.results_for('erik')) == 1
+
+
+def test_real_bots_still_get_no_result(tmp_path):
+    lobby, store = finished_game_with_marta(tmp_path, lambda lobby: lobby.leave('acct:marta'))
+    players = store.finished_games()[0]['players']
+    bots = [p for p in players if p['name'] not in ('Erik', 'Marta')]
+    assert len(bots) == 2
+    assert all(p['bot'] and p['account'] is None for p in bots)
+    marta = next(p for p in players if p['name'] == 'Marta')
+    assert not marta['bot'] and marta['account'] == 'marta'
+
+
+def test_player_who_was_only_away_for_a_while_keeps_their_real_place(tmp_path):
+    def away_and_back(lobby):
+        lobby.connect('acct:marta')
+        lobby.disconnect('acct:marta')
+        lobby.clock.now += 60                          # gone for a minute (crash, reload, break)
+        assert lobby.is_absent('acct:marta')
+        lobby.connect('acct:marta')                    # and back again
+
+    lobby, store = finished_game_with_marta(tmp_path, away_and_back)
+    scores = {p.name: p.score for p in lobby.game.players}
+    expected = 1 + sum(score > scores['Marta'] for score in scores.values())
+    assert store.results_for('marta')[0]['place'] == expected
+
+
+def test_leavers_rank_behind_everyone_else(tmp_path):
+    store = SqliteStore(tmp_path / 'db.sqlite')
+    store.record_game('ABCD', 15, [
+        {'name': 'Erik', 'score': 120, 'account': 'erik', 'correct': 9, 'left': True},
+        {'name': 'Marta', 'score': 80, 'account': 'marta', 'correct': 7},
+        {'name': 'Rui', 'score': 40, 'account': 'rui', 'correct': 5},
+    ])
+    store.flush()
+    # Erik had the most points, but left: he is last, and the others move up one place.
+    assert store.results_for('erik')[0]['place'] == 3
+    assert store.results_for('marta')[0]['place'] == 1
+    assert store.results_for('rui')[0]['place'] == 2
