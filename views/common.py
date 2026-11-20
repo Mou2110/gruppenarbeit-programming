@@ -31,6 +31,18 @@ def esc(text: object) -> str:
     return html.escape(str(text))
 
 
+class BrowserGone(Exception):
+    """The browser left before the page was connected, e.g. a link preview or a tab closed right away."""
+
+
+async def wait_for_browser() -> None:
+    """Wait until the browser is connected. Raises BrowserGone if it never connects."""
+    client = ui.context.client
+    await client.connected()
+    if not client.has_socket_connection:
+        raise BrowserGone()
+
+
 async def player_id() -> str:
     """Who is using this tab? Signed in: the account ID (the same on every device).
     As a guest: a fixed ID for this browser tab, which persists after reloads.
@@ -43,7 +55,7 @@ async def player_id() -> str:
 
 async def guest_id() -> str:
     """The guest ID for this browser tab."""
-    await ui.context.client.connected()
+    await wait_for_browser()
     storage = app.storage.tab
     if 'player_id' not in storage:
         # The ID is also stored in the browser tab (sessionStorage). This lets the game recognize you
@@ -68,7 +80,7 @@ def _store():
 
 async def current_account() -> tuple[str, str] | None:
     """(key, username) if someone is signed in on this browser, otherwise None."""
-    await ui.context.client.connected()
+    await wait_for_browser()
     storage = app.storage.tab
     if 'account' not in storage:
         account = None
