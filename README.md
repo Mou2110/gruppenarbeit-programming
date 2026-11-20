@@ -4,7 +4,7 @@ A digital multiplayer trick-taking card game based on the rules of *Wizard* (25t
 including special cards – built with Python and NiceGUI. Playable online via Render; game states and
 accounts are stored in a Supabase (PostgreSQL) database.
 
-**Live app:** TODO: add the Render URL here
+**Live app:** https://prophecy-game.onrender.com (free Render plan: the first visit after a break can take up to a minute)
 
 ## Team
 
