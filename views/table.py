@@ -18,7 +18,7 @@ from game.engine import GameError
 from game.lobby import Lobby
 from game.rules import Play, lead_suit, trick_winner
 
-from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_icon
+from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_emblem, suit_icon
 from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 
 ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
@@ -89,19 +89,20 @@ def _seat_html(v: dict, index: int, lobby: Lobby) -> str:
 
 
 def _trump_html(v: dict) -> str:
-    """Top left: the revealed card and, next to it, a single-suit card showing the trump suit."""
+    """Show the revealed card beside the current trump suit or selection status."""
     card = v['trump_card']
-    face = card_html(card, 'sm') if card else '<div class="card card--sm empty"></div>'
+    revealed = card_html(card, 'sm') if card is not None else ''
+    symbol = ''
     if v['phase'] in ('werewolf', 'choosing_trump'):
-        suit, colour = 'Choosing…', '<div class="card card--md suitcard pending"><span class="num">?</span></div>'
+        status = 'Choosing…'
     elif v['trump']:
-        suit = SUIT_LABEL[v['trump']]
-        colour = (f'<div class="card card--md suitcard s-{v["trump"].value}" title="Trump: {suit}">'
-                  f'{suit_icon(v["trump"])}<span class="lbl">{suit}</span></div>')
+        trump = v['trump']
+        status = SUIT_LABEL[trump]
+        symbol = f'<span class="trump-symbol s-{trump.value}">{suit_emblem(trump)}</span>'
     else:
-        suit, colour = 'No trump', '<div class="card card--md suitcard none"><span class="lbl">No trump</span></div>'
-    return (f'<div class="trump"><div class="trumpcards">{face}{colour}</div>'
-            f'<span class="tl">Trump</span><span class="ts">{suit}</span></div>')
+        status = 'No trump'
+    return (f'<div class="trump-display">{revealed}<div class="trump">'
+            f'<span class="tl">Trump</span>{symbol}<span class="ts">{status}</span></div></div>')
 
 
 def _lead_html(v: dict) -> str:

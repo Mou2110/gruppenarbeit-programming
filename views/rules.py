@@ -2,15 +2,12 @@
 
 from nicegui import ui
 
+from game.cards import Card, Kind, Suit
+
+from .cards import CARD_RANK, KIND_LABEL, card_html
 from .common import ICON_CLOSE, icon_button
 
-SUIT_CHIPS = ''.join(f'<span class="mini s-{s}">{name}</span>' for s, name in
-                     [('sea', 'Sea'), ('sardine', 'Sardine'), ('olive', 'Olive'), ('sun', 'Sun')])
-
 RULES = [
-    ('The cards', 'Four suits numbered 1 to 13, plus 4 Wizards and 4 Jesters. Wizards beat everything, '
-                  'Jesters lose everything. Neither has a suit.<div class="minis">' + SUIT_CHIPS +
-                  '<span class="mini k-wizard">Wizard</span><span class="mini k-jester">Jester</span></div>'),
     ('Rounds', 'Round 1 deals one card each, round 2 two cards, and so on: 20 rounds with 3 players, '
                '15 with 4, 12 with 5 and 10 with 6.'),
     ('Trump', 'After dealing, the next card is turned up and its suit is trump. A Jester means no trump, '
@@ -28,22 +25,34 @@ RULES = [
 ]
 
 SPECIALS = [
-    ('k-shift', 'Shapeshifter', 'Play it as a Wizard or as a Jester, your choice.'),
-    ('k-dragon', 'Dragon', 'Beats every card, even Wizards. Only the Fairy beats it.'),
-    ('k-fairy', 'Fairy', 'The lowest card, but it wins any trick that holds the Dragon.'),
-    ('k-bomb', 'Bomb', 'Nobody gets the trick it lands in. Whoever would have won leads next.'),
-    ('k-multi', 'Juggler 7½', 'Counts in a suit you pick. After its trick, everyone passes one card to the left.'),
-    ('k-multi', 'Cloud 9¾', 'Counts in a suit you pick. Whoever wins its trick must change their bid by one right away.'),
-    ('k-wolf', 'Werewolf', 'Swap it for the trump card before bidding and choose the trump yourself.'),
+    (Kind.SHAPESHIFTER, 'Play it as a Wizard or as a Jester, your choice.'),
+    (Kind.DRAGON, 'Beats every card, even Wizards. Only the Fairy beats it.'),
+    (Kind.FAIRY, 'The lowest card, but it wins any trick that holds the Dragon.'),
+    (Kind.BOMB, 'Nobody gets the trick it lands in. Whoever would have won leads next.'),
+    (Kind.JUGGLER, 'Counts in a suit you pick. After its trick, everyone passes one card to the left.'),
+    (Kind.CLOUD, 'Counts in a suit you pick. Whoever wins its trick must change their bid by one right away.'),
+    (Kind.WEREWOLF, 'Swap it for the trump card before bidding and choose the trump yourself.'),
 ]
 
 
 def rules_content() -> str:
     """Render the full rules reference, including special cards."""
+    examples = [Card(f'{suit.value}-12', Kind.NUMBER, suit, 12) for suit in Suit]
+    examples.extend(Card(kind.value, kind) for kind in (Kind.WIZARD, Kind.JESTER))
+    faces = ''.join(card_html(card, 'sm') for card in examples)
+    deck = ('<div class="rule"><h3>The cards</h3><p>Four suits numbered 1 to 13, plus 4 Wizards and 4 Jesters. '
+            'Wizards usually win and Jesters usually lose. Neither has a suit.</p>'
+            f'<div class="rule-card-samples">{faces}</div></div>')
+
     rules = ''.join(f'<div class="rule"><h3>{title}</h3><p>{text}</p></div>' for title, text in RULES)
-    specials = ''.join(f'<div class="spec"><span class="swatch {css}"></span><p><b>{name}</b> · {text}</p></div>'
-                       for css, name, text in SPECIALS)
-    return f'{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}</div>'
+    specials = []
+    for kind, text in SPECIALS:
+        card = Card(kind.value, kind)
+        name = KIND_LABEL[kind]
+        if card.needs_suit_choice:
+            name += f' {CARD_RANK[kind]}'
+        specials.append(f'<div class="spec">{card_html(card, "sm")}<p><b>{name}</b> · {text}</p></div>')
+    return f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{"".join(specials)}</div>'
 
 
 def game_rules_dialog() -> ui.dialog:
