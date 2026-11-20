@@ -13,7 +13,7 @@ from .cards import card_html
 from .common import (
     ICON_CLOSE, button, current_account, esc, icon_button, page_frame, player_id, remembered_name, sign_in, sign_out,
 )
-from .rules import rules_content
+from .rules import rules_toggle
 
 HERO = (card_html(Card('sea-13', Kind.NUMBER, Suit.SEA, 13), 'md'),
         card_html(Card('wizard-1', Kind.WIZARD), 'md'),
@@ -204,6 +204,4 @@ async def start_page() -> None:
         ui.html(f'<h2 class="h2">How it works</h2><div class="steps">{steps}</div>', sanitize=False) \
             .classes('section plain')
 
-        ui.html('<h2>Rules</h2><p class="rules-hint">Open a topic to read it.</p>'
-                f'<div class="rulegrid">{rules_content(collapsible=True)}</div>', sanitize=False) \
-            .classes('panel rules')
+        ui.html(rules_toggle(), sanitize=False).classes('panel rules')

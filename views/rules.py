@@ -32,39 +32,40 @@ SPECIALS = [
     (Kind.JUGGLER, 'Counts in a suit you pick. After its trick, everyone passes one card to the left.'),
     (Kind.CLOUD, 'Counts in a suit you pick. Whoever wins its trick must change their bid by one right away.'),
     (Kind.WEREWOLF, 'Swap it for the trump card before bidding and choose the trump yourself.'),
-    (Kind.CR7, 'Our bonus joke card, off unless the host adds it. Always wins the trick, even against the Dragon. '
-               'Only the Bomb stops him. Siuuu!'),
+]
+
+BONUS = [
+    (Kind.CR7, 'Always wins.'),
 ]
 
 
-def _section(title: str, body: str, collapsible: bool) -> str:
-    """One rule section. collapsible: a <details> element that opens and closes with a click (no JavaScript)."""
-    if collapsible:
-        return f'<details class="rule"><summary><h3>{title}</h3></summary>{body}</details>'
-    return f'<div class="rule"><h3>{title}</h3>{body}</div>'
+def _card_row(kind: Kind, text: str) -> str:
+    card = Card(kind.value, kind)
+    name = KIND_LABEL[kind]
+    if card.needs_suit_choice:
+        name += f' {CARD_RANK[kind]}'
+    return f'<div class="spec">{card_html(card, "sm")}<p><b>{name}</b> · {text}</p></div>'
 
 
-def rules_content(collapsible: bool = False) -> str:
-    """Render the full rules reference, including special cards.
-
-    collapsible=True (start page): every section starts closed and opens with a click.
-    """
+def rules_content() -> str:
+    """Render the full rules reference, including special cards and the bonus card."""
     examples = [Card(f'{suit.value}-12', Kind.NUMBER, suit, 12) for suit in Suit]
     examples.extend(Card(kind.value, kind) for kind in (Kind.WIZARD, Kind.JESTER))
     faces = ''.join(card_html(card, 'sm') for card in examples)
-    deck = _section('The cards', '<p>Four suits numbered 1 to 13, plus 4 Wizards and 4 Jesters. '
-                    'Wizards usually win and Jesters usually lose. Neither has a suit.</p>'
-                    f'<div class="rule-card-samples">{faces}</div>', collapsible)
+    deck = ('<div class="rule"><h3>The cards</h3><p>Four suits numbered 1 to 13, plus 4 Wizards and 4 Jesters. '
+            'Wizards usually win and Jesters usually lose. Neither has a suit.</p>'
+            f'<div class="rule-card-samples">{faces}</div></div>')
+    rules = ''.join(f'<div class="rule"><h3>{title}</h3><p>{text}</p></div>' for title, text in RULES)
+    specials = ''.join(_card_row(kind, text) for kind, text in SPECIALS)
+    bonus = ''.join(_card_row(kind, text) for kind, text in BONUS)
+    return (f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}</div>'
+            f'<div class="rule"><h3>Bonus card</h3>{bonus}</div>')
 
-    rules = ''.join(_section(title, f'<p>{text}</p>', collapsible) for title, text in RULES)
-    specials = []
-    for kind, text in SPECIALS:
-        card = Card(kind.value, kind)
-        name = KIND_LABEL[kind]
-        if card.needs_suit_choice:
-            name += f' {CARD_RANK[kind]}'
-        specials.append(f'<div class="spec">{card_html(card, "sm")}<p><b>{name}</b> · {text}</p></div>')
-    return f'{deck}{rules}{_section("Special cards (optional)", "".join(specials), collapsible)}'
+
+def rules_toggle() -> str:
+    """Start page: all rules in one block that starts closed and opens with a click (no JavaScript)."""
+    return ('<details class="rules-toggle"><summary><h2>Rules</h2></summary>'
+            f'<div class="rulegrid">{rules_content()}</div></details>')
 
 
 def game_rules_dialog() -> ui.dialog:

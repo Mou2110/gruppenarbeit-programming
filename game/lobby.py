@@ -47,6 +47,7 @@ class Settings:
     special_cards: list[Kind] = field(default_factory=lambda: list(SPECIAL_KINDS))  # bonus cards start switched off
     clairvoyance: bool = True       # clairvoyance in round 1
     no_matching_bids: bool = True   # bids must not add up to the number of tricks
+    turn_timer: bool = True         # time limit per move (TURN_LIMIT); older saved lobbies get the default
 
 
 CHAT_MAX = 200     # characters per message
@@ -307,7 +308,8 @@ class Lobby:
         self._changed()
 
     def update_settings(self, by: str, *, special_cards: list[Kind] | None = None,
-                        clairvoyance: bool | None = None, no_matching_bids: bool | None = None) -> None:
+                        clairvoyance: bool | None = None, no_matching_bids: bool | None = None,
+                        turn_timer: bool | None = None) -> None:
         """Change the settings (host only). Afterwards everyone has to press "Ready" again."""
         self._require_host(by)
         self._require_waiting()
@@ -317,6 +319,8 @@ class Lobby:
             self.settings.clairvoyance = clairvoyance
         if no_matching_bids is not None:
             self.settings.no_matching_bids = no_matching_bids
+        if turn_timer is not None:
+            self.settings.turn_timer = turn_timer
         for member in self.humans():
             member.ready = False
         self._changed()
@@ -456,7 +460,7 @@ class Lobby:
 
     def seconds_left(self) -> float | None:
         """How long the humans in waiting_on() still have. None if the game is not waiting for a human."""
-        if self.game is None or self.is_paused() or not self.waiting_on():
+        if self.game is None or not self.settings.turn_timer or self.is_paused() or not self.waiting_on():
             return None
         return min(TURN_LIMIT, TURN_LIMIT - (self.clock() - self.turn_started))
 

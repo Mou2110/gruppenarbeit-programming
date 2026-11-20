@@ -137,7 +137,7 @@ def trick_winner(trick: Sequence[Play | Card], trump: Suit | None) -> int:
         raise ValueError('An empty trick has no winner.')
     kinds = [p.acts_as for p in plays]
 
-    if Kind.CR7 in kinds:              # our bonus card beats everything (with a Bomb nobody gets the trick)
+    if Kind.CR7 in kinds:              # our bonus card always wins, even against the Bomb
         return kinds.index(Kind.CR7)
 
     if Kind.DRAGON in kinds:
@@ -167,5 +167,6 @@ def trick_winner(trick: Sequence[Play | Card], trump: Suit | None) -> int:
 
 
 def trick_has_bomb(trick: Sequence[Play | Card]) -> bool:
-    """True if the Bomb is in the trick: then nobody gets the trick."""
-    return any(p.card.kind == Kind.BOMB for p in _as_plays(trick))
+    """True if the Bomb is in the trick: then nobody gets the trick. Our bonus card CR7 even beats the Bomb."""
+    kinds = [p.card.kind for p in _as_plays(trick)]
+    return Kind.BOMB in kinds and Kind.CR7 not in kinds

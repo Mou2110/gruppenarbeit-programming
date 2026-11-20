@@ -178,6 +178,10 @@ async def lobby_page(code: str) -> None:
                 button('Clairvoyance in round 1', partial(run, lobby.update_settings, pid, clairvoyance=not on),
                        cls='chipbtn' + (' on' if on else ''), icon=ICON_CHECK if on else None,
                        disabled=not is_host, marker='setting')
+                on = settings.turn_timer
+                button('2 minutes per move', partial(run, lobby.update_settings, pid, turn_timer=not on),
+                       cls='chipbtn' + (' on' if on else ''), icon=ICON_CHECK if on else None,
+                       disabled=not is_host, marker='setting')
 
     @ui.refreshable
     def ready_part() -> None:

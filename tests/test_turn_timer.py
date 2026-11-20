@@ -148,3 +148,44 @@ def test_a_restored_lobby_gives_the_full_time_again():
     before = progress(lobby)
     wait(lobby, clock, TURN_LIMIT - 5)
     assert progress(lobby) == before
+
+
+def test_the_time_limit_is_on_by_default():
+    lobby, clock = started_game()
+    assert lobby.settings.turn_timer is True
+
+
+def test_the_host_can_switch_the_time_limit_off_and_then_the_game_waits():
+    clock = FakeClock()
+    registry = LobbyRegistry(clock=clock)
+    lobby = registry.create('host', 'Erik')
+    lobby.join('p2', 'Marta')
+    for member_id in ('host', 'p2'):
+        lobby.connect(member_id)
+    lobby.add_bot('host')
+    lobby.update_settings('host', turn_timer=False)
+    lobby.set_ready('host', True)
+    lobby.set_ready('p2', True)
+    until_a_human_must_move(lobby, clock)
+    before = progress(lobby)
+    wait(lobby, clock, 3 * TURN_LIMIT, step=5.0)
+    assert progress(lobby) == before                   # no time limit: the game waits
+    assert lobby.turn_timer() is None                  # and no countdown is shown
+
+
+def test_only_the_host_can_change_the_time_limit():
+    import pytest
+    from game.lobby import LobbyError
+    lobby = LobbyRegistry(clock=FakeClock()).create('host', 'Erik')
+    lobby.join('p2', 'Marta')
+    with pytest.raises(LobbyError):
+        lobby.update_settings('p2', turn_timer=False)
+    assert lobby.settings.turn_timer is True
+
+
+def test_lobbies_saved_before_the_setting_existed_have_the_time_limit_on():
+    import pickle
+    lobby, clock = started_game()
+    del lobby.settings.__dict__['turn_timer']          # like an old saved lobby
+    restored = pickle.loads(pickle.dumps(lobby))
+    assert restored.settings.turn_timer is True

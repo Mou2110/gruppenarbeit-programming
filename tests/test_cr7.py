@@ -1,4 +1,4 @@
-"""Tests for the bonus joke card CR7: it always wins the trick (only the Bomb stops it).
+"""Tests for the bonus joke card CR7: it always wins the trick, even against the Bomb.
 
 It is optional and switched off by default; the host can add it in the lobby settings.
 """
@@ -49,10 +49,20 @@ def test_cr7_beats_a_shapeshifter_played_as_wizard():
     assert trick_winner([shapeshifter, Play(1, CR7)], trump=None) == 1
 
 
-def test_only_the_bomb_stops_cr7():
-    trick = [CR7, BOMB, JESTER]
-    assert trick_has_bomb(trick)                     # nobody gets the trick ...
-    assert trick_winner(trick, trump=None) == 0      # ... and CR7's player leads next
+def test_not_even_the_bomb_stops_cr7():
+    trick = [BOMB, CR7, JESTER]
+    assert not trick_has_bomb(trick)                 # the Bomb has no effect: CR7's player gets the trick
+    assert trick_winner(trick, trump=None) == 1
+
+
+def test_without_cr7_the_bomb_still_works():
+    assert trick_has_bomb([BOMB, WIZARD, JESTER])
+
+
+def test_the_table_does_not_show_the_trick_as_bombed_when_cr7_is_in_it():
+    from views.table import trick_bombed
+    assert not trick_bombed([Play(0, BOMB), Play(1, CR7)])
+    assert trick_bombed([Play(0, BOMB), Play(1, WIZARD)])
 
 
 def test_after_cr7_is_led_everyone_may_play_anything():
