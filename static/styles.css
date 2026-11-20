@@ -633,3 +633,13 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   .hand { min-height: 122px; padding-top: 14px; }
   .tbl:has(.board) .a-left, .tbl:has(.board) .a-right { padding-top: 16px; }
 }
+
+/* Time limit: countdown in the last 30 seconds of a move (bottom right, above the chat) */
+.turntimer { position: fixed; right: 16px; bottom: calc(var(--chat-h) + 12px); z-index: 30; padding: 8px 14px; border-radius: 999px;
+  background: #18284F; border: 1px solid #3A4C7A; color: #fff; font-size: 13px; box-shadow: 0 4px 12px rgba(0,0,0,.35); }
+.turntimer b { font-variant-numeric: tabular-nums; }
+.turntimer.mine { background: #F2C14E; border-color: #F2C14E; color: #1B1B1B; }
+@media (max-width: 600px) {  /* phone: compact, inside the chat row next to the send button, so no card is covered */
+  .turntimer { bottom: 8px; right: 58px; z-index: 41; padding: 6px 10px; box-shadow: none; }
+  .turntimer .long { display: none; }
+}

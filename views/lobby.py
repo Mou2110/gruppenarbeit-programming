@@ -217,6 +217,31 @@ async def lobby_page(code: str) -> None:
     def table_part(open_rules: Callable[[], None]) -> None:
         render_table(lobby, pid, state, table_part.refresh, open_rules)
 
+    def turn_timer() -> None:
+        """Bottom right: a countdown in the last 30 seconds of a move, so nobody waits forever."""
+        label = ui.html('', sanitize=False).classes('turntimer').mark('turn-timer')
+        label.set_visibility(False)
+
+        def update() -> None:
+            timer = lobby.turn_timer()
+            if timer is None:
+                label.set_visibility(False)
+                return
+            who, seconds = timer
+            if pid in who:
+                text = f'<b>0:{seconds:02d}</b><span class="long"> left for your move</span>'
+            else:
+                names = ', '.join(esc(m.name) for m in lobby.members if m.id in who)
+                text = f'<span class="long">{names}: </span><b>0:{seconds:02d}</b>'
+            label.set_content(text)
+            if pid in who:
+                label.classes(add='mine')
+            else:
+                label.classes(remove='mine')
+            label.set_visibility(True)
+
+        ui.timer(1.0, update)
+
     @ui.refreshable
     def content() -> None:
         state['mode'] = mode()
@@ -225,6 +250,7 @@ async def lobby_page(code: str) -> None:
                 # Keep the open dialog outside the table refreshed by moves and bot turns.
                 rules = game_rules_dialog()
                 table_part(rules.open)
+                turn_timer()
             else:
                 waiting_room()
 

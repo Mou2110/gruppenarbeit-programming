@@ -154,10 +154,11 @@ def test_absent_player_is_waited_for_and_no_bot_takes_over(specials):
     game = lobby.game
     assert game is not None
     lobby.disconnect('host')                 # Erik gets something to eat, Marta stays online
-    for _ in range(2000):
+    for _ in range(200):                     # 100 seconds: less than the time limit per move (TURN_LIMIT)
         clock.now += 0.5
         registry.tick_all()
     # No bot moved for Erik: the game stops as soon as it is Erik's (or the waiting Marta's) turn.
+    # (Only after TURN_LIMIT a bot makes that one move for him, see test_turn_timer.py.)
     assert game.round_number == 1
     assert game.players[game.current].id in ('host', 'p2') or game.phase == Phase.PASSING
     assert lobby.is_absent('host') and not lobby.member('host').is_bot

@@ -26,6 +26,8 @@ BOT_NAMES = ['Marta', 'Joana', 'Tiago', 'Inês', 'Rui', 'Sofia']
 BOT_DELAY = 0.9       # seconds between two automatic moves
 TRICK_PAUSE = 1.6     # how long a finished trick stays visible to everyone
 ABSENT_GRACE = 5.0    # how long someone may be offline (e.g. reloading the page) before they count as "away"
+TURN_LIMIT = 120.0    # seconds a human has for a move; then a bot makes this one move for them
+TIMER_SHOWN = 30.0    # the countdown only appears in the last seconds, so nobody feels rushed
 
 
 class LobbyError(Exception):
@@ -76,6 +78,7 @@ class Lobby:
         self.clock = clock
         self.pause_until = 0.0
         self.next_auto_at = 0.0
+        self.turn_started = 0.0                      # when the game started waiting for the current move
         self.votes: set[str] = set()                 # who pressed "continue" after the round
         self.left: set[str] = set()                  # who left the running game for good (counts as last)
         self.connections: dict[str, int] = {}        # open browser tabs per player
@@ -131,6 +134,7 @@ class Lobby:
         self.__dict__.setdefault('chat', [])          # lobbies that were saved before the chat existed
         self.__dict__.setdefault('chat_count', len(self.chat))
         self.__dict__.setdefault('left', set())       # lobbies that were saved before leavers were tracked
+        self.__dict__.setdefault('turn_started', 0.0)  # lobbies that were saved before the time limit
 
     def restored(self, clock: Callable[[], float]) -> 'Lobby':
         """After loading: reset the times. Everyone first gets time to reconnect."""
@@ -139,6 +143,7 @@ class Lobby:
         self.created = now
         self.pause_until = 0.0
         self.next_auto_at = now + BOT_DELAY
+        self.turn_started = now                      # after a restart everyone gets the full time again
         self.last_seen = {m.id: now for m in self.members}
         return self
 
@@ -342,6 +347,7 @@ class Lobby:
         self.left = set()
         self.pause_until = 0.0
         self.next_auto_at = self.clock() + BOT_DELAY
+        self.turn_started = self.clock()
         self._changed()
 
     # ------------------------------------------------------------ Game
@@ -381,6 +387,7 @@ class Lobby:
             self.next_auto_at = self.pause_until
         else:
             self.next_auto_at = now + BOT_DELAY
+        self.turn_started = max(now, self.pause_until)  # the next move gets the full time
 
     def vote_continue(self, member_id: str) -> None:
         """After a round: once everyone has pressed "continue", the game goes on."""
@@ -402,6 +409,7 @@ class Lobby:
         if game.phase == Phase.ROUND_OVER:
             game.next_round()
             self.next_auto_at = self.clock() + BOT_DELAY
+            self.turn_started = self.clock()
         else:
             self.game = None  # back to the waiting room
             for member in self.humans():
@@ -426,12 +434,52 @@ class Lobby:
                 changed = True
             elif self._check_votes():
                 changed = True
+            elif self._time_is_up():
+                changed = True
         if changed:
             self._changed()
         return changed
 
-    def _auto_move(self) -> bool:
-        """Makes a move for a bot or absent player if it is their turn."""
+    # ------------------------------------------------------------ Time limit
+
+    def waiting_on(self) -> list[str]:
+        """The humans the game is waiting for right now (their move, or "continue" after a round)."""
+        game = self.game
+        if game is None:
+            return []
+        if game.phase in (Phase.ROUND_OVER, Phase.GAME_OVER):
+            return [m.id for m in self.waiting_for_votes()]
+        if game.phase == Phase.PASSING:
+            return [p.id for p in game.players if game.must_pass(p.id) and not self._plays_automatically(p.id)]
+        player_id = game.players[game.current].id
+        return [] if self._plays_automatically(player_id) else [player_id]
+
+    def seconds_left(self) -> float | None:
+        """How long the humans in waiting_on() still have. None if the game is not waiting for a human."""
+        if self.game is None or self.is_paused() or not self.waiting_on():
+            return None
+        return min(TURN_LIMIT, TURN_LIMIT - (self.clock() - self.turn_started))
+
+    def turn_timer(self) -> tuple[list[str], int] | None:
+        """What the countdown shows: who is running out of time and how many seconds are left.
+        Only in the last TIMER_SHOWN seconds; before that, nobody is put under pressure."""
+        left = self.seconds_left()
+        if left is None or left > TIMER_SHOWN:
+            return None
+        return self.waiting_on(), max(0, round(left))
+
+    def _time_is_up(self) -> bool:
+        """Time over: a bot makes this one move, or "continue" is pressed for whoever has not pressed it."""
+        left = self.seconds_left()
+        if left is None or left > 0:
+            return False
+        if self.game.phase in (Phase.ROUND_OVER, Phase.GAME_OVER):
+            self.votes |= set(self.waiting_on())
+            return self._check_votes()
+        return self._auto_move(force=True)
+
+    def _auto_move(self, force: bool = False) -> bool:
+        """Makes a move for a bot if it is their turn. force=True: also for a human whose time is up."""
         game = self.game
         phase = game.phase
         if phase in (Phase.ROUND_OVER, Phase.GAME_OVER):
@@ -440,7 +488,7 @@ class Lobby:
         if phase == Phase.PASSING:
             moved = False
             for player in game.players:
-                if game.must_pass(player.id) and self._plays_automatically(player.id):
+                if game.must_pass(player.id) and (force or self._plays_automatically(player.id)):
                     game.pass_card(player.id, bots.choose_pass(game.view_for(player.id)))
                     moved = True
             if moved:
@@ -448,7 +496,7 @@ class Lobby:
             return moved
 
         player = game.players[game.current]
-        if not self._plays_automatically(player.id):
+        if not (force or self._plays_automatically(player.id)):
             return False
         view = game.view_for(player.id)
         if phase in (Phase.WEREWOLF, Phase.CHOOSING_TRUMP):
