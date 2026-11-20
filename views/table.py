@@ -89,7 +89,9 @@ def _seat_html(v: dict, index: int, lobby: Lobby) -> str:
 
 
 def _trump_html(v: dict) -> str:
-    """Show the current trump suit or the status while it is being chosen."""
+    """Show the revealed card beside the current trump suit or selection status."""
+    card = v['trump_card']
+    revealed = card_html(card, 'sm') if card is not None else ''
     symbol = ''
     if v['phase'] in ('werewolf', 'choosing_trump'):
         status = 'Choosing…'
@@ -99,8 +101,8 @@ def _trump_html(v: dict) -> str:
         symbol = f'<span class="trump-symbol s-{trump.value}">{suit_emblem(trump)}</span>'
     else:
         status = 'No trump'
-    return (f'<div class="trump"><span class="tl">Trump</span>{symbol}'
-            f'<span class="ts">{status}</span></div>')
+    return (f'<div class="trump-display">{revealed}<div class="trump">'
+            f'<span class="tl">Trump</span>{symbol}<span class="ts">{status}</span></div></div>')
 
 
 def _lead_html(v: dict) -> str:
