@@ -43,7 +43,9 @@ def _hero_actions() -> ui.element:
     """Render the portrait and introduction, then return their action container."""
     with ui.element('section').classes('prophecy-splash').props('aria-labelledby=prophecy-title'):
         ui.html(
-            '<img src="/static/prophet/lowered.jpg" alt="" fetchpriority="high">',
+            '<img src="/static/prophet/lowered.jpg" alt="" fetchpriority="high">'
+            '<img class="prophet-lifted" src="/static/prophet/lifted.jpg" alt="" decoding="async">'
+            '<canvas class="prophet-motion-canvas" width="896" height="1120"></canvas>',
             sanitize=False,
         ).classes('prophecy-portrait').props('aria-hidden=true')
         ui.html(''.join(HERO), sanitize=False).classes('herocards prophecy-deck').props('aria-hidden=true')
@@ -217,3 +219,7 @@ async def start_page() -> None:
             .classes('section plain')
 
         ui.html(rules_toggle(), sanitize=False).classes('panel rules')
+        ui.context.client.run_javascript(
+            "import('/static/prophet/motion.js').then(({animatePortrait}) => "
+            "animatePortrait(document.querySelector('.prophecy-splash'))).catch(() => {})"
+        )

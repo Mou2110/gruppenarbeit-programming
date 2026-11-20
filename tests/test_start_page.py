@@ -30,6 +30,8 @@ def test_start_page_keeps_the_game_actions_beside_decorative_artwork(monkeypatch
             portrait, = user.find(kind=ui.html, content='/static/prophet/lowered.jpg').elements
             assert portrait.props['aria-hidden'] == 'true'
             assert 'alt=""' in portrait.content
+            assert 'src="/static/prophet/lifted.jpg" alt=""' in portrait.content
+            assert '<canvas class="prophet-motion-canvas"' in portrait.content
             cards, = user.find(kind=ui.html, content='aria-label="Sea 13"').elements
             for label in ('Sea 13', 'Wizard', 'Sardine 7'):
                 assert f'aria-label="{label}"' in cards.content
