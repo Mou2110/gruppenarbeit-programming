@@ -104,17 +104,65 @@ body { margin: 0; background: #18284F; }
 .card--md { width: 60px; height: 90px; --num: 28px; --ico: 17px; --idx: 12px; --lbl: 7px; }
 .card--lg { width: 72px; height: 108px; --num: 32px; --ico: 19px; --idx: 14px; --lbl: 8px; }
 .card .num { font-family: 'DM Serif Display', serif; font-size: var(--num); line-height: 1; }
-.card .idx { position: absolute; top: 5px; left: 6px; font-family: 'DM Serif Display', serif; font-size: var(--idx); line-height: 1; }
 .card .ico { width: var(--ico); height: var(--ico); }
-.card .ico.big { width: calc(var(--ico) * 1.7); height: calc(var(--ico) * 1.7); stroke-width: 1.5; }
 .card .lbl { font-size: var(--lbl); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.card--sm .idx, .card--sm .lbl { display: none; }
+.card--sm .lbl { display: none; }
 .card.empty { background: transparent; border-style: dashed; border-color: #7F8DB3; box-shadow: none; }
 
-.s-sea { background: #1F4FA8; }
-.s-sardine { background: #A8322A; }
-.s-olive { background: #3A6E35; }
-.s-sun { background: #8A5C00; }
+.s-sea { background: #1F4FA8; --suit-ink: #173E8A; --tile-position: 0 0; }
+.s-sardine { background: #A8322A; --suit-ink: #8A2A22; --tile-position: 100% 0; }
+.s-olive { background: #3A6E35; --suit-ink: #325629; --tile-position: 0 100%; }
+.s-sun { background: #8A5C00; --suit-ink: #795009; --tile-position: 100% 100%; }
+.card.number-face {
+  border: 1px solid var(--suit-ink); color: var(--suit-ink);
+  background: radial-gradient(ellipse at 50% 34%, #FFFAEE, #F0DFBF);
+}
+.number-face::before {
+  position: absolute; inset: 2px; border: 1px solid currentColor; border-radius: inherit;
+  opacity: .45; content: ''; pointer-events: none;
+}
+.suit-emblem {
+  position: relative; display: grid; place-items: center; width: 76%; aspect-ratio: 1;
+  border-radius: 28% 28% 34% 34%; overflow: hidden;
+}
+.suit-emblem::after {
+  position: absolute; inset: 0; content: '';
+  background: url("card-art/suit-tiles.jpg") var(--tile-position) / 200% 200% no-repeat;
+}
+.number-suit {
+  position: absolute; bottom: 4%; font-size: var(--lbl); font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+}
+.card-rank {
+  position: absolute; top: 3%; left: 3%; min-width: 24%; padding: 1px; box-sizing: border-box;
+  border-radius: 3px; color: #14203E; background: #FFF1D6; text-align: center;
+  font: 400 var(--idx)/1.1 'DM Serif Display', Georgia, serif; white-space: nowrap;
+}
+.number-face .card-rank { color: var(--suit-ink); background: #FFF7E4; }
+.card.special-face { border: 1px solid #B58A49; background: #18234B; }
+.special-art {
+  position: absolute; inset: 0;
+  background: url("card-art/special-cards.jpg") var(--art-position) / var(--art-size) no-repeat;
+}
+.special-face .card-rank { min-height: 17%; display: grid; place-items: center; }
+.art-juggler .card-rank, .art-cloud .card-rank { min-width: 37%; }
+.chosen-suit {
+  position: absolute; right: 4%; bottom: 14%; display: grid; place-items: center; z-index: 1;
+  border: 1px solid #FFF1D6; border-radius: 20%; padding: 2px; color: #fff;
+}
+.chosen-suit .ico { width: calc(var(--ico) * .8); height: calc(var(--ico) * .8); }
+
+/* Card rectangles in the 1536 by 1024 illustration atlas. */
+.art-wizard { --art-size: 538.95% 239.25%; --art-position: 26.06% 12.75%; }
+.art-jester { --art-size: 535.19% 239.25%; --art-position: 50.20% 12.75%; }
+.art-dragon { --art-size: 527.84% 238.69%; --art-position: 74.38% 12.61%; }
+.art-fairy { --art-size: 524.23% 239.25%; --art-position: 99.12% 12.75%; }
+.art-shapeshifter { --art-size: 524.23% 231.67%; --art-position: 0.97% 92.27%; }
+.art-bomb { --art-size: 540.85% 231.67%; --art-position: 25.80% 92.27%; }
+.art-werewolf { --art-size: 527.84% 231.67%; --art-position: 50.04% 92.27%; }
+.art-juggler { --art-size: 527.84% 231.67%; --art-position: 74.46% 92.27%; }
+.art-cloud { --art-size: 526.03% 231.67%; --art-position: 99.04% 92.27%; }
+
 .k-jester { background: #5E5F68; }
 .k-wizard {
   background-color: #4A5060;
@@ -534,7 +582,7 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   .tbl:has(.board) { --hand-cw: 60px; }
   .hand .card--lg { width: 60px; height: 90px; --num: 27px; --ico: 16px; --idx: 12px; --lbl: 7px; border-radius: 8px; }
   /* Move the corner number fully left so it remains readable with 20 overlapping cards */
-  .hand .card--lg .idx { left: 3px; top: 4px; font-size: 11px; letter-spacing: -.02em; }
+  .hand .card-rank { left: 1px; min-width: 0; font-size: 11px; letter-spacing: -.02em; }
   .hcard.playable { transform: translateY(-8px); }
   .hcard.picked { transform: translateY(-18px); }
   .trump .tl { font-size: 9px; }
