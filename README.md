@@ -45,6 +45,12 @@ pytest
 3. Commit, publish the branch and open a **pull request** into `main`.
 4. Merge once the others have reviewed it and all tests pass.
 
+## Card artwork
+
+The special-card illustrations and the four suit motifs are AI-generated artwork
+created for this project with OpenAI's image generation tool. The app adds card
+ranks and labels separately.
+
 ## Features
 
 - Wizard rules with the special cards Shapeshifter, Dragon, Fairy, Bomb, Werewolf, Juggler and Cloud
