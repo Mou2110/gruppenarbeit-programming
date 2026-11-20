@@ -175,11 +175,6 @@ body { margin: 0; background: #18284F; }
     radial-gradient(circle at 34% 90%, #fff 0 .7px, transparent 1.2px),
     radial-gradient(circle at 52% 12%, #fff 0 .9px, transparent 1.4px);
 }
-.zzz { display: flex; align-items: flex-end; font-family: 'DM Serif Display', serif; line-height: 1; }
-.zzz i { font-style: normal; }
-.zzz i:nth-child(1) { font-size: calc(var(--num) * .45); opacity: .75; }
-.zzz i:nth-child(2) { font-size: calc(var(--num) * .62); opacity: .9; margin-bottom: .15em; }
-.zzz i:nth-child(3) { font-size: calc(var(--num) * .85); margin-bottom: .35em; }
 .back {
   background-color: #1F3F8F;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='4.5' fill='none' stroke='%23ffffff' stroke-opacity='0.7' stroke-width='1'/%3E%3Cpath d='M10 7.5L12.5 10 10 12.5 7.5 10Z' fill='%23ffffff' fill-opacity='0.7'/%3E%3C/svg%3E");
@@ -226,25 +221,6 @@ body { margin: 0; background: #18284F; }
 .pos { color: #3A6E35; font-weight: 700; }
 .neg { color: #A8322A; font-weight: 700; }
 
-/* ===== Sonderkarten ===== */
-.k-dragon { background: #B8321F; }
-.k-dragon > *:not(.flames):not(.idx) { position: relative; }
-.card--md .band { font-size: 6px; letter-spacing: .02em; }
-.card .flames { position: absolute; left: 0; bottom: 0; width: 100%; height: 45%; }
-.k-fairy { background: #4A8ED0; }
-.k-bomb { background: #2A2A2E; }
-.k-wolf { background: #3F3D42; }
-.card .ico.wolf { width: calc(var(--ico) * 2.6); height: calc(var(--ico) * 1.7); }
-.k-multi { background: conic-gradient(#1F4FA8 0deg 90deg, #A8322A 90deg 180deg, #3A6E35 180deg 270deg, #8A5C00 270deg 360deg); }
-.card .num.frac { font-size: calc(var(--num) * .8); }
-.k-shift { background: linear-gradient(to bottom, #4A5060 0%, #4A5060 50%, #5E5F68 50%, #5E5F68 100%); gap: 0; justify-content: stretch; }
-.k-shift .half { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; }
-.k-shift .half.down { transform: rotate(180deg); }
-.k-shift .band {
-  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); background: #363B48;
-  font-size: var(--lbl); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; text-align: center; padding: 2px 0;
-}
-.card--sm .band { display: none; }
 .tag.dark { background: #2A2A2E; color: #fff; }
 .tslot .as { font-size: 10px; color: #C9D3EA; }
 .hcard.picked { transform: translateY(-26px); }
@@ -296,12 +272,11 @@ button[disabled] { cursor: not-allowed; }
 .rules { gap: 18px; margin: 18px 0 32px; padding: 24px 20px; }
 .rule h3 { margin: 0 0 6px; font-size: 14px; font-weight: 700; }
 .rule p { margin: 0; font-size: 13px; line-height: 1.55; color: #33405E; }
-.minis { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.rule-card-samples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .mini { padding: 4px 10px; border-radius: 999px; color: #fff; font-size: 11px; font-weight: 700; }
-.spec { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; }
+.spec { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .spec p { margin: 0; font-size: 13px; line-height: 1.5; color: #33405E; }
 .spec b { color: #18284F; }
-.swatch { flex: none; width: 22px; height: 32px; border-radius: 4px; }
 .dialogpanel { width: 320px; max-width: 90vw; }
 .q-dialog__inner > .rules-dialog-panel {
   width: min(480px, calc(100vw - 32px)); max-height: min(720px, calc(100dvh - 40px)); overflow: hidden;
@@ -398,7 +373,6 @@ button[disabled] { cursor: not-allowed; }
   .card--sm { width: 48px; height: 72px; --num: 22px; --ico: 14px; --idx: 11px; --lbl: 6px; border-radius: 7px; }
   .card--md { width: 72px; height: 108px; --num: 32px; --ico: 20px; --idx: 14px; --lbl: 8px; border-radius: 9px; }
   .card--lg { width: 96px; height: 144px; --num: 42px; --ico: 25px; --idx: 17px; --lbl: 9px; border-radius: 11px; }
-  .card--md .band { font-size: 7px; }
   .suitcard.card--md { width: 84px; height: 126px; }
   .hcard.playable { transform: translateY(-14px); }
   .hcard.picked { transform: translateY(-30px); }
