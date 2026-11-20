@@ -18,7 +18,7 @@ from game.engine import GameError
 from game.lobby import Lobby
 from game.rules import Play, lead_suit, trick_winner
 
-from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_icon
+from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_emblem, suit_icon
 from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 
 ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
@@ -96,7 +96,7 @@ def _trump_html(v: dict) -> str:
     elif v['trump']:
         trump = v['trump']
         status = SUIT_LABEL[trump]
-        symbol = f'<span class="trump-symbol s-{trump.value}">{suit_icon(trump)}</span>'
+        symbol = f'<span class="trump-symbol s-{trump.value}">{suit_emblem(trump)}</span>'
     else:
         status = 'No trump'
     return (f'<div class="trump"><span class="tl">Trump</span>{symbol}'
@@ -148,8 +148,6 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
         note = ''
         if play.card.needs_role_choice:
             note = f'<span class="as">as {"Wizard" if play.as_wizard else "Jester"}</span>'
-        elif play.card.needs_suit_choice and play.suit is not None:
-            note = f'<span class="as">as {SUIT_LABEL[play.suit]}</span>'
         x, y = _slot_position(v, play.player)
         enter, start = '', ''
         if seen is not None and play.card.id not in seen:

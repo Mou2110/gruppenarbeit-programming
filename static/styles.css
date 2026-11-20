@@ -63,8 +63,9 @@ body { margin: 0; background: #18284F; }
 .trump .ts { font-size: 12px; font-weight: 700; }
 .trump-symbol {
   display: grid; place-items: center; width: 38px; height: 38px;
-  border: 1px solid #FFFFFF45; border-radius: 50%; color: #fff;
+  border: 1px solid var(--suit-ink); border-radius: 50%; color: var(--suit-ink);
 }
+.trump-symbol .suit-emblem { width: 100%; border-radius: inherit; background: #FFF1D6; }
 .trump-symbol .ico { width: 22px; height: 22px; }
 .chip {
   display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 999px;
@@ -153,6 +154,11 @@ body { margin: 0; background: #18284F; }
   top: 2%; left: 2%; min-width: 28%; min-height: 19%; display: grid; place-items: center;
 }
 .art-juggler .card-rank, .art-cloud .card-rank { min-width: 39%; }
+.chosen-suit {
+  position: absolute; right: 4%; bottom: 14%; display: grid; place-items: center; z-index: 1;
+  border: 1px solid #FFF1D6; border-radius: 20%; padding: 2px; color: #fff;
+}
+.chosen-suit .ico { width: calc(var(--ico) * .8); height: calc(var(--ico) * .8); }
 
 /* Card rectangles in the 1536 by 1024 illustration atlas. */
 .art-wizard { --art-size: 538.95% 239.25%; --art-position: 26.06% 12.75%; }
@@ -224,10 +230,7 @@ body { margin: 0; background: #18284F; }
 .neg { color: #A8322A; font-weight: 700; }
 
 .tag.dark { background: #2A2A2E; color: #fff; }
-.tslot .as {
-  padding: 2px 5px; border-radius: 8px; background: #23365F;
-  color: #FFF; font-size: 10px; font-weight: 600; white-space: nowrap;
-}
+.tslot .as { font-size: 10px; color: #C9D3EA; }
 .hcard.picked { transform: translateY(-26px); }
 .hcard.picked .card { box-shadow: 0 0 0 3px #F2C14E, 0 6px 14px rgba(0, 0, 0, .5); }
 

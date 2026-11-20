@@ -35,6 +35,11 @@ def suit_icon(suit: Suit) -> str:
     return svg(SUIT_PATHS[suit])
 
 
+def suit_emblem(suit: Suit) -> str:
+    """The painted suit motif shared by number cards and the trump indicator."""
+    return f'<span class="suit-emblem">{suit_icon(suit)}</span>'
+
+
 def card_name(card: Card) -> str:
     if card.is_number:
         return f'{SUIT_LABEL[card.suit]} {card.value}'
@@ -42,12 +47,12 @@ def card_name(card: Card) -> str:
 
 
 def card_html(card: Card, size: str = 'md', chosen: Suit | None = None) -> str:
-    """Render a face-up card, including the chosen suit in its accessible name."""
+    """Render a face-up card and, when applicable, its chosen suit."""
     label = card_name(card)
     if card.is_number:
         face = f'number-face s-{card.suit.value}'
         rank = card.value
-        art = f'<span class="suit-emblem">{suit_icon(card.suit)}</span>'
+        art = suit_emblem(card.suit)
         art += f'<span class="number-suit">{SUIT_LABEL[card.suit]}</span>'
     else:
         face = f'special-face art-{card.kind.value}'
@@ -55,6 +60,7 @@ def card_html(card: Card, size: str = 'md', chosen: Suit | None = None) -> str:
         art = '<span class="special-art"></span>'
         if card.needs_suit_choice and chosen is not None:
             label += f' as {SUIT_LABEL[chosen]}'
+            art += f'<span class="chosen-suit s-{chosen.value}">{suit_icon(chosen)}</span>'
     return (f'<div class="card card--{size} {face}" role="img" aria-label="{label}" title="{label}">'
             f'{art}<span class="card-rank">{rank}</span></div>')
 
