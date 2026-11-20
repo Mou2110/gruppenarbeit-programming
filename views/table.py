@@ -439,6 +439,8 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                 waiting = ', '.join(esc(m.name) for m in lobby.waiting_for_votes()) or 'the others'
                 ui.html(f'<p class="waiting">Waiting for {waiting}…</p>', sanitize=False)
             else:
+                if over:
+                    button('Play again', lambda: lobby.play_again(pid), marker='play-again')
                 button('Back to lobby' if over else 'Next round', lambda: lobby.vote_continue(pid),
                        marker='continue')
 

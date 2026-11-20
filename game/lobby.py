@@ -394,6 +394,8 @@ class Lobby:
             self.next_auto_at = now + BOT_DELAY
         self.turn_started = max(now, self.pause_until)  # the next move gets the full time
 
+    rematch: set = frozenset()  # who pressed "play again" (class default keeps old saved lobbies working)
+
     def vote_continue(self, member_id: str) -> None:
         """After a round: once everyone has pressed "continue", the game goes on."""
         if self.game is None or self.game.phase not in (Phase.ROUND_OVER, Phase.GAME_OVER):
@@ -401,6 +403,15 @@ class Lobby:
         self.votes.add(member_id)
         self._check_votes()
         self._changed()
+
+    def play_again(self, member_id: str) -> None:
+        """At the end of a game: "continue" and also be ready for the next game right away."""
+        if self.game is None or self.game.phase != Phase.GAME_OVER:
+            return
+        if not any(m.id == member_id and not m.is_bot for m in self.members):
+            return
+        self.rematch = self.rematch | {member_id}
+        self.vote_continue(member_id)
 
     def waiting_for_votes(self) -> list[Member]:
         return [m for m in self.members if not self._plays_automatically(m.id) and m.id not in self.votes]
@@ -418,7 +429,11 @@ class Lobby:
         else:
             self.game = None  # back to the waiting room
             for member in self.humans():
-                member.ready = False
+                member.ready = member.id in self.rematch
+            self.rematch = set()
+            self.votes = set()
+            self._maybe_start()      # everyone chose "play again": the next game starts right away
+            return True
         self.votes = set()
         return True
 
