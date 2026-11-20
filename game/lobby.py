@@ -81,6 +81,7 @@ class Lobby:
         self.pause_until = 0.0
         self.next_auto_at = 0.0
         self.turn_started = 0.0                      # when the game started waiting for the current move
+        self.game_number = 0                         # counts the games in this lobby (1, 2, ... after rematches)
         self.votes: set[str] = set()                 # who pressed "continue" after the round
         self.left: set[str] = set()                  # who left the running game for good (counts as last)
         self.connections: dict[str, int] = {}        # open browser tabs per player
@@ -137,6 +138,7 @@ class Lobby:
         self.__dict__.setdefault('chat_count', len(self.chat))
         self.__dict__.setdefault('left', set())       # lobbies that were saved before leavers were tracked
         self.__dict__.setdefault('turn_started', 0.0)  # lobbies that were saved before the time limit
+        self.__dict__.setdefault('game_number', 0)     # lobbies that were saved before games were counted
 
     def restored(self, clock: Callable[[], float]) -> 'Lobby':
         """After loading: reset the times. Everyone first gets time to reconnect."""
@@ -353,6 +355,7 @@ class Lobby:
         self.pause_until = 0.0
         self.next_auto_at = self.clock() + BOT_DELAY
         self.turn_started = self.clock()
+        self.game_number += 1
         self._changed()
 
     # ------------------------------------------------------------ Game

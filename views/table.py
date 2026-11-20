@@ -32,12 +32,16 @@ SIUUU_JS = ("if (window.speechSynthesis) { const u = new SpeechSynthesisUtteranc
             " u.rate = 0.6; u.pitch = 1.4; window.speechSynthesis.speak(u); }")
 
 
-def cheer_for_cr7(v: dict, state: dict) -> bool:
-    """True once per round when CR7 lands on the table (also as the last card of a trick)."""
+def cheer_for_cr7(v: dict, state: dict, game_number: int) -> bool:
+    """True once per round when CR7 lands on the table (also as the last card of a trick).
+
+    Remembers game AND round: after a rematch, round 3 is a new round 3 (found by Jakob).
+    """
     on_table = list(v['trick']) + list(v['last_trick'] or [])
-    if not any(p.card.kind == Kind.CR7 for p in on_table) or state.get('siuuu_round') == v['round']:
+    key = (game_number, v['round'])
+    if not any(p.card.kind == Kind.CR7 for p in on_table) or state.get('siuuu_at') == key:
         return False
-    state['siuuu_round'] = v['round']
+    state['siuuu_at'] = key
     return True
 
 
@@ -256,7 +260,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     if v['pass_count'] != state.get('seen_pass', v['pass_count']) and v['received'] is not None:
         ui.notify(f'You received {card_name(v["received"])}', type='info', position='top')
     state['seen_pass'] = v['pass_count']
-    if cheer_for_cr7(v, state):
+    if cheer_for_cr7(v, state, lobby.game_number):
         ui.run_javascript(SIUUU_JS)
 
     def act(action: str, **kwargs) -> None:
