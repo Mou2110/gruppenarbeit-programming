@@ -9,12 +9,13 @@ from views.table import _trick_html, _trump_html
 
 @pytest.mark.parametrize('revealed', [Card('olive-8', Kind.NUMBER, Suit.OLIVE, 8),
                                       Card('cloud', Kind.CLOUD)])
-def test_trump_shows_the_suit_without_the_revealed_card(revealed):
+def test_trump_shows_the_revealed_card_next_to_the_suit(revealed):
     html = _trump_html({'phase': 'playing', 'trump': Suit.OLIVE, 'trump_card': revealed})
     assert '<span class="trump-symbol s-olive">' in html
     assert '<span class="ts">Olive</span>' in html
-    assert html.count('<svg') == 1
-    assert 'class="card ' not in html
+    assert card_html(revealed, 'sm') in html
+    assert html.count('class="card ') == 1
+    assert html.index(card_html(revealed, 'sm')) < html.index('class="trump-symbol')
 
 
 @pytest.mark.parametrize('suit', list(Suit))
@@ -32,10 +33,17 @@ def test_trump_uses_the_same_painted_emblem_as_the_number_cards(suit):
     ('werewolf', Suit.OLIVE, 'Choosing…'),
     ('playing', None, 'No trump'),
 ])
-def test_trump_without_a_confirmed_suit_shows_only_its_status(phase, trump, label):
-    html = _trump_html({'phase': phase, 'trump': trump, 'trump_card': Card('wizard', Kind.WIZARD)})
+def test_trump_without_a_confirmed_suit_keeps_the_revealed_card_and_status(phase, trump, label):
+    revealed = Card('wizard', Kind.WIZARD)
+    html = _trump_html({'phase': phase, 'trump': trump, 'trump_card': revealed})
     assert f'<span class="ts">{label}</span>' in html
     assert '<svg' not in html
+    assert card_html(revealed, 'sm') in html
+
+
+def test_trump_shows_no_card_when_nothing_was_revealed():
+    html = _trump_html({'phase': 'playing', 'trump': None, 'trump_card': None})
+    assert '<span class="ts">No trump</span>' in html
     assert 'class="card ' not in html
 
 
