@@ -149,8 +149,10 @@ body { margin: 0; background: #18284F; }
   position: absolute; inset: 0;
   background: url("card-art/special-cards.jpg") var(--art-position) / var(--art-size) no-repeat;
 }
-.special-face .card-rank { min-height: 17%; display: grid; place-items: center; }
-.art-juggler .card-rank, .art-cloud .card-rank { min-width: 37%; }
+.special-face .card-rank {
+  top: 2%; left: 2%; min-width: 28%; min-height: 19%; display: grid; place-items: center;
+}
+.art-juggler .card-rank, .art-cloud .card-rank { min-width: 39%; }
 
 /* Card rectangles in the 1536 by 1024 illustration atlas. */
 .art-wizard { --art-size: 538.95% 239.25%; --art-position: 26.06% 12.75%; }
@@ -551,7 +553,9 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   .tbl:has(.board) { --hand-cw: 60px; }
   .hand .card--lg { width: 60px; height: 90px; --num: 27px; --ico: 16px; --idx: 12px; --lbl: 7px; border-radius: 8px; }
   /* Move the corner number fully left so it remains readable with 20 overlapping cards */
-  .hand .card-rank { left: 1px; min-width: 0; font-size: 11px; letter-spacing: -.02em; }
+  .hand .card-rank { left: 1px; font-size: 11px; letter-spacing: -.02em; }
+  .hand .number-face .card-rank { min-width: 0; }
+  .hand .special-face .card-rank { justify-items: start; padding-left: 2px; }
   .hcard.playable { transform: translateY(-8px); }
   .hcard.picked { transform: translateY(-18px); }
   .trump .tl { font-size: 9px; }
