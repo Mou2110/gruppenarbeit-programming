@@ -61,6 +61,12 @@ SCHEMA = [
            rounds INTEGER NOT NULL,
            players TEXT NOT NULL
        )""",
+    """CREATE TABLE IF NOT EXISTS friends (
+           account TEXT NOT NULL,
+           friend TEXT NOT NULL,
+           created_at {time} NOT NULL,
+           PRIMARY KEY (account, friend)
+       )""",
 ]
 
 
@@ -223,6 +229,34 @@ class Store:
         rows = self._with_retry('SELECT code, finished_at, name, score, place, players, rounds, correct '
                                 'FROM results WHERE account = ? ORDER BY finished_at DESC', (key,))
         names = ('code', 'finished_at', 'name', 'score', 'place', 'players', 'rounds', 'correct')
+        return [dict(zip(names, row)) for row in rows]
+
+    # ---------------------------------------------------------------- Friends (one way: no confirmation needed)
+
+    def add_friend(self, key: str, username: str) -> str:
+        """Add the account with this username to key's friends. Returns the friend's display name."""
+        friend = accounts.username_key(username)
+        if friend == key:
+            raise AccountError('You cannot add yourself.')
+        rows = self._with_retry('SELECT username FROM accounts WHERE key = ?', (friend,))
+        if not rows:
+            raise AccountError('There is no player with that username.')
+        if not self._with_retry('SELECT 1 FROM friends WHERE account = ? AND friend = ?', (key, friend)):
+            self._with_retry('INSERT INTO friends (account, friend, created_at) VALUES (?, ?, ?)',
+                             (key, friend, time.time()))
+        return rows[0][0]
+
+    def remove_friend(self, key: str, friend: str) -> None:
+        self._with_retry('DELETE FROM friends WHERE account = ? AND friend = ?', (key, friend))
+
+    def friends_of(self, key: str) -> list[dict]:
+        """key's friends with their number of finished games and wins, sorted by name."""
+        rows = self._with_retry('SELECT a.key, a.username, COUNT(r.account), '
+                                'COALESCE(SUM(CASE WHEN r.place = 1 THEN 1 ELSE 0 END), 0) '
+                                'FROM friends f JOIN accounts a ON a.key = f.friend '
+                                'LEFT JOIN results r ON r.account = a.key '
+                                'WHERE f.account = ? GROUP BY a.key, a.username ORDER BY a.key', (key,))
+        names = ('account', 'name', 'games', 'wins')
         return [dict(zip(names, row)) for row in rows]
 
     def leaderboard_rows(self, min_games: int = MIN_GAMES) -> list[dict]:
