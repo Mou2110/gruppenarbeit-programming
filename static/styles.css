@@ -58,12 +58,13 @@ body { margin: 0; background: #18284F; }
 .seen { display: flex; gap: 4px; justify-content: center; min-height: 60px; }
 .cardsleft { min-height: 14px; line-height: 14px; }
 
-.trump-display { display: flex; align-items: center; gap: 6px; }
+.trump-display { display: flex; align-items: center; gap: 8px; }
+.trump-display > .card { width: 34px; height: 51px; --idx: 9px; --lbl: 5px; }
 .trump { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
 .trump .tl { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #C9D3EA; }
 .trump .ts { max-width: 100%; font-size: 12px; font-weight: 700; text-align: center; overflow-wrap: anywhere; }
 .trump-symbol {
-  display: grid; place-items: center; width: 38px; height: 38px;
+  display: grid; place-items: center; box-sizing: border-box; width: 60px; height: 60px;
   border: 1px solid var(--suit-ink); border-radius: 50%; color: var(--suit-ink);
 }
 .trump-symbol .suit-emblem { width: 100%; border-radius: inherit; background: #FFF1D6; }
@@ -563,7 +564,8 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   .trump .tl { font-size: 9px; }
   .trump .ts { font-size: 11px; }
   .trump-display { gap: 4px; }
-  .trump-symbol { width: 30px; height: 30px; }
+  .trump-display > .card { width: 27px; height: 41px; --idx: 8px; --lbl: 4px; }
+  .trump-symbol { width: 44px; height: 44px; }
 }
 
 /* Selected hand card (phone): lift it above the others so it can be tapped again reliably */
