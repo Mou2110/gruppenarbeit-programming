@@ -416,7 +416,50 @@ button[disabled] { cursor: not-allowed; }
   font-weight: 700;
   font-variant-numeric: lining-nums tabular-nums;
 }
-.prophecy-home button:focus-visible { outline: 2px solid #ffdf9e; outline-offset: 3px; }
+.prophecy-home .h2,
+.prophecy-home .rules h2 {
+  font: 600 36px/1.05 var(--display-face);
+  color: var(--parchment);
+}
+.prophecy-home .stepnum { font-family: var(--display-face); color: #d2ac76; }
+.prophecy-home button:focus-visible,
+.prophecy-home .rules summary:focus-visible { outline: 2px solid #ffdf9e; outline-offset: 3px; }
+.prophecy-home .acct,
+.prophecy-home .steps .step,
+.prophecy-home .rules,
+.prophecy-home .games > .grow {
+  background: linear-gradient(147deg, #181e2a, var(--panel-dusk));
+  border: 1px solid var(--bronze-line);
+  border-radius: 10px;
+}
+.prophecy-home .acct p,
+.prophecy-home .step,
+.prophecy-home .rules .rule p { color: var(--warm-muted); }
+.prophecy-home .rules,
+.prophecy-home .rules .rule h3,
+.prophecy-home .rules .spec b,
+.prophecy-home .step b { color: var(--parchment); }
+.prophecy-home .acct .primary.small { color: var(--parchment); background: #29303e; }
+.prophecy-home .acct .primary.small.ghostbtn {
+  border-color: var(--bronze-line) !important;
+  background: transparent;
+}
+.prophecy-home .acct .primary.small:hover { background: #363440; }
+.prophecy-home .rules { padding: clamp(19px, 3vw, 34px); }
+.prophecy-home .rules-toggle > summary::after { color: var(--bronze); }
+@media (min-width: 701px) {
+  .prophecy-home .acct {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 14px 18px;
+    margin-top: 0;
+  }
+  .prophecy-home .acct p { flex: 1 1 260px; }
+  .prophecy-home .acct .primary.small { padding-inline: 16px; white-space: nowrap; }
+  .prophecy-home .steps .step { padding: 18px 22px; }
+}
 @media (max-width: 700px) {
   .pg:has(> .prophecy-home) {
     background: radial-gradient(ellipse 380px 370px at 56% 210px, #1b2331, transparent 93%), #0b0f18;
@@ -448,6 +491,7 @@ button[disabled] { cursor: not-allowed; }
     bottom: auto;
   }
   .prophecy-deck .card { width: clamp(43px, 9vw, 62px); --idx: 10px; --lbl: 6px; }
+  .prophecy-home .acct { margin-top: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .prophecy-portrait .prophet-lifted { animation: none; opacity: 1; }
