@@ -26,6 +26,21 @@ ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
 
 
 
+# When CR7 is played, every browser says "Siuuu". Spoken by the browser itself (Web Speech API), so there is
+# no audio file and no recording of anyone's voice. Browsers without speech simply stay silent.
+SIUUU_JS = ("if (window.speechSynthesis) { const u = new SpeechSynthesisUtterance('Siuuuuu!');"
+            " u.rate = 0.6; u.pitch = 1.4; window.speechSynthesis.speak(u); }")
+
+
+def cheer_for_cr7(v: dict, state: dict) -> bool:
+    """True once per round when CR7 lands on the table (also as the last card of a trick)."""
+    on_table = list(v['trick']) + list(v['last_trick'] or [])
+    if not any(p.card.kind == Kind.CR7 for p in on_table) or state.get('siuuu_round') == v['round']:
+        return False
+    state['siuuu_round'] = v['round']
+    return True
+
+
 def trick_bombed(plays: list[Play]) -> bool:
     """Does the Bomb take effect in this trick? (Not if CR7 is in it.)"""
     return trick_has_bomb(plays)
@@ -241,6 +256,8 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     if v['pass_count'] != state.get('seen_pass', v['pass_count']) and v['received'] is not None:
         ui.notify(f'You received {card_name(v["received"])}', type='info', position='top')
     state['seen_pass'] = v['pass_count']
+    if cheer_for_cr7(v, state):
+        ui.run_javascript(SIUUU_JS)
 
     def act(action: str, **kwargs) -> None:
         state['pending'] = None

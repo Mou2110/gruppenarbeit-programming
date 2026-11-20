@@ -8,7 +8,7 @@ from views.rules import RULES, rules_content, rules_toggle
 
 def test_the_start_page_has_one_rules_block_that_starts_closed():
     html = rules_toggle()
-    assert html.count('<details') == 1
+    assert html.count('<details class="rules-toggle"') == 1
     assert '<summary' in html and 'Rules' in html
     assert ' open' not in html.split('>')[0]
 
@@ -21,13 +21,17 @@ def test_inside_the_block_every_topic_is_shown_at_once():
 
 def test_the_rules_during_a_game_are_the_same_topics_without_the_block():
     html = rules_content()
-    assert '<details' not in html
+    assert 'rules-toggle' not in html
     assert all(text in html for _, text in RULES)
 
 
-def test_the_bonus_card_has_its_own_section_after_the_special_cards():
+def test_the_extra_special_card_hides_in_its_own_closed_section_after_the_special_cards():
     html = rules_content()
-    special, bonus = html.index('<h3>Special cards (optional)</h3>'), html.index('<h3>Bonus card</h3>')
-    assert special < bonus
-    assert 'CR7' not in html[special:bonus]            # not listed among the special cards
-    assert '<b>CR7</b> · Always wins.' in html[bonus:]
+    special = html.index('<h3>Special cards (optional)</h3>')
+    extra = html.index('<details class="rule extra">')
+    assert special < extra
+    assert 'CR7' not in html[special:extra]            # not listed among the special cards
+    section = html[extra:]
+    assert section.startswith('<details class="rule extra"><summary><h3>(Extra special card)</h3></summary>')
+    assert '<b>CR7</b> · Always wins.' in section
+    assert section.count('<details') == 1 and ' open' not in section.split('>')[0]

@@ -59,7 +59,7 @@ def rules_content() -> str:
     specials = ''.join(_card_row(kind, text) for kind, text in SPECIALS)
     bonus = ''.join(_card_row(kind, text) for kind, text in BONUS)
     return (f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}</div>'
-            f'<div class="rule"><h3>Bonus card</h3>{bonus}</div>')
+            f'<details class="rule extra"><summary><h3>(Extra special card)</h3></summary>{bonus}</details>')
 
 
 def rules_toggle() -> str:
