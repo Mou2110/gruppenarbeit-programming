@@ -79,8 +79,9 @@ leaving, bots taking over, chat limits), saving and restoring games, and the lea
 For each of these there are tests for allowed actions, rejected actions (wrong turn, invalid bid, unknown
 player, wrong password) and edge cases (ties, too few players, empty data).
 
-**What they do not cover:** the page layout itself (`views/start.py`, `views/lobby.py`, `views/table.py`)
-is checked by hand in the browser, not by automatic tests. The logic behind the pages is tested.
+**What they do not cover:** how the pages look (layout, colours, phone vs. laptop) is checked by hand in the
+browser. The logic behind the pages is tested, and a few page tests check that the start page, the rules and the
+"Play again" / invite flows show the right buttons and texts.
 
 ## Working together
 
