@@ -27,7 +27,7 @@ BOT_NAMES = ['Marta', 'Joana', 'Tiago', 'Inês', 'Rui', 'Sofia']
 BOT_DELAY = 0.9       # seconds between two automatic moves
 TRICK_PAUSE = 1.6     # how long a finished trick stays visible to everyone
 ABSENT_GRACE = 5.0    # how long someone may be offline (e.g. reloading the page) before they count as "away"
-TURN_LIMIT = 120.0    # seconds a human has for a move; then a bot makes this one move for them
+TURN_LIMIT = 120.0    # seconds a human has for a move; then the leftmost allowed card is played for them
 TIMER_SHOWN = 30.0    # the countdown only appears in the last seconds, so nobody feels rushed
 
 
