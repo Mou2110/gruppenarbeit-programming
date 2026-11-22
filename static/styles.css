@@ -239,10 +239,10 @@ body { margin: 0; background: #18284F; }
 
 /* 2 + 4. Decisions (bid, trump, Juggler …) sit under your own seat, so the table stays in the middle. */
 @media (min-width: 600px) {
-  .table-stage:has(> .table-decision) { flex-direction: column; align-items: center; gap: 6px; }
-  .table-decision { flex: none; align-self: center; width: min(520px, 100%); max-height: 46%; }
-  .table-decision > .panel { width: 100%; padding: 12px 16px; gap: 8px; }
-  .table-decision > .panel h2 { font-size: 17px; }
+  .tbl .table-stage:has(> .table-decision) { flex-direction: column; align-items: stretch; gap: 6px; }
+  .tbl .table-stage > .table-decision { flex: none; align-self: center; width: min(520px, 100%); max-height: 46%; }
+  .tbl .table-decision > .panel { width: 100%; padding: 12px 16px; gap: 8px; }
+  .tbl .table-decision > .panel h2 { font-size: 17px; }
 }
 
 /* 7. Explanation pop-up for special cards (static/table-fx.js). */
