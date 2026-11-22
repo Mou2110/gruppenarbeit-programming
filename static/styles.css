@@ -1151,6 +1151,11 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
 .art-cr7 .special-art { background: url("card-art/cr7.svg") center / cover no-repeat; }
 /* Bonus: the Wizard cards show Moritz as a wizard (AI-generated portrait, made with his consent). */
 .art-wizard .special-art { background: url("card-art/wizard-moritz.jpg") 48% 38% / auto 150% no-repeat; }
+/* Bonus: the Jester cards show Erik as a jester (AI-generated portrait, made with his consent). */
+.art-jester .special-art { background: url("card-art/jester-erik.jpg") center / 100% 100% no-repeat; }
+/* The portrait is a whole card with its own frame, "J" and name, so the drawn corner label is not needed. */
+.card.art-jester { border-color: #1C111C; }
+.art-jester .card-rank { display: none; }
 .art-cr7 .special-art::after { content: 'SIUUU'; position: absolute; left: 0; right: 0; bottom: 4%; text-align: center;
   color: #FFD700; font: 700 var(--lbl, 9px)/1 Inter, sans-serif; letter-spacing: .08em; text-shadow: 0 1px 2px #000; }
 /* The hidden extra special card in the rules: its own small box that has to be opened separately */

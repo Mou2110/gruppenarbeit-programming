@@ -98,6 +98,8 @@ ranks and labels separately. The prophet portrait on the start page is AI-genera
 vector drawing made for this project, not a photo.
 The Wizard cards (`static/card-art/wizard-moritz.jpg`) show team member Moritz as a wizard: an AI-generated
 portrait made with ChatGPT from his own photo, with his consent.
+The Jester cards (`static/card-art/jester-erik.jpg`) show team member Erik as a jester: a complete AI-generated card
+(frame, "J" and name included) made with ChatGPT from his own photo, with his consent.
 
 ## Features
 
