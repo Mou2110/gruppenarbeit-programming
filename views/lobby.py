@@ -375,8 +375,9 @@ async def lobby_page(code: str) -> None:
         if lobby.member(pid) is None:  # the host removed this player from the waiting room
             lobby.unsubscribe(client.id)
             if not state.get('left'):
-                ui.notify('The host removed you from the lobby.', type='warning')
-                ui.navigate.to('/')
+                with client:  # runs during the host's click, so address this player's own page
+                    ui.notify('The host removed you from the lobby.', type='warning')
+                    ui.navigate.to('/')
             return
         if mode() != state['mode']:
             content.refresh()
