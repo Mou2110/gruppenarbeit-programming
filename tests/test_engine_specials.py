@@ -75,7 +75,7 @@ def test_werewolf_holder_chooses_a_suit(monkeypatch):
     assert game.players[3].hand == [num(OLIVE, 2)]
 
 
-@pytest.mark.parametrize('card', [WIZ])
+@pytest.mark.parametrize('card', [WOLF, DRAGON, SHIFT, JUGGLER, CLOUD, WIZ])
 def test_these_trump_cards_let_the_dealer_choose(monkeypatch, card):
     rig(monkeypatch, [num(SEA, 3), num(SEA, 4), num(SEA, 5), num(SEA, 6), card])
     game = Game(PLAYERS, special_cards=SPECIAL_KINDS)
@@ -86,8 +86,8 @@ def test_these_trump_cards_let_the_dealer_choose(monkeypatch, card):
     assert game.trump == OLIVE and game.phase == Phase.BIDDING
 
 
-@pytest.mark.parametrize('card', [FAIRY, BOMB, WOLF, DRAGON, SHIFT, JUGGLER, CLOUD])
-def test_special_card_as_trump_card_means_no_trump(monkeypatch, card):
+@pytest.mark.parametrize('card', [FAIRY, BOMB])
+def test_fairy_or_bomb_as_trump_card_means_no_trump(monkeypatch, card):
     rig(monkeypatch, [num(SEA, 3), num(SEA, 4), num(SEA, 5), num(SEA, 6), card])
     game = Game(PLAYERS, special_cards=SPECIAL_KINDS)
     assert game.phase == Phase.BIDDING and game.trump is None

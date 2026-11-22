@@ -75,8 +75,8 @@ def test_cr7_may_always_be_played_even_if_you_could_follow_suit():
     assert CR7 in legal_cards(hand, [num(Suit.SEA, 10)])
 
 
-def test_cr7_turned_up_as_trump_means_no_trump():
-    assert not dealer_chooses_trump(CR7)
+def test_cr7_turned_up_as_trump_lets_the_dealer_choose():
+    assert dealer_chooses_trump(CR7)
 
 
 def test_cr7_has_a_name_and_a_face():

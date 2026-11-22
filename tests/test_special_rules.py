@@ -57,13 +57,13 @@ def test_only_special_kinds_allowed():
 
 # ---------------------------------------------------------------- Trump card
 
-@pytest.mark.parametrize('card', [WIZ])
+@pytest.mark.parametrize('card', [WIZ, SHIFT, DRAGON, WOLF, JUGGLER, CLOUD])
 def test_dealer_chooses_trump_for(card):
     assert dealer_chooses_trump(card)
     assert trump_from_card(card) is None
 
 
-@pytest.mark.parametrize('card', [JES, FAIRY, BOMB, SHIFT, DRAGON, WOLF, JUGGLER, CLOUD])
+@pytest.mark.parametrize('card', [JES, FAIRY, BOMB])
 def test_no_trump_for(card):
     assert not dealer_chooses_trump(card)
     assert trump_from_card(card) is None
