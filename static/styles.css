@@ -1454,3 +1454,12 @@ body:has(.game-table-theme) .chatinput .q-field__native::placeholder { color: va
 .timeknob-value { font: 700 24px/1 'Cormorant Garamond', Georgia, serif; color: #F8F5EE; letter-spacing: .02em; }
 .timeknob.q-knob--editable { cursor: grab; }
 .timedial-hint { margin: 0; }
+
+/* J1: place in the turn order (1., 2., 3. …) at the bottom left of every seat */
+.seat-order {
+  position: absolute; z-index: 5; left: -8px; bottom: -4px; min-width: 20px; height: 20px; padding: 0 4px;
+  box-sizing: border-box; border-radius: 10px; border: 1px solid #f3d095; background: #26364d; color: #fff0cd;
+  font: 700 11px/18px Inter, sans-serif; text-align: center; pointer-events: none;
+}
+.avwrap:has(.avatar.turn) .seat-order { left: -12px; bottom: -6px; }   /* clear of the pulsing turn ring */
+@media (max-width: 899px) { .seat-order { min-width: 17px; height: 17px; font-size: 9.5px; line-height: 15px; left: -6px; } }
