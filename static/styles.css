@@ -195,6 +195,10 @@ body { margin: 0; background: #18284F; }
 .hcard.peek, .hcard.selected { z-index: 40; }
 .hcard.peek > .card, .hcard.selected > .card { scale: 1.25; filter: none; }
 @media (max-width: 899px) { .handrow { --peek-room: 30px; } }
+/* Phone: a little less room above the hand, so the table stays as large as possible. */
+@media (max-width: 899px) {
+  .game-table-theme .handrow { padding-top: 16px; margin-top: -14px; min-height: calc(var(--hand-cw, 72px) * 1.5 + 36px); }
+}
 /* "?" on special cards in the hand: opens the explanation instead of playing the card. */
 .hcard .card-info {
   position: absolute; z-index: 3; top: -9px; left: -5px; width: 22px; height: 22px; padding: 0;
@@ -832,16 +836,19 @@ body:has(.lobby-theme) :is(.chatinput .q-field__control, .cmsg:not(.mine)) { bac
 body:has(.lobby-theme) .chatinput .q-field__native::placeholder { color: var(--lobby-muted); }
 body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c; }
 
-/* Fan the hand, with a readable strip on each card when a large hand scrolls. */
+/* Fan the hand. All cards always stay in one row: with many cards they overlap more instead of
+   scrolling sideways (a scrolling row would also clip a raised card at the top and the fan at the bottom).
+   The row keeps its height when it is empty, so the table does not jump after the last card. */
 .game-table-theme .hand { min-height: 0; padding: 0 0 2px; }
 .handrow {
-  width: 100%; flex-wrap: nowrap; box-sizing: border-box; justify-content: safe center;
+  width: 100%; flex-wrap: nowrap; box-sizing: border-box; justify-content: center;
   padding: 26px clamp(12px, 2vw, 22px) 12px;
-  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
-  scrollbar-width: thin; scrollbar-color: #aa875d73 transparent;
+  margin-top: -20px;   /* the empty room above the cards may sit under the status line, the cards may not */
+  min-height: calc(var(--hand-cw, 72px) * 1.5 + 46px);
+  overflow: visible;
 }
 .hcard {
-  flex: 0 1 calc(var(--hand-cw, 72px) * .58); min-width: 24px; position: relative;
+  flex: 0 1 calc(var(--hand-cw, 72px) * .58); min-width: 11px; position: relative;
   translate: 0 var(--fan-drop, 0px);
 }
 .hcard:last-child { flex: 0 0 var(--hand-cw, 72px); }
