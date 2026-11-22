@@ -27,7 +27,9 @@ BOT_NAMES = ['Marta', 'Joana', 'Tiago', 'Inês', 'Rui', 'Sofia']
 BOT_DELAY = 0.9       # seconds between two automatic moves
 TRICK_PAUSE = 1.6     # how long a finished trick stays visible to everyone
 ABSENT_GRACE = 5.0    # how long someone may be offline (e.g. reloading the page) before they count as "away"
-TURN_LIMIT = 120.0    # seconds a human has for a move; then the leftmost allowed card is played for them
+TURN_CHOICES = (1, 2, 3, 4, 5)  # minutes per move the host can choose
+TURN_LIMIT = 120.0    # default seconds a human has for a move (2 minutes); then the leftmost allowed card is played for them
+                      # (only with at least two humans: against bots there is no time limit)
 TIMER_SHOWN = 30.0    # the countdown only appears in the last seconds, so nobody feels rushed
 
 
@@ -48,7 +50,8 @@ class Settings:
     special_cards: list[Kind] = field(default_factory=lambda: list(SPECIAL_KINDS))  # bonus cards start switched off
     clairvoyance: bool = True       # clairvoyance in round 1
     no_matching_bids: bool = True   # bids must not add up to the number of tricks
-    turn_timer: bool = True         # time limit per move (TURN_LIMIT); older saved lobbies get the default
+    turn_timer: bool = True         # time limit per move on/off; older saved lobbies get the default
+    turn_minutes: int = 2           # length of the time limit, one of TURN_CHOICES
 
 
 CHAT_MAX = 200     # characters per message
@@ -312,10 +315,12 @@ class Lobby:
 
     def update_settings(self, by: str, *, special_cards: list[Kind] | None = None,
                         clairvoyance: bool | None = None, no_matching_bids: bool | None = None,
-                        turn_timer: bool | None = None) -> None:
+                        turn_timer: bool | None = None, turn_minutes: int | None = None) -> None:
         """Change the settings (host only). Afterwards everyone has to press "Ready" again."""
         self._require_host(by)
         self._require_waiting()
+        if turn_minutes is not None and (type(turn_minutes) is not int or turn_minutes not in TURN_CHOICES):
+            raise LobbyError(f'The time limit is {TURN_CHOICES[0]} to {TURN_CHOICES[-1]} minutes.')
         if special_cards is not None:
             self.settings.special_cards = [k for k in OPTIONAL_KINDS if k in special_cards]
         if clairvoyance is not None:
@@ -324,6 +329,8 @@ class Lobby:
             self.settings.no_matching_bids = no_matching_bids
         if turn_timer is not None:
             self.settings.turn_timer = turn_timer
+        if turn_minutes is not None:
+            self.settings.turn_minutes = turn_minutes
         for member in self.humans():
             member.ready = False
         self._changed()
@@ -481,7 +488,10 @@ class Lobby:
         """How long the humans in waiting_on() still have. None if the game is not waiting for a human."""
         if self.game is None or not self.settings.turn_timer or self.is_paused() or not self.waiting_on():
             return None
-        return min(TURN_LIMIT, TURN_LIMIT - (self.clock() - self.turn_started))
+        if len(self.humans()) < 2:
+            return None  # only bots are waiting: against bots you may take as long as you like
+        limit = self.settings.turn_minutes * 60.0
+        return min(limit, limit - (self.clock() - self.turn_started))
 
     def turn_timer(self) -> tuple[list[str], int] | None:
         """What the countdown shows: who is running out of time and how many seconds are left.

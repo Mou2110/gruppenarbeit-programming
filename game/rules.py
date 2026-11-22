@@ -21,7 +21,8 @@ JESTER_LIKE = (Kind.JESTER, Kind.FAIRY, Kind.BOMB)
 VALUE_KINDS = (Kind.NUMBER, Kind.JUGGLER, Kind.CLOUD)
 
 # Turned up as the trump card: for these cards the dealer chooses the trump suit.
-DEALER_CHOOSES = (Kind.WIZARD, Kind.SHAPESHIFTER, Kind.DRAGON, Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD, Kind.CR7)
+# Only a Wizard lets the dealer choose trump. A turned-up special card means no trump.
+DEALER_CHOOSES = (Kind.WIZARD,)
 
 
 @dataclass(frozen=True)
@@ -74,8 +75,8 @@ def trump_from_card(card: Card | None) -> Suit | None:
     """Which suit is trump when this card is turned up.
 
     - Number card -> its suit is trump
-    - Jester, Fairy, Bomb or no card (last round without special cards) -> no trump
-    - Wizard and most special cards -> the dealer chooses (see dealer_chooses_trump)
+    - Jester, any special card or no card (last round without special cards) -> no trump
+    - Wizard -> the dealer chooses (see dealer_chooses_trump)
     """
     if card is not None and card.is_number:
         return card.suit
