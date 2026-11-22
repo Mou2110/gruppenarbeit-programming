@@ -12,7 +12,7 @@ from views.invites import watch_invites
 from views.leaderboard import leaderboard_page, profile_page
 from views.lobby import lobby_page
 from views.start import start_page
-from views.stats import stats_page
+from views.stats import friends_page, stats_page
 
 BASE = Path(__file__).parent
 # This number changes when the CSS file changes, ensuring the browser loads the new version.
@@ -75,6 +75,13 @@ async def index() -> None:
 async def stats() -> None:
     with ignore_gone_browser():
         await stats_page()
+        await watch_invites()   # signed in: counts as online and sees invites from friends
+
+
+@ui.page('/friends')
+async def friends() -> None:
+    with ignore_gone_browser():
+        await friends_page()
         await watch_invites()   # signed in: counts as online and sees invites from friends
 
 

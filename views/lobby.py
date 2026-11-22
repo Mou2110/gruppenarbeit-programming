@@ -182,6 +182,13 @@ async def lobby_page(code: str) -> None:
     def invite_part() -> None:
         """Friends who are online right now and can be invited with one click."""
         if not friends:
+            if account and registry.store is not None and lobby.game is None:
+                with ui.element('div').classes('section'):
+                    ui.html('<div class="sechead"><span>Invite friends</span></div>'
+                            '<p class="muted small">No friends yet. Add them once, then invite them with one click.</p>',
+                            sanitize=False)
+                    button('Add friends', lambda: ui.navigate.to('/friends'), cls='primary small ghostbtn',
+                           marker='add-friends')
             return
         candidates = invitable(friends, lobby)
         with ui.element('div').classes('section'):

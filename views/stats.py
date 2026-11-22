@@ -82,8 +82,9 @@ def friend_html(friend: dict, online: bool = False) -> str:
     return f"<div>{name}<small>{_count(friend['games'], 'game')} · {_count(friend['wins'], 'win')}</small></div>"
 
 
-def friends_section(key: str, friends: list[dict]) -> None:
-    """Your friends: add someone by username, see their games and wins, remove them again."""
+def friends_section(key: str, friends: list[dict], back: str = '/stats', title: bool = True) -> None:
+    """Your friends: add someone by username, see their games and wins, remove them again.
+    back: the page to reload afterwards (the stats page or the friends page)."""
     store = registry.store
 
     async def add() -> None:
@@ -96,7 +97,7 @@ def friends_section(key: str, friends: list[dict]) -> None:
             ui.notify('The database could not be reached. Please try again later.', type='negative')
             return
         ui.notify(f'{name} is now your friend.')
-        ui.navigate.to('/stats')
+        ui.navigate.to(back)
 
     async def remove(friend: str) -> None:
         try:
@@ -104,9 +105,10 @@ def friends_section(key: str, friends: list[dict]) -> None:
         except Exception:
             ui.notify('The database could not be reached. Please try again later.', type='negative')
             return
-        ui.navigate.to('/stats')
+        ui.navigate.to(back)
 
-    ui.html('<h2 class="h2">Friends</h2>', sanitize=False).classes('mt-s')
+    if title:
+        ui.html('<h2 class="h2">Friends</h2>', sanitize=False).classes('mt-s')
     with ui.element('div').classes('row items-center gap-2'):
         field = ui.input(placeholder='Username').classes('namefield') \
             .props('dark outlined dense maxlength=16').mark('friend-name')
@@ -173,3 +175,25 @@ async def stats_page() -> None:
                         f'<span class="place{" win" if r["place"] == 1 else ""}">{place}</span>'
                         f'<span class="pts">{r["score"]}</span></div>')
         ui.html('<div class="glist">' + ''.join(rows) + '</div>', sanitize=False)
+
+
+async def friends_page() -> None:
+    """Own page for friends, reachable from the start page: add friends without going through the stats."""
+    account = await current_account()
+    if account is None or registry.store is None:
+        message_page('Sign in to add friends', 'Friends are saved for players with an account. '
+                     'You can create one on the start page.')
+        return
+    try:
+        friends = await run.io_bound(registry.store.friends_of, account[0])
+    except Exception:
+        message_page('Friends are not available', 'The database could not be reached. Please try again later.')
+        return
+    with page_frame() as frame:
+        frame.classes('lobby-theme')  # same dark and gold look as the lobby
+        with ui.element('div').classes('pagehead'):
+            icon_button(ICON_BACK, 'Back to start', lambda: ui.navigate.to('/'))
+            ui.html('<h1>Friends</h1>', sanitize=False)
+        ui.html('<p class="muted small">Add friends by their username. Friends who are online show a green dot, '
+                'and you can invite them into your lobby with one click.</p>', sanitize=False)
+        friends_section(account[0], friends, back='/friends', title=False)

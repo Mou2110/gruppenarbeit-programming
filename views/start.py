@@ -219,6 +219,7 @@ async def start_page() -> None:
                             'and you can get back into them from any device.</p>', sanitize=False)
                     with ui.element('div').classes('acctrow'):
                         button('My stats', lambda: ui.navigate.to('/stats'), cls='primary small', marker='stats')
+                        button('Friends', lambda: ui.navigate.to('/friends'), cls='primary small', marker='friends')
                         button('Sign out', do_sign_out, cls='primary small ghostbtn', marker='signout')
                     button('See the leaderboard', lambda: ui.navigate.to('/leaderboard'),
                            cls='primary small ghostbtn', marker='leaderboard')
