@@ -160,12 +160,10 @@ body { margin: 0; background: #18284F; }
   display: flex; flex-direction: column; gap: 2px; align-items: center; white-space: nowrap;
 }
 .caption-below .trick-caption { top: calc(100% + 3px); bottom: auto; }
-.trick .hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; }
 .tag {
   padding: 2px 7px; border-radius: 999px; background: #F2C14E; color: #1B1B1B; font-size: 9px;
   font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
 }
-.hint { font-size: 12px; color: #C9D3EA; text-align: center; }
 
 /* ===== Status, player info, hand ===== */
 .statusrow { display: flex; justify-content: center; align-items: center; height: 34px; }
@@ -221,6 +219,10 @@ body { margin: 0; background: #18284F; }
 .table-trump {
   position: absolute; z-index: 1; top: var(--table-y); left: 50%; translate: -50% -50%;
   display: flex; flex-direction: column; align-items: center; gap: 6px; transition: opacity .3s ease, scale .3s ease;
+}
+.table-bid-hint {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; translate: -50% 0;
+  color: #f2dfbd; font-size: 12px; font-weight: 600; white-space: nowrap;
 }
 .table-trump > .card {
   width: clamp(40px, calc(var(--table-diameter) * .17), 70px); height: auto; aspect-ratio: 2 / 3; rotate: -5deg;
@@ -1374,7 +1376,7 @@ body:has(.game-table-theme) {
 .game-table-theme .rinfo b {
   font: 700 clamp(16px, 2.3vw, 21px)/1.15 Inter, sans-serif;
 }
-.game-table-theme :is(.rinfo span, .cardsleft, .hint) { color: var(--table-muted); }
+.game-table-theme :is(.rinfo span, .cardsleft) { color: var(--table-muted); }
 .game-table-theme :is(.iconbtn, .badge, .chip, .status.wait) {
   border: 1px solid var(--table-line);
   background: var(--table-slate);
