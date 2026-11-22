@@ -1,4 +1,5 @@
-"""The host chooses the time limit per move for each lobby: off, or 1 to 5 minutes (default 2)."""
+"""The host chooses the time limit per move for each lobby with a dial: off, or 0:30 to 5:00 in half minutes
+(default 2 minutes)."""
 import pickle
 
 import pytest
@@ -44,13 +45,13 @@ def progress(lobby):
     return game.round_number, game.phase, len(game.tricks_played), len(game.trick), game.current
 
 
-def test_choices_are_one_to_five_minutes_and_two_is_the_default():
-    assert TURN_CHOICES == (1, 2, 3, 4, 5)
+def test_choices_are_half_minutes_up_to_five_and_two_is_the_default():
+    assert TURN_CHOICES == (0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5)
     lobby = LobbyRegistry(clock=FakeClock()).create('host', 'Erik')
     assert lobby.settings.turn_minutes == 2
 
 
-@pytest.mark.parametrize('minutes', [1, 3, 5])
+@pytest.mark.parametrize('minutes', [0.5, 1, 2.5, 5])
 def test_the_chosen_time_limit_is_used(minutes):
     lobby, clock = two_humans(minutes)
     assert lobby.seconds_left() == minutes * 60
@@ -67,7 +68,7 @@ def test_five_minutes_means_no_countdown_after_two_minutes():
     assert lobby.turn_timer() is None                  # 2:30 left: the countdown only shows in the last 30 s
 
 
-@pytest.mark.parametrize('minutes', [0, 6, -1, 2.5])
+@pytest.mark.parametrize('minutes', [0, 6, -1, 2.25, 5.5, True, '2', None.__class__])
 def test_other_values_are_rejected(minutes):
     lobby = LobbyRegistry(clock=FakeClock()).create('host', 'Erik')
     with pytest.raises(LobbyError):
@@ -97,3 +98,22 @@ def test_lobbies_saved_before_the_minutes_existed_get_two_minutes():
     restored = pickle.loads(pickle.dumps(lobby))
     assert restored.settings.turn_minutes == 2
     assert restored.seconds_left() is not None
+
+
+@pytest.mark.parametrize('dial, expected', [(0, (False, 2)), (1, (True, 0.5)), (4, (True, 2)), (5, (True, 2.5)),
+                                            (10, (True, 5))])
+def test_the_dial_position_turns_into_a_setting(dial, expected):
+    from views.lobby import dial_to_setting
+    assert dial_to_setting(dial, current_minutes=2) == expected
+
+
+@pytest.mark.parametrize('on, minutes, dial', [(False, 3, 0), (True, 0.5, 1), (True, 2, 4), (True, 5, 10)])
+def test_the_setting_turns_into_a_dial_position(on, minutes, dial):
+    from views.lobby import setting_to_dial
+    assert setting_to_dial(on, minutes) == dial
+
+
+@pytest.mark.parametrize('dial, text', [(0, 'Off'), (1, '0:30'), (3, '1:30'), (4, '2:00'), (10, '5:00')])
+def test_the_dial_shows_minutes_and_seconds(dial, text):
+    from views.lobby import dial_text
+    assert dial_text(dial) == text

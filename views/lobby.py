@@ -37,6 +37,27 @@ SPECIAL_OPTIONS = [
 
 ICON_SEND = '<path d="M4 12l16-8-6 16-3-7z"/><path d="M11 13l9-9"/>'
 
+# The time limit dial: position 0 = off, every further step is half a minute (1 = 0:30 ... 10 = 5:00).
+DIAL_MAX = len(TURN_CHOICES)
+
+
+def dial_to_setting(position: int, current_minutes: float) -> tuple[bool, float]:
+    """(time limit on?, minutes) for a dial position. "Off" keeps the minutes chosen before."""
+    if position <= 0:
+        return False, current_minutes
+    return True, TURN_CHOICES[min(int(position), DIAL_MAX) - 1]
+
+
+def setting_to_dial(on: bool, minutes: float) -> int:
+    return TURN_CHOICES.index(minutes) + 1 if on and minutes in TURN_CHOICES else 0
+
+
+def dial_text(position: int) -> str:
+    if position <= 0:
+        return 'Off'
+    seconds = int(TURN_CHOICES[min(int(position), DIAL_MAX) - 1] * 60)
+    return f'{seconds // 60}:{seconds % 60:02d}'
+
 # Creates a translucent message at the bottom right that stays visible for a few seconds.
 # (Sent in full with every message so it does not depend on a previously loaded script.)
 BUBBLE_JS = """(() => {
@@ -109,6 +130,13 @@ async def lobby_page(code: str) -> None:
         if name:
             save_name(name)
             lobby.rename(pid, name)
+
+    def set_turn_limit(position) -> None:
+        try:
+            on, minutes = dial_to_setting(int(position), lobby.settings.turn_minutes)
+        except (TypeError, ValueError):
+            return
+        run(lobby.update_settings, pid, turn_timer=on, turn_minutes=minutes)
 
     def toggle_special(kinds: tuple[Kind, ...]) -> None:
         current = set(lobby.settings.special_cards)
@@ -212,17 +240,21 @@ async def lobby_page(code: str) -> None:
                 button('Clairvoyance in round 1', partial(run, lobby.update_settings, pid, clairvoyance=not on),
                        cls='chipbtn' + (' on' if on else ''), icon=ICON_CHECK if on else None,
                        disabled=not is_host, marker='setting')
-            ui.html('<p class="muted small">Time limit per move (none if you only play against bots)</p>', sanitize=False)
-            with ui.element('div').classes('chips'):
-                for minutes in (None, *TURN_CHOICES):
-                    if minutes is None:
-                        label, on = 'Off', not settings.turn_timer
-                        change = partial(run, lobby.update_settings, pid, turn_timer=False)
-                    else:
-                        label, on = f'{minutes} min', settings.turn_timer and settings.turn_minutes == minutes
-                        change = partial(run, lobby.update_settings, pid, turn_timer=True, turn_minutes=minutes)
-                    button(label, change, cls='chipbtn' + (' on' if on else ''), icon=ICON_CHECK if on else None,
-                           disabled=not is_host, marker='turn-minutes')
+            ui.html('<p class="muted small">Time limit per move</p>', sanitize=False)
+            with ui.element('div').classes('timedial'):
+                position = setting_to_dial(settings.turn_timer, settings.turn_minutes)
+                dial = ui.knob(position, min=0, max=DIAL_MAX, step=1, size='104px', track_color='grey-8') \
+                    .props('thickness=0.18 aria-label="Time limit per move"').classes('timeknob') \
+                    .mark('turn-dial')
+                with dial:
+                    ui.label().bind_text_from(dial, 'value', backward=dial_text).classes('timeknob-value')
+                if is_host:
+                    dial.on('change', lambda e: set_turn_limit(e.args))
+                else:
+                    dial.props('readonly')
+                hint = 'Turn the dial: off or 0:30 to 5:00.' if is_host else 'Chosen by the host.'
+                ui.html(f'<p class="muted small">{hint}<br>No time limit if you only play against bots.</p>',
+                        sanitize=False).classes('timedial-hint')
 
     @ui.refreshable
     def ready_part() -> None:

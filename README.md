@@ -103,7 +103,7 @@ vector drawing made for this project, not a photo.
 - Clairvoyance in round 1; bids must not add up to the number of tricks
 - Lobbies with a 4-character code, bots and chat
 - Games survive server restarts; a player who leaves is replaced by a bot and counts as last place
-- Time limit per move, chosen by the host for each lobby: off or 1–5 minutes (default 2); the countdown appears in the last 30 seconds. Against bots only there is no time limit
+- Time limit per move, chosen by the host for each lobby with a dial: off or 0:30–5:00 in half minutes (default 2:00); the countdown appears in the last 30 seconds. Against bots only there is no time limit
 - "Play again" at the end of a game, and the rules can be opened during the game
 - Optional accounts with statistics and "Your games" to rejoin
 - Leaderboard: win rate by default (at least 5 finished games), sortable by every statistic, ties share a place
