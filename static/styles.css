@@ -639,6 +639,74 @@ button[disabled] { cursor: not-allowed; }
 .readyinfo { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; margin-top: 8px; }
 .readyinfo b { font-size: 13px; }
 .readyinfo span { font-size: 12px; color: #C9D3EA; }
+
+/* ===== Lobby (waiting room): same dark, gold and parchment look as the start page ===== */
+body:has(.lobby-theme) {
+  --lobby-night: #0b0f18;
+  --lobby-panel: linear-gradient(147deg, #181e2a, #131a25);
+  --lobby-slate: #222b3b;
+  --lobby-text: #f2dfbd;
+  --lobby-muted: #c8bdad;
+  --lobby-line: #90734759;
+  --lobby-bronze: #b99056;
+  --lobby-gold: linear-gradient(#e2c698, #c4a16a);
+  --lobby-display: 'Cormorant Garamond', Georgia, serif;
+  background: var(--lobby-night);
+}
+.pg:has(> .lobby-theme) {
+  color: var(--lobby-text);
+  background:
+    radial-gradient(ellipse 850px 640px at 72% 120px, #171e2c 0%, transparent 78%),
+    radial-gradient(ellipse at 10% 90%, #2a1d1680 0, transparent 50%),
+    var(--lobby-night);
+}
+.lobby-theme .rinfo b { font: 600 26px/1 var(--lobby-display); color: var(--lobby-text); letter-spacing: .02em; }
+.lobby-theme .iconbtn { background: var(--lobby-slate); border: 1px solid var(--lobby-line); color: var(--lobby-text); }
+.lobby-theme .iconbtn:hover { background: #2e3849; }
+/* Lobby code card: dark panel with the code in gold. */
+.lobby-theme .panel.codecard {
+  background: var(--lobby-panel); color: var(--lobby-text); border: 1px solid var(--lobby-line);
+  box-shadow: 0 14px 36px #05070bbd;
+}
+.lobby-theme .codecard .eyebrow { color: var(--lobby-bronze); }
+.lobby-theme .codecard .code {
+  font-family: var(--lobby-display); font-weight: 700; font-size: 58px;
+  background: var(--lobby-gold); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.lobby-theme .primary.small { background: var(--lobby-gold); color: #20170c; border: 1px solid #efd4a2; }
+.lobby-theme .primary.small:hover { background: linear-gradient(#f4d9a9, #d7b47d); }
+.lobby-theme .primary.small.ghostbtn,
+.lobby-theme .section .primary.small.ghostbtn {
+  background: transparent; color: var(--lobby-text); border: 1px solid var(--lobby-line) !important;
+}
+.lobby-theme .primary.small.ghostbtn:hover { background: #ffffff0d; }
+/* Sections, labels and player rows */
+.lobby-theme :is(.flabel, .sechead) { color: var(--lobby-text); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+.lobby-theme :is(.muted, .readyinfo span, .prow .muted) { color: var(--lobby-muted); }
+.lobby-theme .namefield .q-field__control { background: var(--lobby-slate); }
+.lobby-theme .namefield .q-field__control::before { border-color: var(--lobby-line) !important; }
+.lobby-theme .namefield input { color: var(--lobby-text); }
+.lobby-theme .prow { background: var(--lobby-panel); border: 1px solid var(--lobby-line); }
+.lobby-theme .prow.mine { border-color: var(--lobby-bronze); box-shadow: 0 0 0 1px #b9905640; }
+.lobby-theme .avatar { background: #f2dfbd; color: #2b2013; }
+.lobby-theme :is(.tag, .mini) { background: var(--lobby-gold); color: #20170c; }
+/* Setting chips: gold when switched on */
+.lobby-theme .chipbtn { border-color: var(--lobby-line); color: var(--lobby-muted); }
+.lobby-theme .chipbtn.on { background: var(--lobby-gold); border-color: #efd4a2; color: #20170c; }
+.lobby-theme .timeknob .q-circular-progress__track { stroke: #2e3849; }
+.lobby-theme .timeknob .q-circular-progress__circle { stroke: #d9b67c; }
+.lobby-theme .timeknob .q-circular-progress__text { background: radial-gradient(circle at 50% 30%, #262f40, #131a25 72%); box-shadow: inset 0 0 0 1px var(--lobby-line); }
+.lobby-theme .timeknob-value { color: var(--lobby-text); }
+/* Ready button and bottom chat */
+.lobby-theme .readyinfo b { color: var(--lobby-text); }
+.lobby-theme .primary.big { background: var(--lobby-gold); color: #20170c; border: 1px solid #efd4a2; box-shadow: 0 8px 26px #bd7d2c24; }
+.lobby-theme .primary.big:hover { background: linear-gradient(#f4d9a9, #d7b47d); }
+.lobby-theme .primary.big.ghostbtn { background: #111722a6; color: var(--lobby-text); border: 1px solid #ab88576b !important; box-shadow: none; }
+body:has(.lobby-theme) :is(.chatrow, .chatlog) { background: var(--lobby-night); border-color: var(--lobby-line); }
+body:has(.lobby-theme) :is(.chatinput .q-field__control, .cmsg:not(.mine)) { background: var(--lobby-slate); }
+body:has(.lobby-theme) .chatinput .q-field__native::placeholder { color: var(--lobby-muted); }
+body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c; }
+
 /* Fan the hand, with a readable strip on each card when a large hand scrolls. */
 .game-table-theme .hand { min-height: 0; padding: 0 0 2px; }
 .handrow {
@@ -1244,70 +1312,3 @@ body:has(.game-table-theme) .chatinput .q-field__native::placeholder { color: va
 @media (prefers-reduced-motion: reduce) {
   .table-mote, .game-table-theme .avatar.turn::before { animation: none; }
 }
-
-/* ===== Lobby (waiting room): same dark, gold and parchment look as the start page ===== */
-body:has(.lobby-theme) {
-  --lobby-night: #0b0f18;
-  --lobby-panel: linear-gradient(147deg, #181e2a, #131a25);
-  --lobby-slate: #222b3b;
-  --lobby-text: #f2dfbd;
-  --lobby-muted: #c8bdad;
-  --lobby-line: #90734759;
-  --lobby-bronze: #b99056;
-  --lobby-gold: linear-gradient(#e2c698, #c4a16a);
-  --lobby-display: 'Cormorant Garamond', Georgia, serif;
-  background: var(--lobby-night);
-}
-.pg:has(> .lobby-theme) {
-  color: var(--lobby-text);
-  background:
-    radial-gradient(ellipse 850px 640px at 72% 120px, #171e2c 0%, transparent 78%),
-    radial-gradient(ellipse at 10% 90%, #2a1d1680 0, transparent 50%),
-    var(--lobby-night);
-}
-.lobby-theme .rinfo b { font: 600 26px/1 var(--lobby-display); color: var(--lobby-text); letter-spacing: .02em; }
-.lobby-theme .iconbtn { background: var(--lobby-slate); border: 1px solid var(--lobby-line); color: var(--lobby-text); }
-.lobby-theme .iconbtn:hover { background: #2e3849; }
-/* Lobby code card: dark panel with the code in gold. */
-.lobby-theme .panel.codecard {
-  background: var(--lobby-panel); color: var(--lobby-text); border: 1px solid var(--lobby-line);
-  box-shadow: 0 14px 36px #05070bbd;
-}
-.lobby-theme .codecard .eyebrow { color: var(--lobby-bronze); }
-.lobby-theme .codecard .code {
-  font-family: var(--lobby-display); font-weight: 700; font-size: 58px;
-  background: var(--lobby-gold); -webkit-background-clip: text; background-clip: text; color: transparent;
-}
-.lobby-theme .primary.small { background: var(--lobby-gold); color: #20170c; border: 1px solid #efd4a2; }
-.lobby-theme .primary.small:hover { background: linear-gradient(#f4d9a9, #d7b47d); }
-.lobby-theme .primary.small.ghostbtn,
-.lobby-theme .section .primary.small.ghostbtn {
-  background: transparent; color: var(--lobby-text); border: 1px solid var(--lobby-line) !important;
-}
-.lobby-theme .primary.small.ghostbtn:hover { background: #ffffff0d; }
-/* Sections, labels and player rows */
-.lobby-theme :is(.flabel, .sechead) { color: var(--lobby-text); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
-.lobby-theme :is(.muted, .readyinfo span, .prow .muted) { color: var(--lobby-muted); }
-.lobby-theme .namefield .q-field__control { background: var(--lobby-slate); }
-.lobby-theme .namefield .q-field__control::before { border-color: var(--lobby-line) !important; }
-.lobby-theme .namefield input { color: var(--lobby-text); }
-.lobby-theme .prow { background: var(--lobby-panel); border: 1px solid var(--lobby-line); }
-.lobby-theme .prow.mine { border-color: var(--lobby-bronze); box-shadow: 0 0 0 1px #b9905640; }
-.lobby-theme .avatar { background: #f2dfbd; color: #2b2013; }
-.lobby-theme :is(.tag, .mini) { background: var(--lobby-gold); color: #20170c; }
-/* Setting chips: gold when switched on */
-.lobby-theme .chipbtn { border-color: var(--lobby-line); color: var(--lobby-muted); }
-.lobby-theme .chipbtn.on { background: var(--lobby-gold); border-color: #efd4a2; color: #20170c; }
-.lobby-theme .timeknob .q-circular-progress__track { stroke: #2e3849; }
-.lobby-theme .timeknob .q-circular-progress__circle { stroke: #d9b67c; }
-.lobby-theme .timeknob .q-circular-progress__text { background: radial-gradient(circle at 50% 30%, #262f40, #131a25 72%); box-shadow: inset 0 0 0 1px var(--lobby-line); }
-.lobby-theme .timeknob-value { color: var(--lobby-text); }
-/* Ready button and bottom chat */
-.lobby-theme .readyinfo b { color: var(--lobby-text); }
-.lobby-theme .primary.big { background: var(--lobby-gold); color: #20170c; border: 1px solid #efd4a2; box-shadow: 0 8px 26px #bd7d2c24; }
-.lobby-theme .primary.big:hover { background: linear-gradient(#f4d9a9, #d7b47d); }
-.lobby-theme .primary.big.ghostbtn { background: #111722a6; color: var(--lobby-text); border: 1px solid #ab88576b !important; box-shadow: none; }
-body:has(.lobby-theme) :is(.chatrow, .chatlog) { background: var(--lobby-night); border-color: var(--lobby-line); }
-body:has(.lobby-theme) :is(.chatinput .q-field__control, .cmsg:not(.mine)) { background: var(--lobby-slate); }
-body:has(.lobby-theme) .chatinput .q-field__native::placeholder { color: var(--lobby-muted); }
-body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c; }
