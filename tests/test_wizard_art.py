@@ -1,4 +1,5 @@
-"""Bonus: the Wizard cards show Moritz and the Shapeshifter shows Keno (AI-generated portraits, with their consent)."""
+"""Bonus: the Wizard cards show Moritz, the Shapeshifter shows Keno and the Jester cards show Erik
+(AI-generated portraits, with their consent)."""
 import re
 from pathlib import Path
 
@@ -7,7 +8,8 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 CSS = (ROOT / 'static' / 'styles.css').read_text()
 PORTRAITS = pytest.mark.parametrize('kind, image', [('wizard', 'wizard-moritz.jpg'),
-                                                    ('shapeshifter', 'shapeshifter-keno.jpg')])
+                                                    ('shapeshifter', 'shapeshifter-keno.jpg'),
+                                                    ('jester', 'jester-erik.jpg')])
 
 
 @PORTRAITS
