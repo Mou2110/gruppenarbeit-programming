@@ -82,7 +82,7 @@ def friend_html(friend: dict, online: bool = False) -> str:
     return f"<div>{name}<small>{_count(friend['games'], 'game')} · {_count(friend['wins'], 'win')}</small></div>"
 
 
-def friends_section(key: str, friends: list[dict], back: str = '/stats') -> None:
+def friends_section(key: str, friends: list[dict], back: str = '/stats', title: bool = True) -> None:
     """Your friends: add someone by username, see their games and wins, remove them again.
     back: the page to reload afterwards (the stats page or the friends page)."""
     store = registry.store
@@ -107,7 +107,8 @@ def friends_section(key: str, friends: list[dict], back: str = '/stats') -> None
             return
         ui.navigate.to(back)
 
-    ui.html('<h2 class="h2">Friends</h2>', sanitize=False).classes('mt-s')
+    if title:
+        ui.html('<h2 class="h2">Friends</h2>', sanitize=False).classes('mt-s')
     with ui.element('div').classes('row items-center gap-2'):
         field = ui.input(placeholder='Username').classes('namefield') \
             .props('dark outlined dense maxlength=16').mark('friend-name')
@@ -188,10 +189,11 @@ async def friends_page() -> None:
     except Exception:
         message_page('Friends are not available', 'The database could not be reached. Please try again later.')
         return
-    with page_frame():
+    with page_frame() as frame:
+        frame.classes('lobby-theme')  # same dark and gold look as the lobby
         with ui.element('div').classes('pagehead'):
             icon_button(ICON_BACK, 'Back to start', lambda: ui.navigate.to('/'))
             ui.html('<h1>Friends</h1>', sanitize=False)
         ui.html('<p class="muted small">Add friends by their username. Friends who are online show a green dot, '
                 'and you can invite them into your lobby with one click.</p>', sanitize=False)
-        friends_section(account[0], friends, back='/friends')
+        friends_section(account[0], friends, back='/friends', title=False)

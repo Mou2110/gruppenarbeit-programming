@@ -697,6 +697,10 @@ button[disabled] { cursor: not-allowed; }
 .grow .ginfo span { font-size: 12px; font-weight: 500; color: #C9D3EA; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .grow .primary.small { height: 38px; padding: 0 16px; flex: none; }
 .authpanel .namefield { width: 100%; }
+/* Friends page in the dark and gold lobby look (the colours come from the lobby theme). */
+.lobby-theme .pagehead h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; color: var(--lobby-text, #f2dfbd); }
+.lobby-theme .gitem { background: var(--lobby-panel, #181e2a); border: 1px solid var(--lobby-line, #90734759); }
+.lobby-theme .gitem small { color: var(--lobby-muted, #c8bdad); }
 .autherr { min-height: 16px; font-size: 12px; font-weight: 600; color: #A8322A; }
 .authswitch { align-self: center; color: #4A5878 !important; }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
