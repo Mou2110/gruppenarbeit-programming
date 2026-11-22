@@ -106,6 +106,22 @@ def _avatar(v: dict, index: int) -> str:
     return f'<div class="avatar{turn}">{initial}{dealer}</div>'
 
 
+def turn_order(v: dict) -> dict[int, int]:
+    """Seat -> place in the order (1, 2, 3 …) for the current bidding round or trick. Empty between rounds.
+
+    Bidding (and choosing trump) starts left of the dealer. A trick starts with whoever leads it:
+    the first card on the table, or the player whose turn it is while the table is still empty.
+    """
+    n = len(v['players'])
+    if v['phase'] in ('werewolf', 'choosing_trump', 'bidding'):
+        start = (v['dealer'] + 1) % n
+    elif v['phase'] in ('playing', 'adjusting', 'passing'):
+        start = v['trick'][0].player if v['trick'] else v['current']
+    else:
+        return {}
+    return {seat: (seat - start) % n + 1 for seat in range(n)}
+
+
 def _leader(v: dict, paused: bool) -> int | None:
     """Index of the player who is winning (or has just won) the trick on the table."""
     finished = paused and not v['trick'] and bool(v['last_trick'])
@@ -117,6 +133,8 @@ def _leader(v: dict, paused: bool) -> int | None:
 
 def _seat_html(v: dict, index: int, lobby: Lobby, leader: int | None = None) -> str:
     p = v['players'][index]
+    place = turn_order(v).get(index)
+    order = f'<span class="seat-order" title="Turn order: {place}">{place}.</span>' if place else ''
     member = lobby.member(p['id'])
     # Bot / away: shown as a small badge on the avatar instead of on a separate line to keep seats compact.
     mark = ''
@@ -132,7 +150,7 @@ def _seat_html(v: dict, index: int, lobby: Lobby, leader: int | None = None) -> 
     else:
         count = p['cards_left']
         extra = f'<span class="cardsleft">{count} card{"s" if count != 1 else ""}</span>'
-    avatar = _avatar(v, index)
+    avatar = _avatar(v, index) + order
     if index == leader:
         mark += '<span class="seat-crown" title="Wins this trick so far">♛</span>'
     name = esc(p['name'])
