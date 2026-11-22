@@ -187,7 +187,7 @@ async def lobby_page(code: str) -> None:
                     ui.html('<div class="sechead"><span>Invite friends</span></div>'
                             '<p class="muted small">No friends yet. Add them once, then invite them with one click.</p>',
                             sanitize=False)
-                    button('Add friends', lambda: ui.navigate.to('/friends'), cls='primary small ghostbtn',
+                    button('Add friends', lambda: ui.navigate.to(f'/friends?back=/lobby/{lobby.code}'), cls='primary small ghostbtn',
                            marker='add-friends')
             return
         candidates = invitable(friends, lobby)

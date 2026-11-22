@@ -1,6 +1,7 @@
 """Statistics page: only for signed-in players; shows all completed games for the account."""
 from __future__ import annotations
 
+import re
 import time
 
 from nicegui import run, ui
@@ -177,8 +178,15 @@ async def stats_page() -> None:
         ui.html('<div class="glist">' + ''.join(rows) + '</div>', sanitize=False)
 
 
-async def friends_page() -> None:
+def back_target(value: str) -> str:
+    """Where the back arrow of the friends page leads: the lobby you came from, otherwise the start page.
+    Only lobby paths are accepted, so a link cannot send players to another website."""
+    return value if re.fullmatch(r'/lobby/[A-Z0-9]{1,8}', value or '') else '/'
+
+
+async def friends_page(back: str = '') -> None:
     """Own page for friends, reachable from the start page: add friends without going through the stats."""
+    back = back_target(back)
     account = await current_account()
     if account is None or registry.store is None:
         message_page('Sign in to add friends', 'Friends are saved for players with an account. '
@@ -192,8 +200,9 @@ async def friends_page() -> None:
     with page_frame() as frame:
         frame.classes('lobby-theme')  # same dark and gold look as the lobby
         with ui.element('div').classes('pagehead'):
-            icon_button(ICON_BACK, 'Back to start', lambda: ui.navigate.to('/'))
+            icon_button(ICON_BACK, 'Back to start' if back == '/' else 'Back to the lobby',
+                        lambda: ui.navigate.to(back))
             ui.html('<h1>Friends</h1>', sanitize=False)
         ui.html('<p class="muted small">Add friends by their username. Friends who are online show a green dot, '
                 'and you can invite them into your lobby with one click.</p>', sanitize=False)
-        friends_section(account[0], friends, back='/friends', title=False)
+        friends_section(account[0], friends, back='/friends' if back == '/' else f'/friends?back={back}', title=False)

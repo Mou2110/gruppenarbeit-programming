@@ -65,3 +65,9 @@ def test_start_page_has_a_friends_button(monkeypatch, tmp_path):
             await user.open('/')
             await user.should_see(marker='friends')
     asyncio.run(check())
+
+
+def test_back_arrow_leads_to_the_lobby_you_came_from_and_nowhere_else():
+    assert stats.back_target('/lobby/AB23') == '/lobby/AB23'
+    for value in ('', '/stats', 'https://example.com', '//example.com', '/lobby/AB23/../x'):
+        assert stats.back_target(value) == '/'

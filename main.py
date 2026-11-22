@@ -79,9 +79,9 @@ async def stats() -> None:
 
 
 @ui.page('/friends')
-async def friends() -> None:
+async def friends(back: str = '') -> None:
     with ignore_gone_browser():
-        await friends_page()
+        await friends_page(back)
         await watch_invites()   # signed in: counts as online and sees invites from friends
 
 
