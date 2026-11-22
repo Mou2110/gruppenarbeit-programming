@@ -287,8 +287,13 @@ async def lobby_page(code: str) -> None:
     @ui.refreshable
     def content() -> None:
         state['mode'] = mode()
-        with page_frame():
+        with page_frame() as column:
             if state['mode'] == 'game':
+                column.classes('game-table-theme')
+                ui.html(
+                    '<span class="table-mote"></span>' * 6,
+                    sanitize=False,
+                ).classes('table-atmosphere').props('aria-hidden=true').mark('table-atmosphere')
                 # Keep the open dialog outside the table refreshed by moves and bot turns.
                 rules = game_rules_dialog()
                 table_part(rules.open)

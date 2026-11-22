@@ -899,3 +899,60 @@ details.rule.extra > summary::-webkit-details-marker { display: none; }
 details.rule.extra > summary h3 { margin: 0; font-style: italic; color: #8A6A35; }
 details.rule.extra > summary h3::after { content: ' ?'; }
 details.rule.extra[open] > summary h3::after { content: ''; }
+
+/* ===== Illustrated game table ===== */
+body:has(.game-table-theme) {
+  --table-night: #0b0f18;
+  --table-slate: #29344a;
+  --table-text: #f2dfbd;
+  --table-muted: #d6caba;
+  --table-line: #b9905652;
+  --table-gold: linear-gradient(#f3d299, #ce9d58);
+  background: var(--table-night);
+}
+.pg:has(> .game-table-theme) {
+  color: var(--table-text);
+  background:
+    radial-gradient(ellipse at 18% 22%, #21304b 0, transparent 57%),
+    radial-gradient(ellipse at 85% 85%, #3a241cc9 0, transparent 51%),
+    var(--table-night);
+}
+.tbl.game-table-theme { isolation: isolate; }
+.table-atmosphere {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.table-mote {
+  position: absolute;
+  top: var(--mote-y);
+  left: var(--mote-x);
+  width: var(--mote-size, 3px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #efd2a1;
+  box-shadow: 0 0 7px 2px #d9924d78;
+  opacity: 0;
+  animation: table-mote-drift var(--mote-cycle) linear var(--mote-start) infinite;
+}
+.table-mote:nth-of-type(1) { --mote-x: 8%; --mote-y: 23%; --mote-cycle: 17s; --mote-start: -2s; --mote-drift: 19px; }
+.table-mote:nth-of-type(2) { --mote-x: 15%; --mote-y: 64%; --mote-cycle: 19s; --mote-start: -9s; --mote-drift: 13px; }
+.table-mote:nth-of-type(3) { --mote-x: 23%; --mote-y: 31%; --mote-cycle: 23s; --mote-start: -13s; --mote-drift: -18px; --mote-size: 2px; }
+.table-mote:nth-of-type(4) { --mote-x: 90%; --mote-y: 20%; --mote-cycle: 18s; --mote-start: -4s; --mote-drift: -22px; --mote-size: 4px; }
+.table-mote:nth-of-type(5) { --mote-x: 84%; --mote-y: 58%; --mote-cycle: 22s; --mote-start: -15s; --mote-drift: 18px; --mote-size: 2px; }
+.table-mote:nth-of-type(6) { --mote-x: 77%; --mote-y: 29%; --mote-cycle: 21s; --mote-start: -8s; --mote-drift: 14px; --mote-size: 2px; }
+@keyframes table-mote-drift {
+  0%, 5% { opacity: 0; transform: translate3d(0, -10px, 0); }
+  14% { opacity: .76; }
+  23% { opacity: .32; }
+  33%, 100% { opacity: 0; transform: translate3d(var(--mote-drift), 93px, 0); }
+}
+@media (max-width: 600px) {
+  .table-mote:nth-of-type(5) { --mote-x: 90%; }
+  .table-mote:nth-of-type(6) { --mote-x: 86%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .table-mote { animation: none; }
+}
