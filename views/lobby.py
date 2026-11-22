@@ -11,6 +11,7 @@ from functools import partial
 
 from nicegui import run as background, ui
 
+from game.bots import LEVEL_NAMES, LEVELS
 from game.cards import Kind
 from game.lobby import MAX_PLAYERS, MIN_PLAYERS, TURN_CHOICES, LobbyError, clean_name, registry
 from game.presence import InviteError, presence
@@ -172,7 +173,8 @@ async def lobby_page(code: str) -> None:
                     tags.append('offline')
                 tag_html = f' <span class="muted">({", ".join(tags)})</span>' if tags else ''
                 if member.is_bot:
-                    pill = '<span class="pill bot">Bot</span>'
+                    level = '' if member.level == 'normal' else f'{LEVEL_NAMES[member.level]} '
+                    pill = f'<span class="pill bot">{level}Bot</span>'
                 elif member.ready:
                     pill = '<span class="pill ready">Ready</span>'
                 else:
@@ -185,8 +187,12 @@ async def lobby_page(code: str) -> None:
                         icon_button(ICON_CLOSE, f'Remove {member.name}', partial(run, lobby.remove_bot, pid, member.id),
                                     marker='remove-bot').classes('mini')
             if is_host and len(lobby.members) < MAX_PLAYERS:
-                button('Add a bot', partial(run, lobby.add_bot, pid), cls='primary ghostbtn small', icon=ICON_PLUS,
-                       marker='add-bot')
+                ui.html('<p class="muted small">Add a bot</p>', sanitize=False)
+                with ui.element('div').classes('chips'):
+                    for level in LEVELS:
+                        button(LEVEL_NAMES[level], partial(run, lobby.add_bot, pid, level), cls='chipbtn',
+                               icon=ICON_PLUS, label=f'Add a {LEVEL_NAMES[level]} bot',
+                               marker='add-bot' if level == 'normal' else f'add-bot-{level}')
 
     @ui.refreshable
     def settings_part() -> None:

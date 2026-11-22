@@ -43,6 +43,7 @@ class Member:
     name: str
     ready: bool = False
     is_bot: bool = False
+    level: str = 'normal'   # bot level, one of bots.LEVELS (older saved bots get this class default)
 
 
 @dataclass
@@ -293,14 +294,16 @@ class Lobby:
         self._changed()
         self._maybe_start()
 
-    def add_bot(self, by: str) -> None:
+    def add_bot(self, by: str, level: str = 'normal') -> None:
         self._require_host(by)
         self._require_waiting()
+        if level not in bots.LEVELS:
+            raise LobbyError('There is no such bot level.')
         if len(self.members) >= MAX_PLAYERS:
             raise LobbyError('This lobby is full.')
         used = {m.name for m in self.members}
         name = next((n for n in BOT_NAMES if n not in used), f'Bot {len(self.members) + 1}')
-        self.members.append(Member(f'bot-{secrets.token_hex(4)}', name, ready=True, is_bot=True))
+        self.members.append(Member(f'bot-{secrets.token_hex(4)}', name, ready=True, is_bot=True, level=level))
         self._changed()
         self._maybe_start()
 
@@ -544,6 +547,11 @@ class Lobby:
         self._after_move(tricks_before)
         return True
 
+    def _level(self, player_id: str) -> str:
+        """The bot level of a seat. A human's seat taken over by a bot plays normal."""
+        member = self.member(player_id)
+        return member.level if member is not None else 'normal'
+
     def _auto_move(self) -> bool:
         """Makes a move for a bot if it is their turn."""
         game = self.game
@@ -555,7 +563,7 @@ class Lobby:
             moved = False
             for player in game.players:
                 if game.must_pass(player.id) and self._plays_automatically(player.id):
-                    game.pass_card(player.id, bots.choose_pass(game.view_for(player.id)))
+                    game.pass_card(player.id, bots.choose_pass(game.view_for(player.id), self._level(player.id)))
                     moved = True
             if moved:
                 self._after_move(tricks_before)
@@ -568,14 +576,14 @@ class Lobby:
         if phase in (Phase.WEREWOLF, Phase.CHOOSING_TRUMP):
             game.choose_trump(player.id, bots.choose_trump(view))
         elif phase == Phase.BIDDING:
-            game.place_bid(player.id, bots.choose_bid(view))
+            game.place_bid(player.id, bots.choose_bid(view, self._level(player.id)))
         elif phase == Phase.ADJUSTING:
             game.adjust_bid(player.id, bots.choose_adjustment(view))
         elif game.awaiting_choice is not None:
             suit, as_wizard = bots.declare_played_card(view)
             game.declare(player.id, suit=suit, as_wizard=as_wizard)
         else:
-            card_id, suit, as_wizard = bots.choose_card(view)
+            card_id, suit, as_wizard = bots.choose_card(view, self._level(player.id))
             game.play_card(player.id, card_id, suit=suit, as_wizard=as_wizard)
         self._after_move(tricks_before)
         return True
