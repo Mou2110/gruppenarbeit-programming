@@ -28,6 +28,7 @@ BOT_DELAY = 0.9       # seconds between two automatic moves
 TRICK_PAUSE = 1.6     # how long a finished trick stays visible to everyone
 ABSENT_GRACE = 5.0    # how long someone may be offline (e.g. reloading the page) before they count as "away"
 TURN_LIMIT = 120.0    # seconds a human has for a move; then the leftmost allowed card is played for them
+                      # (only with at least two humans: against bots there is no time limit)
 TIMER_SHOWN = 30.0    # the countdown only appears in the last seconds, so nobody feels rushed
 
 
@@ -481,6 +482,8 @@ class Lobby:
         """How long the humans in waiting_on() still have. None if the game is not waiting for a human."""
         if self.game is None or not self.settings.turn_timer or self.is_paused() or not self.waiting_on():
             return None
+        if len(self.humans()) < 2:
+            return None  # only bots are waiting: against bots you may take as long as you like
         return min(TURN_LIMIT, TURN_LIMIT - (self.clock() - self.turn_started))
 
     def turn_timer(self) -> tuple[list[str], int] | None:
