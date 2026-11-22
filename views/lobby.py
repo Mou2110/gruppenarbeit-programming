@@ -244,8 +244,9 @@ async def lobby_page(code: str) -> None:
         note = missing_players_html(lobby)
         if note:
             ui.html(note, sanitize=False)
+        status = '' if note else f'<span>{esc(missing)}</span>'  # the note above already says what is missing
         ui.html(f'<div class="readyinfo"><b>{ready} of {len(humans)} player{"s" if len(humans) != 1 else ""} '
-                f'ready</b><span>{esc(missing)}</span><span>The game starts automatically once everyone is ready '
+                f'ready</b>{status}<span>The game starts automatically once everyone is ready '
                 f'and at least {MIN_PLAYERS} players are in.</span></div>', sanitize=False)
         if me is not None:
             button("I'm ready" if not me.ready else 'Not ready after all', partial(run, lobby.set_ready, pid, not me.ready),
