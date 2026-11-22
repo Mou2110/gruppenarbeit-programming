@@ -12,7 +12,7 @@ from functools import partial
 from nicegui import run as background, ui
 
 from game.cards import Kind
-from game.lobby import MAX_PLAYERS, MIN_PLAYERS, LobbyError, clean_name, registry
+from game.lobby import MAX_PLAYERS, MIN_PLAYERS, TURN_CHOICES, LobbyError, clean_name, registry
 from game.presence import InviteError, presence
 
 from .common import (
@@ -212,10 +212,17 @@ async def lobby_page(code: str) -> None:
                 button('Clairvoyance in round 1', partial(run, lobby.update_settings, pid, clairvoyance=not on),
                        cls='chipbtn' + (' on' if on else ''), icon=ICON_CHECK if on else None,
                        disabled=not is_host, marker='setting')
-                on = settings.turn_timer
-                button('2 minutes per move', partial(run, lobby.update_settings, pid, turn_timer=not on),
-                       cls='chipbtn' + (' on' if on else ''), icon=ICON_CHECK if on else None,
-                       disabled=not is_host, marker='setting')
+            ui.html('<p class="muted small">Time limit per move (none if you only play against bots)</p>', sanitize=False)
+            with ui.element('div').classes('chips'):
+                for minutes in (None, *TURN_CHOICES):
+                    if minutes is None:
+                        label, on = 'Off', not settings.turn_timer
+                        change = partial(run, lobby.update_settings, pid, turn_timer=False)
+                    else:
+                        label, on = f'{minutes} min', settings.turn_timer and settings.turn_minutes == minutes
+                        change = partial(run, lobby.update_settings, pid, turn_timer=True, turn_minutes=minutes)
+                    button(label, change, cls='chipbtn' + (' on' if on else ''), icon=ICON_CHECK if on else None,
+                           disabled=not is_host, marker='turn-minutes')
 
     @ui.refreshable
     def ready_part() -> None:
