@@ -690,6 +690,9 @@ body:has(.lobby-theme) {
 .lobby-theme .prow.mine { border-color: var(--lobby-bronze); box-shadow: 0 0 0 1px #b9905640; }
 .lobby-theme .avatar { background: #f2dfbd; color: #2b2013; }
 .lobby-theme :is(.tag, .mini) { background: var(--lobby-gold); color: #20170c; }
+.lobby-theme .pill { background: var(--lobby-slate); color: var(--lobby-muted); border: 1px solid var(--lobby-line); }
+.lobby-theme .pill.ready { background: var(--lobby-gold); color: #20170c; border-color: #efd4a2; }
+.lobby-theme .pill.bot { background: #2e3849; color: var(--lobby-text); border-color: var(--lobby-line); }
 /* Setting chips: gold when switched on */
 .lobby-theme .chipbtn { border-color: var(--lobby-line); color: var(--lobby-muted); }
 .lobby-theme .chipbtn.on { background: var(--lobby-gold); border-color: #efd4a2; color: #20170c; }
