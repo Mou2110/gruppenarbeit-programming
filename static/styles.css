@@ -190,10 +190,15 @@ body { margin: 0; background: #18284F; }
 .statusrow { position: relative; z-index: 35; pointer-events: none; }  /* above the hand, below a card you point at */
 @media (hover: hover) and (pointer: fine) {
   .hcard:hover { z-index: 40; }
-  .hcard:hover > .card { scale: 1.32; filter: none; box-shadow: 0 0 0 2px #f3d299, 0 14px 28px #000b; }
+  .hcard:not(.dim):hover > .card { scale: 1.32; filter: none; box-shadow: 0 0 0 2px #f3d299, 0 14px 28px #000b; }
+  /* A card you may not play only grows a little so you can read it – it stays dark, without the gold frame. */
+  .hcard.dim:hover { z-index: auto; }      /* stays behind its neighbours, so it never covers a playable card */
+  .hcard.dim:hover > .card { scale: 1.08; }
+  .hcard.dim { cursor: not-allowed; }
 }
 .hcard.peek, .hcard.selected { z-index: 40; }
 .hcard.peek > .card, .hcard.selected > .card { scale: 1.25; filter: none; }
+.hcard.dim.peek > .card { filter: brightness(.6) saturate(.6); }
 @media (max-width: 899px) { .handrow { --peek-room: 30px; } }
 /* Phone: a little less room above the hand, so the table stays as large as possible. */
 @media (max-width: 899px) {
