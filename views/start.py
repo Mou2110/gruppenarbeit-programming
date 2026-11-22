@@ -6,12 +6,14 @@ from functools import partial
 from nicegui import ui
 
 from game.accounts import AccountError
+from game.bots import LEVEL_NAMES, LEVELS
 from game.cards import Card, Kind, Suit
 from game.lobby import MAX_PLAYERS, MIN_PLAYERS, registry
 
 from .cards import card_html
 from .common import (
-    ICON_CLOSE, button, current_account, esc, icon_button, page_frame, player_id, remembered_name, sign_in, sign_out,
+    ICON_CHECK, ICON_CLOSE, button, current_account, esc, icon_button, page_frame, player_id, remembered_name, sign_in,
+    sign_out,
 )
 from .rules import rules_toggle
 
@@ -28,13 +30,15 @@ HOW_IT_WORKS = [
 PRACTICE_SIZES = list(range(MIN_PLAYERS, MAX_PLAYERS + 1))   # players at the table, you included
 
 
-def start_practice(lobbies, pid: str, name: str, players: int):
-    """A practice game: you plus bots up to the chosen number of players. It starts right away."""
+def start_practice(lobbies, pid: str, name: str, players: int, level: str = 'normal'):
+    """A practice game: you plus bots (all of one level) up to the chosen number of players. It starts right away."""
     if players not in PRACTICE_SIZES:
         raise ValueError(f'A table has {MIN_PLAYERS} to {MAX_PLAYERS} players.')
+    if level not in LEVELS:
+        raise ValueError('There is no such bot level.')
     lobby = lobbies.create(pid, name)
     for _ in range(players - 1):
-        lobby.add_bot(pid)
+        lobby.add_bot(pid, level)
     lobby.set_ready(pid, True)  # starts the game immediately
     return lobby
 
@@ -113,13 +117,28 @@ async def start_page() -> None:
         lobby = registry.create(pid, name)
         ui.navigate.to(f'/lobby/{lobby.code}')
 
+    chosen = {'level': 'normal'}   # bot level picked in the practice dialog
+
     def practice(players: int) -> None:
-        lobby = start_practice(registry, pid, name, players)
+        lobby = start_practice(registry, pid, name, players, chosen['level'])
         ui.navigate.to(f'/lobby/{lobby.code}')
 
+    def pick_level(level: str) -> None:
+        chosen['level'] = level
+        level_chips.refresh()
+
+    @ui.refreshable
+    def level_chips() -> None:
+        with ui.element('div').classes('chips'):
+            for level in LEVELS:
+                on = chosen['level'] == level
+                button(LEVEL_NAMES[level], partial(pick_level, level), cls='chipbtn' + (' on' if on else ''),
+                       icon=ICON_CHECK if on else None, marker=f'practice-level-{level}')
+
     with ui.dialog() as practice_dialog, ui.element('div').classes('panel dialogpanel'):
-        ui.html('<h2>Practice against bots</h2><p>How many players at the table? You play, bots fill the other '
-                'seats.</p>', sanitize=False)
+        ui.html('<h2>Practice against bots</h2><p>How should the bots play?</p>', sanitize=False)
+        level_chips()
+        ui.html('<p>How many players at the table? You play, bots fill the other seats.</p>', sanitize=False)
         with ui.element('div').classes('sizebtns'):
             for size in PRACTICE_SIZES:
                 button(str(size), partial(practice, size), cls='numbtn', marker=f'practice-{size}',
