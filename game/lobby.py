@@ -307,12 +307,15 @@ class Lobby:
         self._changed()
         self._maybe_start()
 
-    def remove_bot(self, by: str, bot_id: str) -> None:
+    def remove_member(self, by: str, member_id: str) -> None:
+        """The host removes a bot or a player from the waiting room (not during a game, not themselves)."""
         self._require_host(by)
         self._require_waiting()
-        member = self.member(bot_id)
-        if member is None or not member.is_bot:
-            raise LobbyError('That is not a bot.')
+        member = self.member(member_id)
+        if member is None:
+            raise LobbyError('That player is not in this lobby.')
+        if member_id == by:
+            raise LobbyError('You cannot remove yourself. Press "Leave" instead.')
         self.members.remove(member)
         self._changed()
 

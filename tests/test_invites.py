@@ -19,11 +19,8 @@ def presence():
     return Presence(clock=FakeClock())
 
 
-def test_nobody_is_online_at_first(presence):
-    assert not presence.is_online('marta')
-
-
 def test_online_while_at_least_one_page_is_open(presence):
+    assert not presence.is_online('marta')             # nobody is online at first
     presence.connect('tab-1', 'marta', lambda invite: None)
     presence.connect('tab-2', 'marta', lambda invite: None)
     assert presence.is_online('marta')
@@ -43,12 +40,9 @@ def test_invite_pops_up_on_every_open_page_of_the_friend(presence):
     assert [(i.sender_name, i.code) for i in got] == [('Erik', 'K7QX'), ('Erik', 'K7QX')]
 
 
-def test_cannot_invite_a_friend_who_is_offline(presence):
+def test_cannot_invite_a_friend_who_is_offline_or_yourself(presence):
     with pytest.raises(InviteError):
         presence.invite('erik', 'Erik', 'marta', 'K7QX')
-
-
-def test_cannot_invite_yourself(presence):
     presence.connect('tab-1', 'erik', lambda invite: None)
     with pytest.raises(InviteError):
         presence.invite('erik', 'Erik', 'erik', 'K7QX')
@@ -108,3 +102,14 @@ def test_popup_text_escapes_the_name():
 def test_friends_list_shows_who_is_online():
     assert 'online' in stats.friend_html(friend('marta', 'Marta'), online=True)
     assert 'online' not in stats.friend_html(friend('marta', 'Marta'))
+
+
+def test_friend_in_a_running_game_is_shown_as_in_game(presence):
+    lobbies = LobbyRegistry()
+    running = lobbies.create('acct:marta', 'Marta')
+    for _ in range(2):
+        running.add_bot('acct:marta')
+    running.set_ready('acct:marta', True)              # Marta is playing a game right now
+    presence.connect('tab-marta', 'marta', lambda invite: None)
+    lobby = lobbies.create('acct:erik', 'Erik')
+    assert [f['in_game'] for f in invites.invitable([friend('marta', 'Marta')], lobby, presence, lobbies)] == [True]

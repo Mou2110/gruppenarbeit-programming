@@ -80,7 +80,7 @@ def test_only_host_manages_bots_and_settings():
     lobby.add_bot('host')
     bot = lobby.members[-1]
     assert bot.is_bot and bot.ready
-    lobby.remove_bot('host', bot.id)
+    lobby.remove_member('host', bot.id)
     assert len(lobby.members) == 2
 
 
@@ -330,3 +330,15 @@ def test_chat_messages_are_cleaned_limited_and_sent_to_listeners():
         clock.now += 1
         lobby.say('p2', f'msg {i}')
     assert len(lobby.chat) == 100 and lobby.chat[-1].text == 'msg 149'
+
+
+def test_host_can_remove_a_player_from_the_waiting_room_but_nobody_else_can():
+    _, lobby, _ = make_lobby()
+    lobby.join('p2')
+    lobby.join('p3')
+    with pytest.raises(LobbyError):
+        lobby.remove_member('p2', 'p3')        # only the host
+    with pytest.raises(LobbyError):
+        lobby.remove_member('host', 'host')    # not yourself
+    lobby.remove_member('host', 'p2')
+    assert [m.id for m in lobby.members] == ['host', 'p3']

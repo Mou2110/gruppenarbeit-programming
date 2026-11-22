@@ -133,6 +133,7 @@ async def lobby_page(code: str) -> None:
             ui.notify(str(error), type='warning')
 
     def leave_lobby() -> None:
+        state['left'] = True
         lobby.leave(pid)
         lobby.unsubscribe(client.id)
         ui.navigate.to('/')
@@ -198,10 +199,12 @@ async def lobby_page(code: str) -> None:
             for friend in candidates:
                 with ui.element('div').classes('prow'):
                     ui.html(f'<div class="avatar av-sm">{esc(friend["name"][:1].upper())}</div>'
-                            f'<span class="pn">{esc(friend["name"])} <span class="muted">(online)</span></span>',
+                            f'<span class="pn">{esc(friend["name"])} <span class="muted">'
+                            f'({"in game" if friend["in_game"] else "online"})</span></span>',
                             sanitize=False).classes('prow-main')
-                    button('Invite', partial(invite, friend), cls='primary small', marker='invite-friend') \
-                        .classes('px-4')
+                    if not friend['in_game']:  # in the middle of another game: cannot be invited
+                        button('Invite', partial(invite, friend), cls='primary small', marker='invite-friend') \
+                            .classes('px-4')
 
     @ui.refreshable
     def players_part() -> None:
@@ -229,9 +232,9 @@ async def lobby_page(code: str) -> None:
                     ui.html(f'<div class="avatar av-sm">{esc(member.name[:1].upper())}</div>'
                             f'<span class="pn">{esc(member.name)}{tag_html}</span>{pill}', sanitize=False
                             ).classes('prow-main')
-                    if is_host and member.is_bot:
-                        icon_button(ICON_CLOSE, f'Remove {member.name}', partial(run, lobby.remove_bot, pid, member.id),
-                                    marker='remove-bot').classes('mini')
+                    if is_host and member.id != pid:
+                        icon_button(ICON_CLOSE, f'Remove {member.name}', partial(run, lobby.remove_member, pid, member.id),
+                                    marker='remove-bot' if member.is_bot else 'remove-player').classes('mini')
             if is_host and len(lobby.members) < MAX_PLAYERS:
                 ui.html('<p class="muted small">Add a bot</p>', sanitize=False)
                 with ui.element('div').classes('chips'):
@@ -369,6 +372,13 @@ async def lobby_page(code: str) -> None:
                 waiting_room()
 
     def on_change() -> None:
+        if lobby.member(pid) is None:  # the host removed this player from the waiting room
+            lobby.unsubscribe(client.id)
+            if not state.get('left'):
+                with client:  # runs during the host's click, so address this player's own page
+                    ui.notify('The host removed you from the lobby.', type='warning')
+                    ui.navigate.to('/')
+            return
         if mode() != state['mode']:
             content.refresh()
         elif state['mode'] == 'game':
