@@ -503,6 +503,8 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     with ui.element('div').classes('table-stage'):
         with ui.element('div').classes('table-field'), \
                 ui.element('div').classes(board_class).props('role=region aria-label="Game table"'):
+            ui.html('<span></span><span></span><span></span>', sanitize=False) \
+                .classes('table-engraving').props('aria-hidden=true')
             for index in others:
                 x, y = _seat_vector(v, index)
                 side = 'seat-left' if x < -.1 else 'seat-right' if x > .1 else 'seat-north'

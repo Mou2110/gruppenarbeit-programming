@@ -1048,18 +1048,78 @@ body:has(.game-table-theme) {
   overflow: hidden;
   pointer-events: none;
 }
+.game-table-theme .board::before,
+.game-table-theme .board::after {
+  position: absolute;
+  z-index: -2;
+  top: var(--table-y);
+  left: 50%;
+  translate: -50% -50%;
+  box-sizing: border-box;
+  border-radius: 50%;
+  pointer-events: none;
+  content: '';
+}
 .game-table-theme .board::before {
+  width: var(--table-width);
+  height: var(--table-diameter);
+  border: var(--table-rim) solid transparent;
+  background:
+    repeating-linear-gradient(135deg, #ecddc80a 0 1px, transparent 1px 5px) padding-box,
+    radial-gradient(ellipse at 15% 21%, #6284b844, transparent 44%) padding-box,
+    radial-gradient(ellipse at 87% 70%, #bb724636, transparent 43%) padding-box,
+    radial-gradient(ellipse at 51% 106%, #e7a85338, transparent 43%) padding-box,
+    radial-gradient(ellipse at 49% 31%, #303e55 0, #212f46 49%, #161e30 100%) padding-box,
+    linear-gradient(139deg, #657c9e, #344661 36%, #455269 64%, #ae8056) border-box;
+  box-shadow: 0 0 0 1px #b58a573f, 0 8px 0 -2px #111926, 0 20px 34px #060b16ad,
+    inset 0 0 0 1px #bfa38060, inset 0 6px 24px #0e1a2c66;
+}
+.game-table-theme .board::after {
+  --table-inset: calc(2 * (var(--table-rim) + 6px));
+  width: calc(var(--table-width) - var(--table-inset));
+  height: calc(var(--table-diameter) - var(--table-inset));
+  border: 1px dashed #dec09663;
+}
+.table-engraving {
   position: absolute;
   z-index: -1;
   top: var(--table-y);
   left: 50%;
+  width: clamp(76px, calc(var(--table-diameter) * .42), 180px);
+  aspect-ratio: 1.47;
   translate: -50% -50%;
-  width: var(--table-width);
-  height: var(--table-diameter);
-  border-radius: 50%;
-  background: var(--table-slate);
+  opacity: .55;
   pointer-events: none;
+}
+.table-engraving > span {
+  position: absolute;
+  top: 10%;
+  width: 36%;
+  height: 82%;
+  border: 1px solid #d0b483a6;
+  border-radius: 9%;
+  box-shadow: inset 0 0 0 3px #16233854, inset 0 0 0 4px #d0b48346;
+  background: #303b50;
+  transform-origin: 50% 88%;
+}
+.table-engraving > span:first-child { left: 21%; rotate: -23deg; border-color: #b1bd8f99; }
+.table-engraving > span:last-child { right: 21%; rotate: 23deg; border-color: #ce958599; }
+.table-engraving > span:nth-child(2) {
+  z-index: 1;
+  top: 3%;
+  left: 32%;
+  background: #2b374d;
+}
+.table-engraving > span:nth-child(2)::after {
+  position: absolute;
   content: '';
+  width: 35%;
+  aspect-ratio: 1;
+  top: 48%;
+  left: 50%;
+  translate: -50% -50%;
+  background: #f3d38f;
+  clip-path: polygon(50% 0, 59% 40%, 100% 50%, 59% 60%, 50% 100%, 41% 60%, 0 50%, 41% 40%);
 }
 .table-mote {
   position: absolute;
@@ -1109,6 +1169,25 @@ body:has(.game-table-theme) {
   height: var(--table-seat-size);
   font-size: clamp(17px, 3vw, 21px);
 }
+.game-table-theme .avatar.turn {
+  color: #291c12;
+  border-color: #ffe7b0;
+  background: radial-gradient(ellipse at 35% 26%, #fff0c5, #f5c474 60%, #bf8647);
+  box-shadow: 0 0 0 2px #172137;
+}
+.game-table-theme .avatar.turn::before {
+  position: absolute;
+  inset: -7px;
+  border: 5px solid #ffd325;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ffc20f69;
+  pointer-events: none;
+  animation: turn-ring-pulse 1.8s ease-in-out infinite;
+  content: '';
+}
+@keyframes turn-ring-pulse {
+  50% { border-color: #ffed5f; box-shadow: 0 0 17px 3px #ffd72cab; }
+}
 .game-table-theme .trump .tl { color: #e8cca1; }
 .game-table-theme .trump-symbol {
   border-color: #f4d596;
@@ -1124,6 +1203,11 @@ body:has(.game-table-theme) {
 body:has(.game-table-theme) :is(.chatsend, .turntimer.mine) {
   color: #21170b;
   background: var(--table-gold);
+}
+.game-table-theme .avatar.turn .dealer {
+  border: 1px solid #f3d095;
+  color: #fff0cd;
+  background: #26364d;
 }
 .game-table-theme :is(.a-trick, .overlay, .sheet) > .panel {
   background: #f8edda;
@@ -1159,5 +1243,5 @@ body:has(.game-table-theme) .chatinput .q-field__native::placeholder { color: va
   .table-mote:nth-of-type(6) { --mote-x: 86%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .table-mote { animation: none; }
+  .table-mote, .game-table-theme .avatar.turn::before { animation: none; }
 }
