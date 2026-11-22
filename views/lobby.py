@@ -55,6 +55,17 @@ BUBBLE_JS = """(() => {
 })();"""
 
 
+def missing_players_html(lobby) -> str:
+    """A clear note while there are not enough players yet (bots count). Empty once the game could start."""
+    missing = MIN_PLAYERS - len(lobby.members)
+    if missing <= 0:
+        return ''
+    players = 'player' if missing == 1 else 'players'
+    return (f'<div class="needplayers" role="status"><b>{missing} more {players} needed</b>'
+            f'<span>A game needs at least {MIN_PLAYERS} players. Share the code with friends or press '
+            f'"Add a bot".</span></div>')
+
+
 async def lobby_page(code: str) -> None:
     pid = await player_id()
     account = await current_account()
@@ -230,6 +241,9 @@ async def lobby_page(code: str) -> None:
         humans = lobby.humans()
         ready = sum(1 for m in humans if m.ready)
         missing = lobby.missing_for_start() or 'Starting…'
+        note = missing_players_html(lobby)
+        if note:
+            ui.html(note, sanitize=False)
         ui.html(f'<div class="readyinfo"><b>{ready} of {len(humans)} player{"s" if len(humans) != 1 else ""} '
                 f'ready</b><span>{esc(missing)}</span><span>The game starts automatically once everyone is ready '
                 f'and at least {MIN_PLAYERS} players are in.</span></div>', sanitize=False)
