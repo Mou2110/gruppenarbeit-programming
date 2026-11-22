@@ -187,6 +187,7 @@ body { margin: 0; background: #18284F; }
       The hand row gets extra room above the cards for this, without moving the layout. */
 .handrow { --peek-room: 44px; padding-top: calc(26px + var(--peek-room)); margin-top: calc(-1 * var(--peek-room)); }
 .hcard > .card { transition: box-shadow .2s ease, filter .2s ease, scale .18s ease; }
+.statusrow { position: relative; z-index: 45; pointer-events: none; }  /* stays readable above the hand */
 @media (hover: hover) and (pointer: fine) {
   .hcard:hover { z-index: 40; }
   .hcard:hover > .card { scale: 1.32; filter: none; box-shadow: 0 0 0 2px #f3d299, 0 14px 28px #000b; }
