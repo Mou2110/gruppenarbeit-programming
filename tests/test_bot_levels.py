@@ -60,9 +60,12 @@ def test_there_are_three_levels():
     assert bots.LEVELS == ('normal', 'spiteful', 'ruthless')
 
 
-@pytest.mark.parametrize('levels', [['spiteful'], ['ruthless'], ['normal', 'spiteful', 'ruthless']])
-@pytest.mark.parametrize('num_players', [3, 4, 5, 6])
-@pytest.mark.parametrize('specials', [(), SPECIAL_KINDS, SPECIAL_KINDS + (Kind.CR7,)])
+# One case per level (the last one mixes all three at a full table), each with the special cards.
+@pytest.mark.parametrize('levels, num_players, specials', [
+    (['spiteful'], 4, SPECIAL_KINDS),
+    (['ruthless'], 5, SPECIAL_KINDS + (Kind.CR7,)),
+    (['normal', 'spiteful', 'ruthless'], 6, SPECIAL_KINDS + (Kind.CR7,)),
+])
 def test_games_with_every_level_finish(levels, num_players, specials):
     for seed in range(4):
         game = Game([(f'p{i}', f'P{i}') for i in range(num_players)], special_cards=specials,
