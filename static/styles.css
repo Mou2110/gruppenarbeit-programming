@@ -101,7 +101,6 @@ body { margin: 0; background: #18284F; }
 /* Player labels face away from the cards along the upper edge of the table. */
 .table-seat.seat-upper { translate: -50% calc(-100% + .5 * var(--table-seat-size)); }
 .seat-upper .avwrap { order: 1; }
-.board-5-seats .seat-upper { top: calc(var(--table-y) - var(--table-radius)); }
 .table-seat .seen { min-height: 0; }
 .table-seat .seen .card {
   width: clamp(28px, 6vw, 34px); height: auto; aspect-ratio: 2 / 3;
