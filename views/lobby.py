@@ -305,6 +305,7 @@ async def lobby_page(code: str) -> None:
                 rules = game_rules_dialog()
                 table_part(rules.open)
             else:
+                column.classes('lobby-theme')  # same dark, gold and parchment look as the start page
                 waiting_room()
 
     def on_change() -> None:
