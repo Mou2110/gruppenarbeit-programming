@@ -74,11 +74,20 @@ def _lobby_status(lobby) -> tuple[str, str]:
 def auth_dialog(register: bool) -> ui.dialog:
     """Dialog for signing in or creating an account."""
     async def submit() -> None:
+        await send(create=register)
+
+    async def create_account() -> None:
+        await send(create=True)
+
+    async def send(create: bool) -> None:
         error.set_content('')
         try:
-            await sign_in(user_input.value or '', password_input.value or '', register=register)
+            await sign_in(user_input.value or '', password_input.value or '', register=create)
         except AccountError as problem:
             error.set_content(esc(problem))
+            # Sign-in failed: maybe there is no account yet. The message stays the same on purpose
+            # (it does not tell whether the username exists), but offer to create one with these details.
+            create_instead.set_visibility(not register and not create)
             return
         except Exception:
             error.set_content('Something went wrong. Please try again.')
@@ -100,6 +109,9 @@ def auth_dialog(register: bool) -> ui.dialog:
         password_input.on('keydown.enter', submit)
         error = ui.html('', sanitize=False).classes('autherr')
         button('Create account' if register else 'Sign in', submit, marker='auth-submit')
+        create_instead = button('New here? Create an account with these details', create_account,
+                                cls='linkbtn authswitch', marker='auth-create-instead')
+        create_instead.set_visibility(False)
         button('Cancel', dialog.close, cls='primary ghostbtn')
     return dialog
 

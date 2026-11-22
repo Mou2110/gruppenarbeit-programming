@@ -38,19 +38,26 @@ def test_profile_uses_the_requested_players_public_leaderboard_statistics():
     }
 
 
+def test_a_profile_needs_only_one_finished_game_when_opened_directly():
+    # Friends link to profiles even before they reach the leaderboard (5 games).
+    rows = [player('jan', 'Jan', games=1)]
+    assert leaderboard.profile_entry(rows, 'jan', min_games=1)['name'] == 'Jan'
+    assert leaderboard.profile_entry(rows, 'jan') is None        # the leaderboard rule stays 5 games
+
+
 @pytest.mark.parametrize('name', ['missing', 'not_ranked', ''])
 def test_unknown_or_unlisted_players_have_no_public_profile(name):
     rows = [player(), player('not_ranked', 'Not_ranked', games=4)]
     assert leaderboard.profile_entry(rows, name) is None
 
 
-def failing_query():
+def failing_query(*_):
     raise RuntimeError('Database offline')
 
 
 @pytest.mark.parametrize('store, expected', [
     (None, 'Player profile unavailable'),
-    (SimpleNamespace(leaderboard_rows=lambda: []), 'Player profile not found'),
+    (SimpleNamespace(leaderboard_rows=lambda *_: []), 'Player profile not found'),
     (SimpleNamespace(leaderboard_rows=failing_query), 'Player profile unavailable'),
 ])
 def test_profile_errors_give_a_useful_message(monkeypatch, store, expected):
@@ -58,8 +65,8 @@ def test_profile_errors_give_a_useful_message(monkeypatch, store, expected):
     monkeypatch.setattr(leaderboard.registry, 'store', store)
     monkeypatch.setattr(leaderboard, 'message_page', lambda title, detail: messages.append(title))
 
-    async def io_bound(action):
-        return action()
+    async def io_bound(action, *args):
+        return action(*args)
 
     monkeypatch.setattr(leaderboard.run, 'io_bound', io_bound)
     asyncio.run(leaderboard.profile_page('missing'))

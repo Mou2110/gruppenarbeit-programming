@@ -68,3 +68,12 @@ def test_playing_order_starts_with_whoever_leads_the_trick():
 
 def test_no_order_numbers_between_rounds():
     assert turn_order(view(phase='round_over', dealer=0, current=0)) == {}
+
+
+def test_scoreboard_highlights_your_own_column():
+    from views.table import scoreboard_html
+    v = view(players=[{'name': 'Me', 'round_scores': [30, -10], 'score': 20},
+                      {'name': 'Ana', 'round_scores': [20, 40], 'score': 60}], my_index=0)
+    html = scoreboard_html(v)
+    assert html.count(' me"') == 4                     # name, two rounds, total: all in your column
+    assert '<th class="r me">You</th>' in html and '>Ana</th>' in html

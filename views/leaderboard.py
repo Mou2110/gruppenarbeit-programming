@@ -81,7 +81,8 @@ async def leaderboard_page(sort: str | None = None) -> None:
         return
     rows = view_rows(board, sort_by, account[0] if account else None)
 
-    with page_frame():
+    with page_frame() as frame:
+        frame.classes('lobby-theme')  # same dark and gold look as the start page and lobby
         with ui.element('div').classes('pagehead'):
             icon_button(ICON_BACK, 'Back to start', lambda: ui.navigate.to('/'))
             ui.html('<h1>Leaderboard</h1>', sanitize=False)
@@ -109,11 +110,14 @@ async def leaderboard_page(sort: str | None = None) -> None:
                 sanitize=False).classes('mt-s')
 
 
-def profile_entry(rows: list[dict], username: str) -> dict | None:
+PROFILE_MIN_GAMES = 1   # a profile only needs one finished game (friends link to it); the leaderboard needs 5
+
+
+def profile_entry(rows: list[dict], username: str, min_games: int = MIN_GAMES) -> dict | None:
     """Find the requested account among eligible players and format its public totals."""
     key = username_key(username)
     for row in rows:
-        if row['account'] == key and row['games'] >= MIN_GAMES:
+        if row['account'] == key and row['games'] >= min_games:
             return rank([row])[0]
     return None
 
@@ -124,16 +128,17 @@ async def profile_page(username: str) -> None:
         message_page('Player profile unavailable', 'The database is not available.')
         return
     try:
-        rows = await run.io_bound(store.leaderboard_rows)
+        rows = await run.io_bound(store.leaderboard_rows, PROFILE_MIN_GAMES)
     except Exception:
         message_page('Player profile unavailable', 'The database could not be reached. Please try again later.')
         return
-    entry = profile_entry(rows, username)
+    entry = profile_entry(rows, username, PROFILE_MIN_GAMES)
     if entry is None:
-        message_page('Player profile not found', 'Profiles are available for players listed on the leaderboard.')
+        message_page('Player profile not found', 'Profiles are available once a player has finished a game.')
         return
 
-    with page_frame():
+    with page_frame() as frame:
+        frame.classes('lobby-theme')  # same dark and gold look as the start page and lobby
         with ui.element('div').classes('pagehead'):
             icon_button(ICON_BACK, 'Back to leaderboard', lambda: ui.navigate.to('/leaderboard'))
             ui.html(f'<h1>{esc(entry["name"])}</h1>', sanitize=False)

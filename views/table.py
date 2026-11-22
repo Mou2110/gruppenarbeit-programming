@@ -272,6 +272,24 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
     return ''.join(parts)
 
 
+def scoreboard_html(v: dict) -> str:
+    """Points per round for every player. Your own column is highlighted and called "You"."""
+    players = v['players']
+    me = v['my_index']
+
+    def css(index: int) -> str:
+        return 'r me' if index == me else 'r'
+
+    head = ''.join(f'<th class="{css(i)}">{"You" if i == me else esc(p["name"])}</th>' for i, p in enumerate(players))
+    rounds = max((len(p['round_scores']) for p in players), default=0)
+    body = ''.join(
+        f'<tr><td>{r + 1}</td>' + ''.join(f'<td class="{css(i)}">{p["round_scores"][r]:+d}</td>'
+                                         for i, p in enumerate(players)) + '</tr>' for r in range(rounds))
+    totals = ''.join(f'<td class="{css(i)}">{p["score"]}</td>' for i, p in enumerate(players))
+    return (f'<table class="restbl"><tr><th>Round</th>{head}</tr>{body}'
+            f'<tr class="top"><td>Total</td>{totals}</tr></table>')
+
+
 def _status(v: dict, paused: bool) -> tuple[str, bool]:
     """Status line text and whether it is currently this player's turn."""
     me, current, phase = v['my_index'], v['current'], v['phase']
@@ -533,15 +551,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                        marker='continue')
 
     def scores_overlay() -> None:
-        players = v['players']
-        head = ''.join(f'<th class="r">{esc(p["name"])}</th>' for p in players)
-        rounds = max((len(p['round_scores']) for p in players), default=0)
-        body = ''.join(
-            f'<tr><td>{r + 1}</td>' + ''.join(f'<td class="r">{p["round_scores"][r]:+d}</td>' for p in players)
-            + '</tr>' for r in range(rounds))
-        totals = ''.join(f'<td class="r">{p["score"]}</td>' for p in players)
-        table = (f'<table class="restbl"><tr><th>Round</th>{head}</tr>{body}'
-                 f'<tr class="top"><td>Total</td>{totals}</tr></table>')
+        table = scoreboard_html(v)
         with ui.element('div').classes('overlay'), ui.element('div').classes('panel'):
             ui.html(f'<h2>Scoreboard</h2>{table}', sanitize=False)
             button('Close', partial(set_state, 'scores_open', False))
