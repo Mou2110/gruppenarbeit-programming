@@ -110,7 +110,7 @@ def test_friends_list_shows_who_is_online():
     assert 'online' not in stats.friend_html(friend('marta', 'Marta'))
 
 
-def test_friend_in_a_running_game_cannot_be_invited(presence):
+def test_friend_in_a_running_game_is_shown_as_in_game(presence):
     lobbies = LobbyRegistry()
     running = lobbies.create('acct:marta', 'Marta')
     for _ in range(2):
@@ -118,4 +118,4 @@ def test_friend_in_a_running_game_cannot_be_invited(presence):
     running.set_ready('acct:marta', True)              # Marta is playing a game right now
     presence.connect('tab-marta', 'marta', lambda invite: None)
     lobby = lobbies.create('acct:erik', 'Erik')
-    assert invites.invitable([friend('marta', 'Marta')], lobby, presence, lobbies) == []
+    assert [f['in_game'] for f in invites.invitable([friend('marta', 'Marta')], lobby, presence, lobbies)] == [True]

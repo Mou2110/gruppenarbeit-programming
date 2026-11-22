@@ -12,16 +12,17 @@ from .common import button, current_account, esc
 
 def invitable(friends: list[dict], lobby: Lobby, online: Presence = presence,
               lobbies: LobbyRegistry = registry) -> list[dict]:
-    """Friends who can be invited right now: online, not yet in the lobby, not in the middle of
-    another game (with "Join" they would leave it), and our own game has not started."""
+    """Friends shown in the "Invite friends" list: online, not yet in the lobby, and our own game has not
+    started. Friends in the middle of another game get 'in_game': True and no invite button,
+    because with "Join" they would leave that game."""
     if lobby.game is not None or len(lobby.members) >= MAX_PLAYERS:
         return []
 
-    def playing(account: str) -> bool:
+    def in_game(account: str) -> bool:
         return any(other.game is not None for other in lobbies.lobbies_of(member_id(account)))
 
-    return [f for f in friends if online.is_online(f['account']) and lobby.member(member_id(f['account'])) is None
-            and not playing(f['account'])]
+    return [{**f, 'in_game': in_game(f['account'])} for f in friends
+            if online.is_online(f['account']) and lobby.member(member_id(f['account'])) is None]
 
 
 def invite_html(sender_name: str, code: str) -> str:
