@@ -932,6 +932,7 @@ body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c
 .dialogpanel .namefield input { color: #212f4b; }
 .dialogpanel .namefield input::placeholder { color: #8a7c66; }
 .dialogpanel .linkbtn { color: #5b4524; }
+.message-panel { width: auto; max-width: none; }
 /* "Rejoin" on the start page was still the old blue. */
 .prophecy-home .games .primary.small:not(.ghostbtn) { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
 /* Pressing a button briefly showed the old blue (hover colour on touch screens). */
