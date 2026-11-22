@@ -20,6 +20,7 @@ from game.rules import trick_has_bomb, Play, lead_suit, trick_winner
 
 from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_emblem, suit_icon
 from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
+from .rules import BONUS, SPECIALS
 
 ACTIVE = {'werewolf', 'choosing_trump', 'bidding', 'playing', 'adjusting'}
 
@@ -51,6 +52,30 @@ def trick_bombed(plays: list[Play]) -> bool:
 
 _hand_order = hand_order   # order of the hand from left to right (game/cards.py)
 
+# Short explanations for the pop-up that opens when a special card is clicked (static/table-fx.js).
+CARD_INFO = {
+    Kind.WIZARD.value: ('Wizard', 'Wins the trick: the first Wizard played takes it. May always be played.'),
+    Kind.JESTER.value: ('Jester', 'Loses the trick, unless only Jesters are played. May always be played.'),
+    **{kind.value: (KIND_LABEL[kind], text) for kind, text in SPECIALS + BONUS},
+}
+
+
+def fx_js(call: str) -> str:
+    """JavaScript that loads the table effects once and then runs one of their functions."""
+    info = json.dumps({kind: {'name': name, 'text': text} for kind, (name, text) in CARD_INFO.items()})
+    return (f"import('/static/table-fx.js').then(fx => {{ fx.install({info}); {call} }})"
+            ".catch(() => {})")
+
+
+def hand_card_html(card: Card) -> str:
+    """A card in the hand. Special cards get a small "?" that explains them instead of playing them."""
+    info = ''
+    if not card.is_number and card.kind.value in CARD_INFO:
+        name = CARD_INFO[card.kind.value][0]
+        info = (f'<button type="button" class="card-info" data-kind="{card.kind.value}" '
+                f'aria-label="What does the {name} do?">?</button>')
+    return card_html(card, 'lg') + info
+
 
 def _name(v: dict, index: int | None) -> str:
     if index is None:
@@ -81,7 +106,16 @@ def _avatar(v: dict, index: int) -> str:
     return f'<div class="avatar{turn}">{initial}{dealer}</div>'
 
 
-def _seat_html(v: dict, index: int, lobby: Lobby) -> str:
+def _leader(v: dict, paused: bool) -> int | None:
+    """Index of the player who is winning (or has just won) the trick on the table."""
+    finished = paused and not v['trick'] and bool(v['last_trick'])
+    plays = v['last_trick'] if finished else v['trick']
+    if not plays or trick_bombed(plays):
+        return None
+    return plays[trick_winner(plays, v['trump'])].player
+
+
+def _seat_html(v: dict, index: int, lobby: Lobby, leader: int | None = None) -> str:
     p = v['players'][index]
     member = lobby.member(p['id'])
     # Bot / away: shown as a small badge on the avatar instead of on a separate line to keep seats compact.
@@ -99,6 +133,8 @@ def _seat_html(v: dict, index: int, lobby: Lobby) -> str:
         count = p['cards_left']
         extra = f'<span class="cardsleft">{count} card{"s" if count != 1 else ""}</span>'
     avatar = _avatar(v, index)
+    if index == leader:
+        mark += '<span class="seat-crown" title="Wins this trick so far">♛</span>'
     name = esc(p['name'])
     label = 'You' if index == v['my_index'] else name
     bid = f'<span class="player-stat"><span>Bid</span><b>{_bid_value(p)}</b></span>'
@@ -125,6 +161,20 @@ def _trump_html(v: dict) -> str:
         status = 'No trump'
     return (f'<div class="trump-display">{revealed}<div class="trump">'
             f'<span class="tl">Trump</span>{symbol}<span class="ts">{status}</span></div></div>')
+
+
+def _table_trump_html(v: dict) -> str:
+    """The trump card lies in the middle of the table, with the trump suit written under it."""
+    card = v['trump_card']
+    face = card_html(card, 'md') if card is not None else '<div class="card card--md no-trump-card"></div>'
+    if v['phase'] in ('werewolf', 'choosing_trump'):
+        label = 'Trump: choosing…'
+    elif v['trump']:
+        label = f'Trump: {SUIT_LABEL[v["trump"]]}'
+    else:
+        label = 'No trump'
+    suit = f' s-{v["trump"].value}' if v['trump'] else ''
+    return f'{face}<span class="table-trump-label{suit}">{esc(label)}</span>'
 
 
 def _lead_html(v: dict) -> str:
@@ -184,13 +234,18 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
         if play.card.needs_role_choice:
             note = f'<span class="as">as {"Wizard" if play.as_wizard else "Jester"}</span>'
         x, y = _slot_position(v, play.player)
-        enter = ''
+        enter = ' best' if pos == best and not bombed else ''
         if seen is not None and play.card.id not in seen:
-            enter = ' enter'
+            enter += ' enter'
             seen.add(play.card.id)
+        fly = ''
+        if finished and not bombed:  # after the trick: the cards slide towards the winner
+            sx, sy = _seat_vector(v, plays[best].player)
+            enter += ' collect'
+            fly = f';--to-x:{50 + sx * 46:.1f}%;--to-y:{50 + sy * 46:.1f}%'
         caption = f'<span class="trick-caption">{tag}{note}</span>' if tag or note else ''
         below = ' caption-below' if y <= 50 else ''
-        parts.append(f'<div class="tslot{enter}{below}" style="left:{x:.1f}%;top:{y:.1f}%;z-index:{pos + 1}" '
+        parts.append(f'<div class="tslot{enter}{below}" style="left:{x:.1f}%;top:{y:.1f}%;z-index:{pos + 1}{fly}" '
                      f'title="{esc(_name(v, play.player))}">{card_html(play.card, "md", chosen=play.suit)}'
                      f'{caption}</div>')
     return ''.join(parts)
@@ -263,8 +318,12 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
 
     # Did the player receive a Juggler card? Show a brief notification.
     if v['pass_count'] != state.get('seen_pass', v['pass_count']) and v['received'] is not None:
-        ui.notify(f'You received {card_name(v["received"])}', type='info', position='top')
+        text = json.dumps(f'You received {card_name(v["received"])}')
+        ui.run_javascript(fx_js(f'fx.received({json.dumps(card_html(v["received"], "lg"))}, {text});'))
     state['seen_pass'] = v['pass_count']
+    if not state.get('fx_loaded'):  # the explanation pop-up for special cards
+        ui.run_javascript(fx_js(''))
+        state['fx_loaded'] = True
     if cheer_for_cr7(v, state, lobby.game_number):
         ui.run_javascript(SIUUU_JS)
 
@@ -404,7 +463,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                 return
             cards = sorted(v['my_hand'], key=_hand_order)
             for index, card in enumerate(cards):
-                element = ui.html(card_html(card, 'lg'), sanitize=False).classes('hcard') \
+                element = ui.html(hand_card_html(card), sanitize=False).classes('hcard') \
                     .props(f'data-card={card.id}').style(_fan_style(index, len(cards)))
                 if card.id == state.get('selected'):
                     element.classes('selected')
@@ -488,7 +547,6 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
             icon_button(ICON_SCORES, 'Scoreboard', partial(set_state, 'scores_open', True), marker='scoreboard')
             icon_button(ICON_INFO, 'Game rules', open_rules, marker='open-game-rules').props('title="Game rules"')
 
-        ui.html(_trump_html(v), sanitize=False).classes('a-trump')
         ui.html(_lead_html(v), sanitize=False).classes('a-lead')
 
     # Validate remembered card choices when the browser redraws after a turn or timeout.
@@ -520,13 +578,15 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                 ui.element('div').classes(board_class).props('role=region aria-label="Game table"'):
             ui.html('<span></span><span></span><span></span>', sanitize=False) \
                 .classes('table-engraving').props('aria-hidden=true')
+            ui.html(_table_trump_html(v), sanitize=False).classes('table-trump').mark('table-trump')
+            leader = _leader(v, paused)
             for index in others:
                 x, y = _seat_vector(v, index)
                 side = 'seat-left' if x < -.1 else 'seat-right' if x > .1 else 'seat-north'
                 upper = ' seat-upper' if y < -.1 else ''
-                ui.html(_seat_html(v, index, lobby), sanitize=False).classes(f'table-seat {side}{upper}') \
+                ui.html(_seat_html(v, index, lobby, leader), sanitize=False).classes(f'table-seat {side}{upper}') \
                     .style(f'--seat-x:{x:.4f};--seat-y:{y:.4f}')
-            ui.html(_seat_html(v, me, lobby), sanitize=False).classes('table-self')
+            ui.html(_seat_html(v, me, lobby, leader), sanitize=False).classes('table-self')
             if not phase_decision:
                 with ui.element('div').classes('a-trick'):
                     # On a reload all cards are visible. On later updates only new cards fade in.
