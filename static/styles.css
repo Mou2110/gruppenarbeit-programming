@@ -938,9 +938,25 @@ body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c
 .dialogpanel .namefield input { color: #212f4b; }
 .dialogpanel .namefield input::placeholder { color: #8a7c66; }
 .dialogpanel .linkbtn { color: #5b4524; }
+.dialogpanel .chipbtn { background: transparent; border-color: #b99056; color: #5b4524; }
+.dialogpanel .chipbtn.on { background: linear-gradient(#e2c698, #c4a16a); border-color: #c4a16a; color: #20170c; }
+.dialogpanel .numbtn { background: #304767; color: #fff4df; }
+.dialogpanel .numbtn:hover { background: #435b7d; }
 .message-panel { width: auto; max-width: none; }
 /* "Rejoin" on the start page was still the old blue. */
 .prophecy-home .games .primary.small:not(.ghostbtn) { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
+.prophecy-home .iconbtn { background: #222b3b; border: 1px solid #90734759; color: #f2dfbd; }
+.prophecy-home .iconbtn:hover { background: #2e3849; }
+/* Game table: the last bits of the old blue (bot badge, buttons in overlays, rules during the game). */
+.game-table-theme .seatmark { background: #29344a; color: #f2dfbd; border: 1px solid #b9905652; }
+.game-table-theme .overlay .primary:not(.ghostbtn) { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
+.game-table-theme .overlay .primary:not(.ghostbtn):hover { background: linear-gradient(#f4d9a9, #d7b47d); }
+.game-table-theme .overlay .ghostbtn { color: #5b4524; border-width: 1px !important; border-color: #b9905699 !important; }
+.rules-dialog-panel { background: #f8edda; border: 1px solid #d8b989; color: #212f4b; }
+.rules-dialog-panel .rule p { color: #3d4658; }
+.rules-dialog-panel .spec b { color: #212f4b; }
+.rules-dialog-panel .iconbtn { background: #304767; color: #fff4df; }
+.rules-dialog-panel .iconbtn:hover { background: #435b7d; }
 /* Pressing a button briefly showed the old blue (hover colour on touch screens). */
 .lobby-theme .primary:active, .dialogpanel .primary:active, .prophecy-home .primary:active { filter: brightness(.92); }
 .autherr { min-height: 16px; font-size: 12px; font-weight: 600; color: #A8322A; }
