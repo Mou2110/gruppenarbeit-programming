@@ -56,8 +56,10 @@ def play_game(game: Game, levels: list[str]) -> None:
             game.play_card(player.id, card_id, suit=suit, as_wizard=as_wizard)
 
 
-def test_there_are_three_levels():
+def test_there_are_three_levels_and_normal_is_the_default():
     assert bots.LEVELS == ('normal', 'spiteful', 'ruthless')
+    view = make_view(['sea-12', 'sea-2'], [(0, 1, 0), (2, 0, 100), (1, 0, 50)], trick=[(1, 'sea-5')])
+    assert bots.choose_card(view) == bots.choose_card(view, 'normal')
 
 
 # One case per level (the last one mixes all three at a full table), each with the special cards.
@@ -110,11 +112,6 @@ def make_view(hand, players, me=0, trick=(), trump=None, round_number=5, **extra
 
 # ------------------------------------------------------------- 2. Spiteful
 
-def test_normal_is_the_default_level():
-    view = make_view(['sea-12', 'sea-2'], [(0, 1, 0), (2, 0, 100), (1, 0, 50)], trick=[(1, 'sea-5')])
-    assert bots.choose_card(view) == bots.choose_card(view, 'normal')
-
-
 def test_spiteful_takes_a_trick_from_the_leader_once_its_own_bid_is_lost():
     # I bid 0 but already won a trick: my bid is lost. The leader (seat 1) still needs tricks.
     view = make_view(['sea-12', 'sea-2'], [(0, 1, 0), (2, 0, 100), (1, 0, 50)], trick=[(1, 'sea-5')])
@@ -142,14 +139,12 @@ def test_when_spiteful_leads_the_score_it_targets_the_closest_chaser():
 
 # ------------------------------------------------------------- 3. Ruthless
 
-def test_ruthless_bombs_a_trick_the_leader_needs():
+def test_ruthless_bombs_only_a_trick_the_leader_needs():
     # Leader (seat 1) wins with Sea 13 and needs tricks. I cannot beat it, so I blow the trick up.
     view = make_view(['bomb', 'sea-2'], [(1, 0, 0), (2, 0, 100), (1, 0, 50)], trick=[(1, 'sea-13')])
     assert bots.choose_card(view, 'normal')[0] == 'sea-2'
     assert bots.choose_card(view, 'ruthless')[0] == 'bomb'
-
-
-def test_ruthless_does_not_bomb_a_trick_the_leader_does_not_want():
+    # Same trick, but the leader already has enough: no bomb.
     view = make_view(['bomb', 'sea-2'], [(1, 0, 0), (1, 1, 100), (1, 0, 50)], trick=[(1, 'sea-13')])
     assert bots.choose_card(view, 'ruthless')[0] == 'sea-2'
 
@@ -176,13 +171,12 @@ def test_ruthless_dumps_its_highest_safe_card_when_it_wants_to_lose():
     assert bots.choose_card(view, 'ruthless')[0] == 'sea-9'   # loses as well, and gets rid of the 9
 
 
-def test_ruthless_passes_a_winner_to_a_left_neighbour_who_has_enough():
+def test_ruthless_passes_what_hurts_its_left_neighbour():
+    # The neighbour (seat 1) leads and has enough: give them a winner.
     view = make_view(['dragon', 'sea-2', 'jester-1'], [(3, 0, 0), (1, 1, 100), (1, 0, 50)], must_pass=True)
     assert bots.choose_pass(view, 'normal') == 'jester-1'      # normal keeps its Dragon, it needs tricks
     assert bots.choose_pass(view, 'ruthless') == 'dragon'      # forces an extra trick on the leader
-
-
-def test_ruthless_passes_rubbish_to_a_left_neighbour_who_needs_tricks():
+    # The neighbour still needs tricks: give them rubbish.
     view = make_view(['dragon', 'sea-2', 'jester-1'], [(0, 0, 0), (2, 0, 100), (1, 0, 50)], must_pass=True)
     assert bots.choose_pass(view, 'normal') == 'dragon'
     assert bots.choose_pass(view, 'ruthless') == 'jester-1'
@@ -200,19 +194,15 @@ def test_ruthless_as_last_bidder_makes_the_round_tight_for_the_leader():
 
 # ------------------------------------------------------------- 4. lobby
 
-def test_the_host_picks_a_level_when_adding_a_bot():
+def test_the_host_picks_a_known_level_when_adding_a_bot():
     lobby = LobbyRegistry(clock=FakeClock()).create('host', 'Keno')
     lobby.add_bot('host')
     lobby.add_bot('host', 'spiteful')
     lobby.add_bot('host', 'ruthless')
     assert [m.level for m in lobby.members if m.is_bot] == ['normal', 'spiteful', 'ruthless']
-
-
-def test_an_unknown_level_is_rejected():
-    lobby = LobbyRegistry(clock=FakeClock()).create('host', 'Keno')
     with pytest.raises(LobbyError):
-        lobby.add_bot('host', 'evil')
-    assert len(lobby.members) == 1
+        lobby.add_bot('host', 'evil')                 # an unknown level is rejected
+    assert len(lobby.members) == 4
 
 
 def test_bots_saved_before_levels_existed_play_normal():

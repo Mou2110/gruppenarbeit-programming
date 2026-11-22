@@ -19,11 +19,8 @@ def presence():
     return Presence(clock=FakeClock())
 
 
-def test_nobody_is_online_at_first(presence):
-    assert not presence.is_online('marta')
-
-
 def test_online_while_at_least_one_page_is_open(presence):
+    assert not presence.is_online('marta')             # nobody is online at first
     presence.connect('tab-1', 'marta', lambda invite: None)
     presence.connect('tab-2', 'marta', lambda invite: None)
     assert presence.is_online('marta')
@@ -43,12 +40,9 @@ def test_invite_pops_up_on_every_open_page_of_the_friend(presence):
     assert [(i.sender_name, i.code) for i in got] == [('Erik', 'K7QX'), ('Erik', 'K7QX')]
 
 
-def test_cannot_invite_a_friend_who_is_offline(presence):
+def test_cannot_invite_a_friend_who_is_offline_or_yourself(presence):
     with pytest.raises(InviteError):
         presence.invite('erik', 'Erik', 'marta', 'K7QX')
-
-
-def test_cannot_invite_yourself(presence):
     presence.connect('tab-1', 'erik', lambda invite: None)
     with pytest.raises(InviteError):
         presence.invite('erik', 'Erik', 'erik', 'K7QX')
