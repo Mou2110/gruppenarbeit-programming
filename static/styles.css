@@ -182,6 +182,109 @@ body { margin: 0; background: #18284F; }
 /* Unplayable cards: dimmed instead of transparent, so other cards do not show through */
 .hcard.dim .card { filter: brightness(.42) saturate(.5); }
 
+/* ===== Play-test polish (22.11.) ===== */
+/* 1. Hand: a card grows when you point at it (mouse) or tap it (phone), so you can read your whole hand.
+      The hand row gets extra room above the cards for this, without moving the layout. */
+.handrow { --peek-room: 44px; padding-top: calc(26px + var(--peek-room)); margin-top: calc(-1 * var(--peek-room)); }
+.hcard > .card { transition: box-shadow .2s ease, filter .2s ease, scale .18s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .hcard:hover { z-index: 40; }
+  .hcard:hover > .card { scale: 1.32; filter: none; box-shadow: 0 0 0 2px #f3d299, 0 14px 28px #000b; }
+}
+.hcard.peek, .hcard.selected { z-index: 40; }
+.hcard.peek > .card, .hcard.selected > .card { scale: 1.25; filter: none; }
+@media (max-width: 899px) { .handrow { --peek-room: 30px; } }
+/* "?" on special cards in the hand: opens the explanation instead of playing the card. */
+.hcard .card-info {
+  position: absolute; z-index: 3; top: -9px; left: -5px; width: 22px; height: 22px; padding: 0;
+  border-radius: 50%; border: 1px solid #efd4a2; background: linear-gradient(#e2c698, #c4a16a); color: #20170c;
+  font: 700 13px/20px Inter, sans-serif; text-align: center; cursor: help; box-shadow: 0 2px 6px #0008;
+  rotate: var(--fan-angle, 0deg);
+}
+.board .card.special-face { cursor: help; }
+
+/* 3. The trump card lies in the middle of the table. */
+.board .table-engraving { display: none; }
+.table-trump {
+  position: absolute; z-index: 1; top: var(--table-y); left: 50%; translate: -50% -50%;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; transition: opacity .3s ease, scale .3s ease;
+}
+.table-trump > .card {
+  width: clamp(40px, calc(var(--table-diameter) * .17), 70px); height: auto; aspect-ratio: 2 / 3; rotate: -5deg;
+  box-shadow: 0 0 0 2px #e8c58c, 0 0 24px #f2c14e55, 0 10px 18px #0009;
+}
+.table-trump .no-trump-card { background: #ffffff08; border: 1px dashed #d8b98980; box-shadow: none; }
+.table-trump-label {
+  padding: 3px 10px; border-radius: 999px; background: #0b0f18d9; border: 1px solid #b9905680;
+  color: #f2dfbd; font-size: 12px; font-weight: 700; letter-spacing: .03em; white-space: nowrap;
+}
+.board:has(.tslot) .table-trump { opacity: .5; scale: .85; }
+
+/* 6. Who wins the trick: the leading card glows, the leader gets a crown, the player to move is highlighted,
+      and after the trick the cards slide over to the winner. */
+.tslot.best { z-index: 20 !important; }
+.tslot.best .card { box-shadow: 0 0 0 3px #f3d299, 0 0 28px #f2c14e99, 0 8px 16px #000a; }
+.tslot.collect { animation: collect .5s ease-in .8s forwards; }
+.tslot.enter.collect { animation: cardin .32s cubic-bezier(.2, .8, .2, 1) both, collect .5s ease-in .8s forwards; }
+@keyframes collect {
+  to { left: var(--to-x); top: var(--to-y); opacity: 0; transform: translate(-50%, -50%) scale(.5); }
+}
+.seat-crown {
+  position: absolute; z-index: 2; right: -12px; top: -12px; font-size: 20px; line-height: 1; color: #f3d299;
+  text-shadow: 0 0 10px #f2c14e, 0 2px 4px #000;
+}
+.seat:has(.avatar.turn) .pname {
+  padding: 1px 9px; border-radius: 999px; background: linear-gradient(#f3d299, #ce9d58); color: #21170b;
+}
+
+/* 2 + 4. Decisions (bid, trump, Juggler …) sit under your own seat, so the table stays in the middle. */
+@media (min-width: 600px) {
+  .table-stage:has(> .table-decision) { flex-direction: column; align-items: center; gap: 6px; }
+  .table-decision { flex: none; align-self: center; width: min(520px, 100%); max-height: 46%; }
+  .table-decision > .panel { width: 100%; padding: 12px 16px; gap: 8px; }
+  .table-decision > .panel h2 { font-size: 17px; }
+}
+
+/* 7. Explanation pop-up for special cards (static/table-fx.js). */
+.card-popup {
+  position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; padding: 16px;
+  background: #05070bcc; animation: popfade .15s ease both;
+}
+.card-popup-panel {
+  display: flex; align-items: center; gap: 18px; width: min(460px, 100%); box-sizing: border-box; padding: 18px;
+  border-radius: 16px; background: #f8edda; border: 1px solid #d8b989; color: #212f4b;
+  box-shadow: 0 20px 50px #000c; animation: popin .2s cubic-bezier(.2, .8, .2, 1) both;
+}
+.card-popup-panel > .card { flex: none; width: 118px; height: 177px; --idx: 18px; --lbl: 9px; }
+.card-popup-text h2 { margin: 0 0 6px; font: 600 26px/1.1 'Cormorant Garamond', Georgia, serif; }
+.card-popup-text p { margin: 0 0 10px; font-size: 14px; line-height: 1.45; }
+.card-popup-close { font-size: 11px; color: #6b6253; }
+@media (max-width: 460px) {
+  .card-popup-panel { flex-direction: column; text-align: center; }
+}
+
+/* 5. The card you receive from the Juggler flies into the middle of the screen for a moment. */
+.received-pop {
+  position: fixed; z-index: 250; left: 50%; top: 42%; display: flex; flex-direction: column; align-items: center;
+  gap: 10px; pointer-events: none; translate: -50% -50%; animation: received 2.8s ease both;
+}
+.received-pop > .card { width: 110px; height: 165px; box-shadow: 0 0 0 3px #f3d299, 0 0 40px #f2c14eaa, 0 18px 36px #000c; }
+.received-text {
+  padding: 7px 16px; border-radius: 999px; background: linear-gradient(#f3d299, #ce9d58); color: #21170b;
+  font: 700 15px/1.2 Inter, sans-serif; white-space: nowrap; box-shadow: 0 8px 20px #0009;
+}
+@keyframes received {
+  0% { opacity: 0; transform: translateY(-60px) rotateY(90deg) scale(.7); }
+  18% { opacity: 1; transform: none; }
+  80% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(80px) scale(.6); }
+}
+@keyframes popfade { from { opacity: 0; } }
+@keyframes popin { from { opacity: 0; transform: scale(.9); } }
+@media (prefers-reduced-motion: reduce) {
+  .tslot.collect, .tslot.enter.collect, .received-pop, .card-popup, .card-popup-panel { animation: none; }
+}
+
 /* ===== Cards ===== */
 .card {
   position: relative; flex: none; box-sizing: border-box; border: 2px solid #F8F5EE; border-radius: 8px;
