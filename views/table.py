@@ -141,6 +141,13 @@ def _slot_position(v: dict, player: int) -> tuple[float, float]:
     return 50 + 30 * math.cos(angle), 50 - 30 * math.sin(angle)
 
 
+def _fan_style(index: int, count: int) -> str:
+    side = (2 * index - count + 1) / (count - 1) if count > 1 else 0
+    angle = side * min(12, 3 * (count - 1), 96 / count)
+    drop = side ** 2 * min(8, 2 * (count - 1))
+    return f'--fan-angle:{angle:.2f}deg;--fan-drop:{drop:.1f}px'
+
+
 def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
     """Cards in the center of the table. seen: cards already shown by this browser.
     All others have just been played and slide from their player into place."""
@@ -388,33 +395,32 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     # --- player hand ---
     def hand() -> None:
         can_play = v['phase'] == 'playing' and v['my_turn']
-        with ui.element('div').classes('hand'):
+        with ui.element('div').classes('hand'), ui.element('div').classes('handrow') \
+                .props('role=group aria-label="Your hand" tabindex=0'):
             if v['my_hand'] is None:  # Clairvoyance: own card is hidden
-                with ui.element('div').classes('handrow'):
-                    for _ in range(v['my_hand_size']):
-                        element = ui.html(back_html('lg', '?'), sanitize=False).classes('hcard')
-                        if can_play and v['playable']:
-                            element.classes('playable')
-                            element.on('click', partial(act, 'play', card_id=v['playable'][0])).mark('playable')
+                for _ in range(v['my_hand_size']):
+                    element = ui.html(back_html('lg', '?'), sanitize=False).classes('hcard')
+                    if can_play and v['playable']:
+                        element.classes('playable')
+                        element.on('click', partial(act, 'play', card_id=v['playable'][0])).mark('playable')
                 return
-            # All cards in one row. If there is not enough room, CSS makes them overlap.
-            with ui.element('div').classes('handrow'):
-                for card in sorted(v['my_hand'], key=_hand_order):
-                        element = ui.html(card_html(card, 'lg'), sanitize=False).classes('hcard') \
-                            .props(f'data-card={card.id}')
-                        if card.id == state.get('selected'):
-                            element.classes('selected')
-                        if v['must_pass']:
-                            element.classes('playable')
-                            element.on('click', partial(pass_card, card.id)).mark('pass')
-                        elif can_play:
-                            if card.id in v['playable']:
-                                element.classes('playable')
-                                if card.id == state.get('pending'):
-                                    element.classes('picked')
-                                element.on('click', partial(choose, card.id)).mark('playable')
-                            else:
-                                element.classes('dim')
+            cards = sorted(v['my_hand'], key=_hand_order)
+            for index, card in enumerate(cards):
+                element = ui.html(card_html(card, 'lg'), sanitize=False).classes('hcard') \
+                    .props(f'data-card={card.id}').style(_fan_style(index, len(cards)))
+                if card.id == state.get('selected'):
+                    element.classes('selected')
+                if card.id == state.get('pending'):
+                    element.classes('picked')
+                if v['must_pass']:
+                    element.classes('playable')
+                    element.on('click', partial(pass_card, card.id)).mark('pass')
+                elif can_play:
+                    if card.id in v['playable']:
+                        element.classes('playable')
+                        element.on('click', partial(choose, card.id)).mark('playable')
+                    else:
+                        element.classes('dim')
 
     # --- Results, scoreboard, leave ---
     def results_overlay() -> None:

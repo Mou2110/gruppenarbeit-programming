@@ -567,10 +567,20 @@ button[disabled] { cursor: not-allowed; }
 .me .badge { min-width: 132px; box-sizing: border-box; text-align: center; }
 .seat .badge { min-width: 92px; box-sizing: border-box; text-align: center; }
 
-/* ===== Hand: always one row, overlapping when there are many cards ===== */
-.handrow { width: 100%; flex-wrap: nowrap; }
-.hcard { flex: 0 1 calc(var(--hand-cw, 72px) + 8px); min-width: 10px; position: relative; }
+/* Fan the hand, with a readable strip on each card when a large hand scrolls. */
+.game-table-theme .hand { min-height: 0; padding: 0 0 2px; }
+.handrow {
+  width: 100%; flex-wrap: nowrap; box-sizing: border-box; justify-content: safe center;
+  padding: 26px clamp(12px, 2vw, 22px) 12px;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  scrollbar-width: thin; scrollbar-color: #aa875d73 transparent;
+}
+.hcard {
+  flex: 0 1 calc(var(--hand-cw, 72px) * .58); min-width: 24px; position: relative;
+  translate: 0 var(--fan-drop, 0px);
+}
 .hcard:last-child { flex: 0 0 var(--hand-cw, 72px); }
+.hcard > .card { rotate: var(--fan-angle, 0deg); transform-origin: 50% 87%; }
 
 /* ===== Website: wider, larger, more spacing ===== */
 .bottombar { display: flex; flex-direction: column; gap: 12px; }
@@ -917,7 +927,14 @@ body:has(.game-table-theme) {
     radial-gradient(ellipse at 85% 85%, #3a241cc9 0, transparent 51%),
     var(--table-night);
 }
-.tbl.game-table-theme { isolation: isolate; }
+.tbl.game-table-theme {
+  isolation: isolate;
+  --hand-cw: clamp(64px, 17.75vw, 74px);
+}
+.game-table-theme .hand .card--lg { width: var(--hand-cw); height: auto; aspect-ratio: 2 / 3; }
+@media (min-width: 900px) {
+  .tbl.game-table-theme { --hand-cw: clamp(82px, 11vh, 92px); }
+}
 .table-atmosphere {
   position: absolute;
   z-index: -1;
