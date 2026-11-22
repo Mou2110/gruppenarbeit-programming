@@ -188,6 +188,10 @@ body { margin: 0; background: #18284F; }
 .hcard > .card { transition: box-shadow .2s ease, filter .2s ease, scale .18s ease; }
 .statusrow { position: relative; z-index: 35; pointer-events: none; }  /* above the hand, below a card you point at */
 @media (hover: hover) and (pointer: fine) {
+  /* While you point at a playable card it grows over the status line: the line fades out for that moment,
+     so it never covers the card (you know it is your turn while you are choosing a card anyway). */
+  .statusrow { transition: opacity .15s ease; }
+  .tbl:has(.hcard:not(.dim):hover) .statusrow { opacity: 0; }
   .hcard:hover { z-index: 40; }
   .hcard:not(.dim):hover > .card { scale: 1.32; filter: none; box-shadow: 0 0 0 2px #f3d299, 0 14px 28px #000b; }
   /* A card you may not play only grows a little so you can read it – it stays dark, without the gold frame. */
