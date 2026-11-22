@@ -58,8 +58,11 @@ def rules_content() -> str:
     rules = ''.join(f'<div class="rule"><h3>{title}</h3><p>{text}</p></div>' for title, text in RULES)
     specials = ''.join(_card_row(kind, text) for kind, text in SPECIALS)
     bonus = ''.join(_card_row(kind, text) for kind, text in BONUS)
-    return (f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}</div>'
-            f'<details class="rule extra"><summary><h3>(Extra special card)</h3></summary>{bonus}</details>')
+    # The extra card sits inside the special cards block, so it stays in that column right under them.
+    tip = ('<p class="rule-tip">During a game: Click a special card on the table, or the <b>?</b> on a special '
+           'card in your hand, to see what it does.</p>')
+    return (f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}{tip}'
+            f'<details class="rule extra"><summary><h3>(Extra special card)</h3></summary>{bonus}</details></div>')
 
 
 def rules_toggle() -> str:

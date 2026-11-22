@@ -75,8 +75,14 @@ def test_friend_row_links_to_profile_and_escapes_the_name():
     assert '7 games · 1 win' in html
 
 
-def test_friend_with_too_few_games_has_no_profile_link():
-    # Profiles only exist for players on the leaderboard (at least MIN_GAMES finished games).
-    html = stats.friend_html({'account': 'jan', 'name': 'Jan', 'games': 1, 'wins': 0})
+def test_friend_without_finished_games_has_no_profile_link():
+    # A profile needs at least one finished game (there is nothing to show before that).
+    html = stats.friend_html({'account': 'jan', 'name': 'Jan', 'games': 0, 'wins': 0})
     assert 'href=' not in html and 'Jan' in html
-    assert '1 game · 0 wins' in html
+    assert '0 games · 0 wins' in html
+
+
+def test_friend_with_one_game_can_be_clicked():
+    # Friends do not need 5 games like the leaderboard: one finished game is enough for their profile.
+    html = stats.friend_html({'account': 'jan', 'name': 'Jan', 'games': 1, 'wins': 0})
+    assert 'href="/players/jan"' in html

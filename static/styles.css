@@ -207,12 +207,18 @@ body { margin: 0; background: #18284F; }
 @media (max-width: 899px) {
   .game-table-theme .handrow { padding-top: 16px; margin-top: -14px; min-height: calc(var(--hand-cw, 72px) * 1.5 + 36px); }
 }
-/* "?" on special cards in the hand: opens the explanation instead of playing the card. */
-.hcard .card-info {
-  position: absolute; z-index: 3; top: -9px; left: -5px; width: 22px; height: 22px; padding: 0;
+/* "?" on special cards in the hand: opens the explanation instead of playing the card.
+   It sits inside the card under the rank and is sized from the card's own index size (--idx),
+   so it grows and turns with the card for every hand size, on hover and when tapped. */
+.hcard .card .card-info {
+  position: absolute; z-index: 3; left: 3%; top: 24%; display: grid; place-items: center;
+  width: calc(var(--idx, 15px) * 1.3); height: calc(var(--idx, 15px) * 1.3); padding: 0; box-sizing: border-box;
   border-radius: 50%; border: 1px solid #efd4a2; background: linear-gradient(#e2c698, #c4a16a); color: #20170c;
-  font: 700 13px/20px Inter, sans-serif; text-align: center; cursor: help; box-shadow: 0 2px 6px #0008;
-  rotate: var(--fan-angle, 0deg);
+  font: 700 calc(var(--idx, 15px) * .85)/1 Inter, sans-serif; cursor: help; box-shadow: 0 1px 4px #0008;
+}
+/* Phones with big hands: a bit smaller and lower, so the next card never covers it (checked for 1 to 20 cards). */
+@media (max-width: 899px) {
+  .hcard .card .card-info { left: 1%; top: 34%; width: calc(var(--idx, 15px) * 1.15); height: calc(var(--idx, 15px) * 1.15); }
 }
 .board .card.special-face { cursor: help; }
 
@@ -433,6 +439,7 @@ body { margin: 0; background: #18284F; }
 .restbl td { padding: 8px 4px; border-bottom: 1px solid #E4EAF4; }
 .restbl .r { text-align: right; }
 .restbl tr.top td { font-weight: 700; }
+.restbl .me { background: #f2c14e2e; font-weight: 700; color: #6b4a12; }  /* your own column in the scoreboard */
 .pos { color: #3A6E35; font-weight: 700; }
 .neg { color: #A8322A; font-weight: 700; }
 
@@ -909,6 +916,49 @@ body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c
 .lobby-theme .pagehead h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; color: var(--lobby-text, #f2dfbd); }
 .lobby-theme .gitem { background: var(--lobby-panel, #181e2a); border: 1px solid var(--lobby-line, #90734759); }
 .lobby-theme .gitem small { color: var(--lobby-muted, #c8bdad); }
+.lobby-theme .gitem .place.win, .lobby-theme .lbplace.top, .lobby-theme .lbitem em { color: #f3d299; }
+.lobby-theme .lbitem.me { box-shadow: inset 0 0 0 2px #d9b67c; }
+.lobby-theme .h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; color: var(--lobby-text, #f2dfbd); }
+.lobby-theme .tile { background: var(--lobby-panel, #181e2a); border: 1px solid var(--lobby-line, #90734759); }
+.lobby-theme .tile b { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; color: #f3d299; }
+.lobby-theme .tile span, .lobby-theme :is(.streak, .lbnote, .empty-note) { color: var(--lobby-muted, #c8bdad); }
+.lobby-theme .sortbtn { border-color: var(--lobby-line, #90734759); color: var(--lobby-muted, #c8bdad); }
+.lobby-theme .sortbtn:hover { background: #ffffff0d; }
+.lobby-theme .sortbtn.on { background: linear-gradient(#e2c698, #c4a16a); border-color: #efd4a2; color: #20170c; }
+.lobby-theme .fdot { background: #2e3849; color: var(--lobby-text, #f2dfbd); }
+.lobby-theme .fdot.win { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
+.lobby-theme .fdot.last { background: #7c2f24; }
+.lobby-theme .profile-link:hover, .lobby-theme .profile-link:focus-visible { color: #f3d299; }
+/* Dialogs (sign in, create account, join, practice) in the parchment and gold look instead of the old blue. */
+.dialogpanel { background: #f8edda; border: 1px solid #d8b989; color: #212f4b; }
+.dialogpanel .primary:not(.ghostbtn, .sizebtn, .linkbtn) { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
+.dialogpanel .primary:not(.ghostbtn, .sizebtn, .linkbtn):hover { background: linear-gradient(#f4d9a9, #d7b47d); }
+.dialogpanel .ghostbtn { color: #5b4524; border-width: 1px !important; border-color: #b9905699 !important; }
+.dialogpanel .namefield .q-field__control { background: #fffaf0; }
+.dialogpanel .namefield input { color: #212f4b; }
+.dialogpanel .namefield input::placeholder { color: #8a7c66; }
+.dialogpanel .linkbtn { color: #5b4524; }
+.dialogpanel .chipbtn { background: transparent; border-color: #b99056; color: #5b4524; }
+.dialogpanel .chipbtn.on { background: linear-gradient(#e2c698, #c4a16a); border-color: #c4a16a; color: #20170c; }
+.dialogpanel .numbtn { background: #304767; color: #fff4df; }
+.dialogpanel .numbtn:hover { background: #435b7d; }
+.message-panel { width: auto; max-width: none; }
+/* "Rejoin" on the start page was still the old blue. */
+.prophecy-home .games .primary.small:not(.ghostbtn) { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
+.prophecy-home .iconbtn { background: #222b3b; border: 1px solid #90734759; color: #f2dfbd; }
+.prophecy-home .iconbtn:hover { background: #2e3849; }
+/* Game table: the last bits of the old blue (bot badge, buttons in overlays, rules during the game). */
+.game-table-theme .seatmark { background: #29344a; color: #f2dfbd; border: 1px solid #b9905652; }
+.game-table-theme .overlay .primary:not(.ghostbtn) { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
+.game-table-theme .overlay .primary:not(.ghostbtn):hover { background: linear-gradient(#f4d9a9, #d7b47d); }
+.game-table-theme .overlay .ghostbtn { color: #5b4524; border-width: 1px !important; border-color: #b9905699 !important; }
+.rules-dialog-panel { background: #f8edda; border: 1px solid #d8b989; color: #212f4b; }
+.rules-dialog-panel .rule p { color: #3d4658; }
+.rules-dialog-panel .spec b { color: #212f4b; }
+.rules-dialog-panel .iconbtn { background: #304767; color: #fff4df; }
+.rules-dialog-panel .iconbtn:hover { background: #435b7d; }
+/* Pressing a button briefly showed the old blue (hover colour on touch screens). */
+.lobby-theme .primary:active, .dialogpanel .primary:active, .prophecy-home .primary:active { filter: brightness(.92); }
 .autherr { min-height: 16px; font-size: 12px; font-weight: 600; color: #A8322A; }
 .authswitch { align-self: center; color: #4A5878 !important; }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -948,9 +998,11 @@ body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c
 /* ===== Form and win streak (stats page) ===== */
 .formrow { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
 .fdot {
-  width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  min-width: 44px; height: 44px; padding: 0 6px; box-sizing: border-box; border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;
   font-weight: 700; font-size: 13px; background: #3A4C7A; color: #fff;
 }
+.fdot small { font-size: 10px; font-weight: 600; opacity: .8; }
 .fdot.win { background: #F2C14E; color: #18284F; }
 .fdot.last { background: #B8321F; }
 .streak { margin-top: 8px; font-size: 13px; color: #C9D3EA; }
@@ -1166,6 +1218,8 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   color: #FFD700; font: 700 var(--lbl, 9px)/1 Inter, sans-serif; letter-spacing: .08em; text-shadow: 0 1px 2px #000; }
 /* The hidden extra special card in the rules: its own small box that has to be opened separately */
 details.rule.extra { border: 1px dashed #B58A49; border-radius: 10px; padding: 8px 12px; }
+.rule > details.rule.extra { margin-top: 14px; }
+.rule .rule-tip { margin-top: 10px; font-size: 12px; font-style: italic; opacity: .85; }
 details.rule.extra > summary { list-style: none; cursor: pointer; }
 details.rule.extra > summary::-webkit-details-marker { display: none; }
 details.rule.extra > summary h3 { margin: 0; font-style: italic; color: #8A6A35; }

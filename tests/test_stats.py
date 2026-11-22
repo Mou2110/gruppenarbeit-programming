@@ -118,3 +118,19 @@ def test_only_wins_makes_current_and_best_streak_equal_to_all_games():
 ])
 def test_streak_text(current, best, text):
     assert streak_text(current, best) == text
+
+
+# ---- Form row on the stats page: places as "1st", "4th" with a short explanation (no tooltip needed on phones)
+
+def test_places_are_written_as_ordinals():
+    from views.stats import ordinal
+    assert [ordinal(n) for n in (1, 2, 3, 4, 11, 12, 13, 21, 22)] == \
+        ['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd']
+
+
+def test_form_row_says_what_the_numbers_mean():
+    from views.stats import form_html
+    html = form_html([{'place': 4, 'players': 5}, {'place': 1, 'players': 4}])  # newest first
+    assert 'Your place in each game' in html
+    assert html.index('1st') < html.index('4th')                     # oldest on the left
+    assert 'of 5' in html

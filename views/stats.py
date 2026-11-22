@@ -7,7 +7,6 @@ import time
 from nicegui import run, ui
 
 from game.accounts import AccountError
-from game.leaderboard import MIN_GAMES
 from game.lobby import registry
 from game.presence import presence
 
@@ -42,6 +41,21 @@ def form(results: list[dict], limit: int = 10) -> list[dict]:
     return row
 
 
+def ordinal(n: int) -> str:
+    """1 -> '1st', 2 -> '2nd', 3 -> '3rd', 4 -> '4th', 11 -> '11th', 21 -> '21st'."""
+    if 10 <= n % 100 <= 20:
+        return f'{n}th'
+    return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')}"
+
+
+def form_html(results: list[dict]) -> str:
+    """The form row: your place in each of the last games, written out ("4th of 5") so it needs no tooltip."""
+    dots = ''.join(f'<span class="fdot {g["kind"]}" title="{ordinal(g["place"])} of {g["players"]}">'
+                   f'<b>{ordinal(g["place"])}</b><small>of {g["players"]}</small></span>' for g in form(results))
+    return (f'<div class="streak">Your place in each game · last 10 games, newest on the right</div>'
+            f'<div class="formrow">{dots}</div>')
+
+
 def win_streaks(results: list[dict]) -> tuple[int, int]:
     """(current, best) number of wins in a row. results come newest first."""
     current = 0
@@ -74,9 +88,9 @@ def _count(number: int, word: str) -> str:
 
 
 def friend_html(friend: dict, online: bool = False) -> str:
-    """Name and totals of one friend. The name links to the profile if the friend has one."""
+    """Name and totals of one friend. The name links to their profile once they have finished a game."""
     name = esc(friend['name'])
-    if friend['games'] >= MIN_GAMES:
+    if friend['games'] >= 1:
         name = f'<a class="profile-link" href="/players/{esc(friend["account"])}">{name}</a>'
     if online:
         name += ' <span class="online-dot" style="color: #5BD38B">● online</span>'
@@ -141,7 +155,8 @@ async def stats_page() -> None:
         return
     s = summary(results)
 
-    with page_frame():
+    with page_frame() as frame:
+        frame.classes('lobby-theme')  # same dark and gold look as the start page and lobby
         with ui.element('div').classes('pagehead'):
             icon_button(ICON_BACK, 'Back to start', lambda: ui.navigate.to('/'))
             ui.html(f'<h1>{esc(account[1])}</h1>', sanitize=False)
@@ -154,10 +169,7 @@ async def stats_page() -> None:
                                                for t, v in tiles) + '</div>', sanitize=False)
 
         if results:
-            dots = ''.join(f'<span class="fdot {g["kind"]}" title="{g["place"]}. of {g["players"]}">{g["place"]}</span>'
-                           for g in form(results))
-            ui.html(f'<h2 class="h2">Form</h2><div class="streak">Last 10 games, newest on the right</div>'
-                    f'<div class="formrow">{dots}</div>'
+            ui.html(f'<h2 class="h2">Form</h2>{form_html(results)}'
                     f'<div class="streak">{esc(streak_text(*win_streaks(results)))}</div>',
                     sanitize=False).classes('mt-s')
 

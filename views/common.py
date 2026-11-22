@@ -183,7 +183,8 @@ def icon_button(icon: str, label: str, on_click: Callable, marker: str | None = 
 
 def message_page(title: str, text: str) -> None:
     """A simple information page, e.g. when a lobby does not exist."""
-    with page_frame():
-        with ui.element('div').classes('panel mt'):
+    with page_frame() as frame:
+        frame.classes('lobby-theme')  # dark and gold like the rest of the app, not the old blue
+        with ui.element('div').classes('panel mt dialogpanel message-panel'):
             ui.html(f'<h2>{esc(title)}</h2><p>{esc(text)}</p>', sanitize=False)
             button('Back to start', lambda: ui.navigate.to('/'), marker='home')

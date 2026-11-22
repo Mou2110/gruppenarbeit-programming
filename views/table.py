@@ -68,13 +68,15 @@ def fx_js(call: str) -> str:
 
 
 def hand_card_html(card: Card) -> str:
-    """A card in the hand. Special cards get a small "?" that explains them instead of playing them."""
-    info = ''
-    if not card.is_number and card.kind.value in CARD_INFO:
-        name = CARD_INFO[card.kind.value][0]
-        info = (f'<button type="button" class="card-info" data-kind="{card.kind.value}" '
-                f'aria-label="What does the {name} do?">?</button>')
-    return card_html(card, 'lg') + info
+    """A card in the hand. Special cards get a small "?" that explains them instead of playing them.
+    The "?" sits inside the card, so it grows and turns together with the card (hover, tap, any hand size)."""
+    face = card_html(card, 'lg')
+    if card.is_number or card.kind.value not in CARD_INFO:
+        return face
+    name = CARD_INFO[card.kind.value][0]
+    info = (f'<button type="button" class="card-info" data-kind="{card.kind.value}" '
+            f'aria-label="What does the {name} do?">?</button>')
+    return face[:-len('</div>')] + info + '</div>'
 
 
 def _name(v: dict, index: int | None) -> str:
@@ -270,6 +272,24 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
                      f'title="{esc(_name(v, play.player))}">{card_html(play.card, "md", chosen=play.suit)}'
                      f'{caption}</div>')
     return ''.join(parts)
+
+
+def scoreboard_html(v: dict) -> str:
+    """Points per round for every player. Your own column is highlighted and called "You"."""
+    players = v['players']
+    me = v['my_index']
+
+    def css(index: int) -> str:
+        return 'r me' if index == me else 'r'
+
+    head = ''.join(f'<th class="{css(i)}">{"You" if i == me else esc(p["name"])}</th>' for i, p in enumerate(players))
+    rounds = max((len(p['round_scores']) for p in players), default=0)
+    body = ''.join(
+        f'<tr><td>{r + 1}</td>' + ''.join(f'<td class="{css(i)}">{p["round_scores"][r]:+d}</td>'
+                                         for i, p in enumerate(players)) + '</tr>' for r in range(rounds))
+    totals = ''.join(f'<td class="{css(i)}">{p["score"]}</td>' for i, p in enumerate(players))
+    return (f'<table class="restbl"><tr><th>Round</th>{head}</tr>{body}'
+            f'<tr class="top"><td>Total</td>{totals}</tr></table>')
 
 
 def _status(v: dict, paused: bool) -> tuple[str, bool]:
@@ -533,15 +553,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                        marker='continue')
 
     def scores_overlay() -> None:
-        players = v['players']
-        head = ''.join(f'<th class="r">{esc(p["name"])}</th>' for p in players)
-        rounds = max((len(p['round_scores']) for p in players), default=0)
-        body = ''.join(
-            f'<tr><td>{r + 1}</td>' + ''.join(f'<td class="r">{p["round_scores"][r]:+d}</td>' for p in players)
-            + '</tr>' for r in range(rounds))
-        totals = ''.join(f'<td class="r">{p["score"]}</td>' for p in players)
-        table = (f'<table class="restbl"><tr><th>Round</th>{head}</tr>{body}'
-                 f'<tr class="top"><td>Total</td>{totals}</tr></table>')
+        table = scoreboard_html(v)
         with ui.element('div').classes('overlay'), ui.element('div').classes('panel'):
             ui.html(f'<h2>Scoreboard</h2>{table}', sanitize=False)
             button('Close', partial(set_state, 'scores_open', False))

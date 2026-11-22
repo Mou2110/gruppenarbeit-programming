@@ -26,6 +26,13 @@ def test_special_cards_in_the_hand_get_a_question_mark_number_cards_do_not():
     assert 'card-info' not in hand_card_html(num(Suit.SUN, 3))
 
 
+def test_the_question_mark_sits_inside_the_card_so_it_grows_with_it():
+    # Inside the card it is scaled together with the card (hover, phone tap, every hand size).
+    html = hand_card_html(Card('bomb', Kind.BOMB))
+    assert html.startswith('<div class="card') and html.endswith('</button></div>')
+    assert html.count('<div') == html.count('</div>')
+
+
 def test_trump_card_and_suit_lie_in_the_middle_of_the_table():
     assert 'Trump: Sea' in _table_trump_html(view())
     assert 'No trump' in _table_trump_html(view(trump=None, trump_card=Card('jester', Kind.JESTER)))
@@ -68,3 +75,12 @@ def test_playing_order_starts_with_whoever_leads_the_trick():
 
 def test_no_order_numbers_between_rounds():
     assert turn_order(view(phase='round_over', dealer=0, current=0)) == {}
+
+
+def test_scoreboard_highlights_your_own_column():
+    from views.table import scoreboard_html
+    v = view(players=[{'name': 'Me', 'round_scores': [30, -10], 'score': 20},
+                      {'name': 'Ana', 'round_scores': [20, 40], 'score': 60}], my_index=0)
+    html = scoreboard_html(v)
+    assert html.count(' me"') == 4                     # name, two rounds, total: all in your column
+    assert '<th class="r me">You</th>' in html and '>Ana</th>' in html

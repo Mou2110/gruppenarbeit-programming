@@ -35,3 +35,17 @@ def test_the_extra_special_card_hides_in_its_own_closed_section_after_the_specia
     assert section.startswith('<details class="rule extra"><summary><h3>(Extra special card)</h3></summary>')
     assert '<b>CR7</b> · Always wins.' in section
     assert section.count('<details') == 1 and ' open' not in section.split('>')[0]
+
+
+def test_the_extra_special_card_sits_inside_the_special_cards_block():
+    # So it stays in the same column, right under the special cards (not alone in the other column).
+    html = rules_content()
+    assert html.endswith('</details></div>')
+    block = html[html.index('<h3>Special cards (optional)</h3>'):]
+    assert block.index('<details class="rule extra">') < block.index('</details></div>')
+
+
+def test_the_rules_say_how_to_see_what_a_special_card_does_during_a_game():
+    html = rules_content()
+    block = html[html.index('<h3>Special cards (optional)</h3>'):]
+    assert 'Click a special card' in block and '?' in block
