@@ -10,8 +10,8 @@ from .common import ICON_CLOSE, icon_button
 RULES = [
     ('Rounds', 'Round 1 deals one card each, round 2 two cards, and so on: 20 rounds with 3 players, '
                '15 with 4, 12 with 5 and 10 with 6.'),
-    ('Trump', 'After dealing, the next card is turned up and its suit is trump. A Jester or a special card means '
-              'no trump, a Wizard lets the dealer choose. Without special cards the last round has no trump.'),
+    ('Trump', 'After dealing, the next card is turned up and its suit is trump. A Jester means no trump, '
+              'a Wizard lets the dealer choose. Without special cards the last round has no trump.'),
     ('Bidding', 'Starting left of the dealer, everyone says how many tricks they will win. '
                 "The bids must not add up to the number of tricks, so the last player has one option less."),
     ('Playing a trick', 'Follow the suit of the first card if you can. Wizards, Jesters and special cards may '

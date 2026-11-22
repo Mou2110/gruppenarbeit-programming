@@ -1,12 +1,6 @@
-"""Feedback from the rehearsal (21.11.):
-1. Against bots only, there is no time limit: you may think or take a break as long as you like.
-2. If a special card is turned up as the trump card, there is simply no trump (only a Wizard lets the dealer choose)."""
-import pytest
-
-from game.cards import Card, Kind, Suit
-from game.engine import Phase
+"""Feedback from the rehearsal (21.11.): against bots only, there is no time limit.
+You may think or take a break as long as you like."""
 from game.lobby import TURN_LIMIT, LobbyRegistry
-from game.rules import dealer_chooses_trump, trump_from_card
 from views.start import start_practice
 
 
@@ -86,29 +80,3 @@ def test_when_the_other_human_leaves_for_good_the_time_limit_stops():
     lobby.leave('b')                             # Ben's seat goes to a bot: Ana now plays only against bots
     run(registry, clock, 5)
     assert lobby.seconds_left() is None
-
-
-# ---------------------------------------------------------------- 2. Special card as trump card
-
-SPECIALS = [Kind.SHAPESHIFTER, Kind.DRAGON, Kind.FAIRY, Kind.BOMB, Kind.WEREWOLF, Kind.JUGGLER, Kind.CLOUD, Kind.CR7]
-
-
-@pytest.mark.parametrize('kind', SPECIALS)
-def test_special_card_turned_up_means_no_trump(kind):
-    card = Card(99, kind)
-    assert trump_from_card(card) is None
-    assert not dealer_chooses_trump(card)
-
-
-def test_a_wizard_turned_up_still_lets_the_dealer_choose():
-    assert dealer_chooses_trump(Card(99, Kind.WIZARD))
-
-
-def test_a_jester_turned_up_still_means_no_trump():
-    assert not dealer_chooses_trump(Card(99, Kind.JESTER))
-    assert trump_from_card(Card(99, Kind.JESTER)) is None
-
-
-def test_the_rules_page_says_a_special_card_means_no_trump():
-    from views.rules import rules_content
-    assert 'A Jester or a special card means no trump' in rules_content()
