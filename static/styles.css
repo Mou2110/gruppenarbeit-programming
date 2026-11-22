@@ -929,6 +929,8 @@ body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c
 .dialogpanel .primary:not(.ghostbtn, .sizebtn, .linkbtn):hover { background: linear-gradient(#f4d9a9, #d7b47d); }
 .dialogpanel .ghostbtn { color: #5b4524; border-width: 1px !important; border-color: #b9905699 !important; }
 .dialogpanel .namefield .q-field__control { background: #fffaf0; }
+.dialogpanel .namefield input { color: #212f4b; }
+.dialogpanel .namefield input::placeholder { color: #8a7c66; }
 .dialogpanel .linkbtn { color: #5b4524; }
 /* "Rejoin" on the start page was still the old blue. */
 .prophecy-home .games .primary.small:not(.ghostbtn) { background: linear-gradient(#e2c698, #c4a16a); color: #20170c; }
