@@ -71,6 +71,11 @@ body { margin: 0; background: #18284F; }
   --table-y: 50%;
   --seat-label-width: clamp(64px, calc(var(--table-width) * .185), 86px);
 }
+/* Safari computes tan(atan2()) with container units wrongly, so the board did not shrink there.
+   Browsers that can divide two lengths directly use that simpler formula instead. */
+@supports (scale: calc(1px / 2px)) {
+  .board { transform: scale(min(1, calc(100cqh / var(--board-min-height)))); }
+}
 .board.clairvoyance {
   --seat-clearance: calc(var(--table-seat-size) / 2 + 114px);
   --board-min-height: 504px;
