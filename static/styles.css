@@ -101,7 +101,6 @@ body { margin: 0; background: #18284F; }
 /* Player labels face away from the cards along the upper edge of the table. */
 .table-seat.seat-upper { translate: -50% calc(-100% + .5 * var(--table-seat-size)); }
 .seat-upper .avwrap { order: 1; }
-.board-5-seats .seat-upper { top: calc(var(--table-y) - var(--table-radius)); }
 .table-seat .seen { min-height: 0; }
 .table-seat .seen .card {
   width: clamp(28px, 6vw, 34px); height: auto; aspect-ratio: 2 / 3;
@@ -190,11 +189,20 @@ body { margin: 0; background: #18284F; }
 .statusrow { position: relative; z-index: 35; pointer-events: none; }  /* above the hand, below a card you point at */
 @media (hover: hover) and (pointer: fine) {
   .hcard:hover { z-index: 40; }
-  .hcard:hover > .card { scale: 1.32; filter: none; box-shadow: 0 0 0 2px #f3d299, 0 14px 28px #000b; }
+  .hcard:not(.dim):hover > .card { scale: 1.32; filter: none; box-shadow: 0 0 0 2px #f3d299, 0 14px 28px #000b; }
+  /* A card you may not play only grows a little so you can read it – it stays dark, without the gold frame. */
+  .hcard.dim:hover { z-index: auto; }      /* stays behind its neighbours, so it never covers a playable card */
+  .hcard.dim:hover > .card { scale: 1.08; }
+  .hcard.dim { cursor: not-allowed; }
 }
 .hcard.peek, .hcard.selected { z-index: 40; }
 .hcard.peek > .card, .hcard.selected > .card { scale: 1.25; filter: none; }
+.hcard.dim.peek > .card { filter: brightness(.6) saturate(.6); }
 @media (max-width: 899px) { .handrow { --peek-room: 30px; } }
+/* Phone: a little less room above the hand, so the table stays as large as possible. */
+@media (max-width: 899px) {
+  .game-table-theme .handrow { padding-top: 16px; margin-top: -14px; min-height: calc(var(--hand-cw, 72px) * 1.5 + 36px); }
+}
 /* "?" on special cards in the hand: opens the explanation instead of playing the card. */
 .hcard .card-info {
   position: absolute; z-index: 3; top: -9px; left: -5px; width: 22px; height: 22px; padding: 0;
@@ -226,7 +234,7 @@ body { margin: 0; background: #18284F; }
 .tslot.best { z-index: 20 !important; }
 .tslot.best .card { box-shadow: 0 0 0 3px #f3d299, 0 0 28px #f2c14e99, 0 8px 16px #000a; }
 .tslot.collect { animation: collect .5s ease-in .8s forwards; }
-.tslot.enter.collect { animation: cardin .32s cubic-bezier(.2, .8, .2, 1) both, collect .5s ease-in .8s forwards; }
+.tslot.enter.collect { animation: cardin .48s cubic-bezier(.2, .8, .2, 1) both, collect .5s ease-in .8s forwards; }
 @keyframes collect {
   to { left: var(--to-x); top: var(--to-y); opacity: 0; transform: translate(-50%, -50%) scale(.5); }
 }
@@ -832,16 +840,19 @@ body:has(.lobby-theme) :is(.chatinput .q-field__control, .cmsg:not(.mine)) { bac
 body:has(.lobby-theme) .chatinput .q-field__native::placeholder { color: var(--lobby-muted); }
 body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c; }
 
-/* Fan the hand, with a readable strip on each card when a large hand scrolls. */
+/* Fan the hand. All cards always stay in one row: with many cards they overlap more instead of
+   scrolling sideways (a scrolling row would also clip a raised card at the top and the fan at the bottom).
+   The row keeps its height when it is empty, so the table does not jump after the last card. */
 .game-table-theme .hand { min-height: 0; padding: 0 0 2px; }
 .handrow {
-  width: 100%; flex-wrap: nowrap; box-sizing: border-box; justify-content: safe center;
+  width: 100%; flex-wrap: nowrap; box-sizing: border-box; justify-content: center;
   padding: 26px clamp(12px, 2vw, 22px) 12px;
-  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
-  scrollbar-width: thin; scrollbar-color: #aa875d73 transparent;
+  margin-top: -20px;   /* the empty room above the cards may sit under the status line, the cards may not */
+  min-height: calc(var(--hand-cw, 72px) * 1.5 + 46px);
+  overflow: visible;
 }
 .hcard {
-  flex: 0 1 calc(var(--hand-cw, 72px) * .58); min-width: 24px; position: relative;
+  flex: 0 1 calc(var(--hand-cw, 72px) * .58); min-width: 11px; position: relative;
   translate: 0 var(--fan-drop, 0px);
 }
 .hcard:last-child { flex: 0 0 var(--hand-cw, 72px); }
@@ -1082,9 +1093,15 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
 }
 
 /* Newly played cards appear inside their own slot without crossing player labels. */
-.tslot.enter { animation: cardin .32s cubic-bezier(.2, .8, .2, 1) both; }
+/* A newly played card glides in from its player's seat (--fx/--fy: direction, set in views/table.py). */
+.tslot.enter { animation: cardin .48s cubic-bezier(.2, .8, .2, 1) both; }
 @keyframes cardin {
-  from { transform: translate(-50%, -50%) scale(.88); opacity: .2; }
+  from {
+    transform: translate(-50%, -50%)
+      translate(calc(var(--fx, 0) * var(--table-radius, 150px) * .9), calc(var(--fy, 0) * var(--table-radius, 150px) * .9))
+      scale(.8);
+    opacity: .35;
+  }
   to { transform: translate(-50%, -50%); opacity: 1; }
 }
 

@@ -253,14 +253,17 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
             note = f'<span class="as">as {"Wizard" if play.as_wizard else "Jester"}</span>'
         x, y = _slot_position(v, play.player)
         enter = ' best' if pos == best and not bombed else ''
+        fly = ''
         if seen is not None and play.card.id not in seen:
             enter += ' enter'
             seen.add(play.card.id)
-        fly = ''
+            # Start point of the glide: from the player's seat (my own card comes up from my hand below).
+            fx, fy = (0.0, 1.6) if play.player == v['my_index'] else _seat_vector(v, play.player)
+            fly = f';--fx:{fx:.3f};--fy:{fy:.3f}'
         if finished and not bombed:  # after the trick: the cards slide towards the winner
             sx, sy = _seat_vector(v, plays[best].player)
             enter += ' collect'
-            fly = f';--to-x:{50 + sx * 46:.1f}%;--to-y:{50 + sy * 46:.1f}%'
+            fly += f';--to-x:{50 + sx * 46:.1f}%;--to-y:{50 + sy * 46:.1f}%'
         caption = f'<span class="trick-caption">{tag}{note}</span>' if tag or note else ''
         below = ' caption-below' if y <= 50 else ''
         parts.append(f'<div class="tslot{enter}{below}" style="left:{x:.1f}%;top:{y:.1f}%;z-index:{pos + 1}{fly}" '
