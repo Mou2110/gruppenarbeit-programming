@@ -256,7 +256,7 @@ body { margin: 0; background: #18284F; }
   border-radius: 16px; background: #f8edda; border: 1px solid #d8b989; color: #212f4b;
   box-shadow: 0 20px 50px #000c; animation: popin .2s cubic-bezier(.2, .8, .2, 1) both;
 }
-.card-popup-panel > .card { flex: none; width: 118px; height: 177px; --idx: 18px; --lbl: 9px; }
+.card-popup-panel > .card { position: relative; inset: auto; flex: none; width: 118px; height: 177px; rotate: none; scale: none; translate: none; transform: none; --idx: 18px; --lbl: 9px; }
 .card-popup-text h2 { margin: 0 0 6px; font: 600 26px/1.1 'Cormorant Garamond', Georgia, serif; }
 .card-popup-text p { margin: 0 0 10px; font-size: 14px; line-height: 1.45; }
 .card-popup-close { font-size: 11px; color: #6b6253; }

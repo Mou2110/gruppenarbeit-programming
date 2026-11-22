@@ -27,6 +27,7 @@ function showInfo(kind, card) {
   const face = card.cloneNode(true);
   face.className = face.className.replace(/card--\w+/, 'card--lg');
   face.querySelector('.card-info')?.remove();
+  face.removeAttribute('style');
   const text = document.createElement('div');
   text.className = 'card-popup-text';
   const title = document.createElement('h2');
