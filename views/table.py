@@ -314,7 +314,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
         state[key] = value
         refresh_self()
 
-    # --- Panels in the center of the table ---
+    # --- Decisions before and during a round ---
     def werewolf_panel() -> None:
         with ui.element('div').classes('panel'):
             ui.html(f'<h2>You drew the Werewolf</h2><p>It swaps places with the trump card '
@@ -365,14 +365,14 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                            cls='numbtn wide', marker='adjust')
 
     # --- Card with a choice (Juggler, Cloud, Shapeshifter) ---
-    def choice_sheet(card: Card, declare: bool = False) -> None:
+    def choice_panel(card: Card, declare: bool = False) -> None:
         def pick(**choice) -> None:
             if declare:
                 act('declare', **choice)
             else:
                 act('play', card_id=card.id, **choice)
 
-        with ui.element('div').classes('sheet'), ui.element('div').classes('panel'):
+        with ui.element('div').classes('panel'):
             if card.needs_suit_choice:
                 value = '7½' if card.kind == Kind.JUGGLER else '9¾'
                 ui.html(f'<h2>Play the {KIND_LABEL[card.kind]} ({value}) as…</h2>'
@@ -392,7 +392,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
 
     # --- player hand ---
     def hand() -> None:
-        can_play = v['phase'] == 'playing' and v['my_turn']
+        can_play = v['phase'] == 'playing' and v['my_turn'] and not decision
         with ui.element('div').classes('hand'), ui.element('div').classes('handrow') \
                 .props('role=group aria-label="Your hand" tabindex=0'):
             if v['my_hand'] is None:  # Clairvoyance: own card is hidden
@@ -491,10 +491,25 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
         ui.html(_trump_html(v), sanitize=False).classes('a-trump')
         ui.html(_lead_html(v), sanitize=False).classes('a-lead')
 
+    # Validate remembered card choices when the browser redraws after a turn or timeout.
+    phase_decision = {
+        'werewolf': werewolf_panel, 'choosing_trump': trump_panel,
+        'bidding': bid_panel, 'adjusting': adjust_panel,
+    }.get(v['phase']) if v['my_turn'] else None
+    decision = phase_decision
+    pending = state.get('pending')
+    if v['must_declare']:
+        state['pending'] = None
+        decision = partial(choice_panel, v['trick'][-1].card, declare=True)
+    elif pending and v['phase'] == 'playing' and v['my_turn'] and pending in v['playable']:
+        decision = partial(choice_panel, next(c for c in v['my_hand'] if c.id == pending))
+    else:
+        state['pending'] = None
+
     # Discard stale touch selection before rendering the hand in either position.
     selectable = v['playable'] if (v['phase'] == 'playing' and v['my_turn']) else (
         [c.id for c in v['my_hand'] or []] if v['must_pass'] else [])
-    if state.get('selected') not in selectable:
+    if state.get('selected') not in selectable or decision:
         state['selected'] = None
 
     board_class = f'board board-{n}-seats'
@@ -512,24 +527,17 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                 ui.html(_seat_html(v, index, lobby), sanitize=False).classes(f'table-seat {side}{upper}') \
                     .style(f'--seat-x:{x:.4f};--seat-y:{y:.4f}')
             ui.html(_seat_html(v, me, lobby), sanitize=False).classes('table-self')
-            with ui.element('div').classes('a-trick'):
-                phase = v['phase']
-                if phase == 'werewolf' and v['my_turn']:
-                    werewolf_panel()
-                elif phase == 'choosing_trump' and v['my_turn']:
-                    trump_panel()
-                elif phase == 'bidding' and v['my_turn']:
-                    bid_panel()
-                elif phase == 'adjusting' and v['my_turn']:
-                    adjust_panel()
-                else:
-                    # Which cards has this browser already seen? On the first render (e.g. after a reload)
-                    # nothing slides; afterwards, only the newly played card does.
+            if not phase_decision:
+                with ui.element('div').classes('a-trick'):
+                    # On a reload all cards are visible. On later updates only new cards fade in.
                     shown = [p.card.id for p in (v['trick'] or v['last_trick'])]
                     if 'seen_trick' not in state:
                         state['seen_trick'] = set(shown)
                     state['seen_trick'] &= set(shown)
                     ui.html(_trick_html(v, paused, state['seen_trick']), sanitize=False).classes('trick')
+        if decision:
+            with ui.element('div').classes('table-decision'):
+                decision()
 
     text, mine = _status(v, paused)
     if state.get('selected'):
@@ -553,13 +561,11 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     hand()
 
     pending = state.get('pending')
-    if v['must_declare']:
-        state['pending'] = None
-        choice_sheet(v['trick'][-1].card, declare=True)
-    elif pending and v['phase'] == 'playing' and v['my_turn'] and pending in v['playable']:
-        choice_sheet(next(c for c in v['my_hand'] if c.id == pending))
-    else:
-        state['pending'] = None
+    if pending and state.get('revealed_pending') != pending:
+        ui.context.client.run_javascript(
+            "requestAnimationFrame(() => document.querySelector('.handrow .hcard.picked')"
+            "?.scrollIntoView({block:'nearest',inline:'nearest'}))")
+    state['revealed_pending'] = pending
 
     if state.get('confirm_leave'):
         leave_overlay()

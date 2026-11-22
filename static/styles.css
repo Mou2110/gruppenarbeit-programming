@@ -334,8 +334,6 @@ body { margin: 0; background: #18284F; }
 button[disabled] { cursor: not-allowed; }
 
 /* ===== Choice when playing (shown at the bottom) ===== */
-.sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; justify-content: center; padding: 12px; box-sizing: border-box; }
-.sheet .panel { width: 100%; max-width: 406px; }
 .waiting { text-align: center; font-weight: 600; }
 
 /* ===== Start page ===== */
@@ -675,7 +673,6 @@ button[disabled] { cursor: not-allowed; }
   .card--lg { width: 96px; height: 144px; --num: 42px; --ico: 25px; --idx: 17px; --lbl: 9px; border-radius: 11px; }
   .hcard.playable { transform: translateY(-14px); }
   .hcard.picked { transform: translateY(-30px); }
-  .sheet .panel { max-width: 520px; }
   .overlay .panel { max-width: 560px; }
 }
 
@@ -865,17 +862,21 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   .hcard.playable:hover { transform: translateY(-26px); }
 }
 
-/* Decision panels at the table (bid, trump, Werewolf, Cloud): always on top,
-   centered over the table even when taller than the space there, above the cards. */
-.a-trick > .panel {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 45;
-  width: min(420px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); overflow-y: auto;
+/* Move decisions beside the board when the available width allows it. */
+.table-stage:has(> .table-decision) { gap: 6px; }
+.table-decision { display: flex; justify-content: center; min-width: 0; min-height: 0; max-height: 65%; }
+.table-decision > .panel { width: min(420px, 100%); overflow-y: auto; }
+.table-decision > .panel > * { flex-shrink: 0; }
+@media (min-width: 600px) {
+  .table-stage:has(> .table-decision) { flex-direction: row; align-items: stretch; gap: 10px; }
+  .table-decision { flex: 0 1 min(50%, 400px); align-self: center; max-height: 100%; }
+  .table-decision > .panel { max-height: 100%; }
 }
 @media (max-width: 899px) {
-  .a-trick > .panel { width: min(340px, calc(100vw - 24px)); padding: 14px; gap: 10px; }
-  .a-trick > .panel h2 { font-size: 18px; }
-  .a-trick > .panel .suitbtn, .a-trick > .panel .numbtn { height: 40px; }
-  .a-trick > .panel .primary { height: 42px; }
+  .table-decision > .panel { width: min(340px, 100%); padding: 14px; gap: 10px; }
+  .table-decision > .panel h2 { font-size: 18px; }
+  .table-decision > .panel .suitbtn, .table-decision > .panel .numbtn { height: 40px; }
+  .table-decision > .panel .primary { height: 42px; }
 }
 
 /* Newly played cards appear inside their own slot without crossing player labels. */
@@ -883,13 +884,6 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
 @keyframes cardin {
   from { transform: translate(-50%, -50%) scale(.88); opacity: .2; }
   to { transform: translate(-50%, -50%); opacity: 1; }
-}
-
-/* Choice panel for special cards (suit / Wizard or Jester): on top of the chat bar and cards,
-   while the rest of the table is dimmed. */
-.sheet {
-  z-index: 60; top: 0; align-items: flex-end; background: rgba(10, 16, 34, .45);
-  padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
 }
 
 /* Laptop/Desktop: player cards are slightly smaller to fit the table and leave more room in the center */
@@ -1209,7 +1203,7 @@ body:has(.game-table-theme) :is(.chatsend, .turntimer.mine) {
   color: #fff0cd;
   background: #26364d;
 }
-.game-table-theme :is(.a-trick, .overlay, .sheet) > .panel {
+.game-table-theme :is(.table-decision, .overlay) > .panel {
   background: #f8edda;
   border: 1px solid #d8b989;
   color: #212f4b;
