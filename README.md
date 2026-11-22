@@ -96,6 +96,8 @@ The special-card illustrations and the four suit motifs are AI-generated artwork
 created for this project with OpenAI's image generation tool. The app adds card
 ranks and labels separately. The prophet portrait on the start page is AI-generated as well. The CR7 bonus card (`static/card-art/cr7.svg`) is a simple
 vector drawing made for this project, not a photo.
+The Wizard cards (`static/card-art/wizard-moritz.jpg`) show team member Moritz as a wizard: an AI-generated
+portrait made with ChatGPT from his own photo, with his consent.
 
 ## Features
 
