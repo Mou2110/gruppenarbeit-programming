@@ -141,3 +141,30 @@ async def profile_page(username: str) -> None:
         tiles = ''.join(f'<div class="tile"><b>{esc(display_value(entry, key))}</b>'
                         f'<span>{esc(label)}</span></div>' for key, label in SORT_LABELS.items())
         ui.html(f'<div class="tiles">{tiles}</div>', sanitize=False)
+        await _add_friend_button(entry)
+
+
+async def _add_friend_button(entry: dict) -> None:
+    """On someone else's profile: add them as a friend with one click (signed-in players only)."""
+    account = await current_account()
+    store = registry.store
+    if account is None or store is None or account[0] == entry['account']:
+        return
+    try:
+        friends = {f['account'] for f in await run.io_bound(store.friends_of, account[0])}
+    except Exception:
+        return
+    if entry['account'] in friends:
+        ui.html('<p class="muted small">Already your friend.</p>', sanitize=False)
+        return
+
+    async def add() -> None:
+        try:
+            name = await run.io_bound(store.add_friend, account[0], entry['name'])
+        except Exception:
+            ui.notify('Could not add this friend. Please try again later.', type='negative')
+            return
+        ui.notify(f'{name} is now your friend.')
+        ui.navigate.reload()
+
+    button('Add friend', add, cls='primary small', marker='add-friend-profile')
