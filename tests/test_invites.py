@@ -108,3 +108,14 @@ def test_popup_text_escapes_the_name():
 def test_friends_list_shows_who_is_online():
     assert 'online' in stats.friend_html(friend('marta', 'Marta'), online=True)
     assert 'online' not in stats.friend_html(friend('marta', 'Marta'))
+
+
+def test_friend_in_a_running_game_is_shown_as_in_game(presence):
+    lobbies = LobbyRegistry()
+    running = lobbies.create('acct:marta', 'Marta')
+    for _ in range(2):
+        running.add_bot('acct:marta')
+    running.set_ready('acct:marta', True)              # Marta is playing a game right now
+    presence.connect('tab-marta', 'marta', lambda invite: None)
+    lobby = lobbies.create('acct:erik', 'Erik')
+    assert [f['in_game'] for f in invites.invitable([friend('marta', 'Marta')], lobby, presence, lobbies)] == [True]

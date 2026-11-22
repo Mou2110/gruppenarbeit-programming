@@ -198,10 +198,12 @@ async def lobby_page(code: str) -> None:
             for friend in candidates:
                 with ui.element('div').classes('prow'):
                     ui.html(f'<div class="avatar av-sm">{esc(friend["name"][:1].upper())}</div>'
-                            f'<span class="pn">{esc(friend["name"])} <span class="muted">(online)</span></span>',
+                            f'<span class="pn">{esc(friend["name"])} <span class="muted">'
+                            f'({"in game" if friend["in_game"] else "online"})</span></span>',
                             sanitize=False).classes('prow-main')
-                    button('Invite', partial(invite, friend), cls='primary small', marker='invite-friend') \
-                        .classes('px-4')
+                    if not friend['in_game']:  # in the middle of another game: cannot be invited
+                        button('Invite', partial(invite, friend), cls='primary small', marker='invite-friend') \
+                            .classes('px-4')
 
     @ui.refreshable
     def players_part() -> None:
