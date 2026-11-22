@@ -1,7 +1,7 @@
 """Play-testing polish on the game table (22.11.): card explanations, trump in the middle, clearer trick winner."""
 from game.cards import OPTIONAL_KINDS, Card, Kind, Suit
 from game.rules import Play
-from views.table import CARD_INFO, _leader, _table_trump_html, _trick_html, hand_card_html
+from views.table import CARD_INFO, _leader, _table_trump_html, _trick_html, hand_card_html, turn_order
 
 
 def num(suit, value):
@@ -50,3 +50,21 @@ def test_after_the_trick_the_cards_slide_to_the_winner():
 
 def test_nobody_gets_the_crown_on_an_empty_table():
     assert _leader(view(), paused=False) is None
+
+
+# J1: every seat shows its place in the order (1., 2., 3. …) for the current bidding round or trick.
+
+def test_bidding_order_starts_left_of_the_dealer():
+    v = view(phase='bidding', dealer=1, current=2, players=[{'name': n} for n in ('Me', 'Ana', 'Ben', 'Cem')])
+    assert turn_order(v) == {2: 1, 3: 2, 0: 3, 1: 4}          # Ben bids first, the dealer Ana last
+
+
+def test_playing_order_starts_with_whoever_leads_the_trick():
+    v = view(phase='playing', dealer=0, current=0, trick=[Play(2, num(Suit.SUN, 4))])
+    assert turn_order(v) == {2: 1, 0: 2, 1: 3}                # Ben led, so Me is second
+    v = view(phase='playing', dealer=0, current=1, trick=[])
+    assert turn_order(v) == {1: 1, 2: 2, 0: 3}                # empty trick: the player to lead is first
+
+
+def test_no_order_numbers_between_rounds():
+    assert turn_order(view(phase='round_over', dealer=0, current=0)) == {}
