@@ -245,6 +245,15 @@ body { margin: 0; background: #18284F; }
   .tbl .table-decision > .panel { width: 100%; padding: 12px 16px; gap: 8px; }
   .tbl .table-decision > .panel h2 { font-size: 17px; }
 }
+/* Wide but short windows (laptops): there is no room under the table, but plenty beside it.
+   The decision floats on the right and the table stays in the middle at full size. */
+@media (min-width: 1000px) and (max-height: 820px) {
+  .tbl .table-stage:has(> .table-decision) { position: relative; }
+  .tbl .table-stage > .table-decision {
+    position: absolute; z-index: 30; right: 0; top: 50%; translate: 0 -50%;
+    width: min(330px, 27%); max-height: 100%;
+  }
+}
 
 /* 7. Explanation pop-up for special cards (static/table-fx.js). */
 .card-popup {
