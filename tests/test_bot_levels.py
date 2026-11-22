@@ -236,6 +236,8 @@ def test_the_lobby_lets_each_bot_play_with_its_own_level(monkeypatch):
     lobby.set_ready('host', True)
     for _ in range(50):
         clock.now += 2.0
+        if lobby.waiting_on() == ['host'] and lobby.game.phase not in (Phase.ROUND_OVER, Phase.GAME_OVER):
+            lobby._timeout_move()  # the human host makes the simplest move, so the bots get their turn too
         registry.tick_all()
     assert seen and set(seen) == {'ruthless'}
 
