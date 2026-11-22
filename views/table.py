@@ -65,13 +65,11 @@ def _verb(v: dict, index: int, you: str, other: str) -> str:
 
 # ---------------------------------------------------------------- HTML-Bausteine
 
-def _badge(v: dict, p: dict) -> str:
+def _bid_value(p: dict) -> str:
     bid = '–' if p['bid'] is None else str(p['bid'])
     if p['bid_change']:
         bid += f'→{p["bid"] + p["bid_change"]}'
-    if v['phase'] in ('werewolf', 'choosing_trump', 'bidding'):
-        return f'Bid {bid}'
-    return f'Bid {bid} · Won {p["tricks_won"]}'
+    return bid
 
 
 def _avatar(v: dict, index: int) -> str:
@@ -92,7 +90,7 @@ def _seat_html(v: dict, index: int, lobby: Lobby) -> str:
         mark = '<span class="seatmark">BOT</span>'
     elif lobby.is_absent(p['id']):
         mark = '<span class="seatmark away">AWAY</span>'
-    if v['clairvoyance']:  # Clairvoyance: this player's card is visible (the seat remains reserved)
+    if v['clairvoyance'] and index != v['my_index']:
         cards = ''.join(card_html(c, 'sm') for c in (p['visible_hand'] or []))
         extra = f'<div class="seen">{cards}</div>'
     elif v['phase'] == 'passing':
@@ -101,8 +99,15 @@ def _seat_html(v: dict, index: int, lobby: Lobby) -> str:
         count = p['cards_left']
         extra = f'<span class="cardsleft">{count} card{"s" if count != 1 else ""}</span>'
     avatar = _avatar(v, index)
-    return (f'<div class="seat"><div class="avwrap">{avatar}{mark}</div><span class="pname">{esc(p["name"])}</span>'
-            f'<span class="badge">{_badge(v, p)}</span>{extra}</div>')
+    name = esc(p['name'])
+    label = 'You' if index == v['my_index'] else name
+    bid = f'<span class="player-stat"><span>Bid</span><b>{_bid_value(p)}</b></span>'
+    won = ''
+    if v['phase'] not in ('werewolf', 'choosing_trump', 'bidding'):
+        won = f'<span class="player-stat"><span>Won</span><b>{p["tricks_won"]}</b></span>'
+    return (f'<div class="seat"><div class="avwrap">{avatar}{mark}</div><div class="player-label">'
+            f'<span class="pname" title="{name}">{label}</span>'
+            f'<div class="player-stats">{bid}{won}</div>{extra}</div></div>')
 
 
 def _trump_html(v: dict) -> str:
@@ -129,21 +134,32 @@ def _lead_html(v: dict) -> str:
     return f'<span class="chip" title="Suit to follow">{suit_icon(lead)}{SUIT_LABEL[lead]}</span>'
 
 
-def _slot_position(v: dict, player: int) -> tuple[float, float]:
-    """Fixed position (as a percentage of the table center) where a player's card is placed.
-
-    Seats form an ellipse: you are at the bottom, and the others go clockwise
-    up the left side and across the top to the right. With 3 players, two are at the top and one at the bottom.
-    """
+def _seat_vector(v: dict, player: int) -> tuple[float, float]:
+    """Direction from the center to the player, with the viewer at the bottom."""
     n = len(v['players'])
     relative = (player - v['my_index']) % n
     angle = math.radians(270 - relative * 360 / n)
-    return 50 + 30 * math.cos(angle), 50 - 30 * math.sin(angle)
+    return math.cos(angle), -math.sin(angle)
+
+
+def _slot_position(v: dict, player: int) -> tuple[float, float]:
+    """The played card goes in front of its player's seat."""
+    x, y = _seat_vector(v, player)
+    column = 29 if x < -.1 else 71 if x > .1 else 50
+    row = 25.5 if y < -.1 else 74.5 if y > .1 else 50
+    return column, row
+
+
+def _fan_style(index: int, count: int) -> str:
+    side = (2 * index - count + 1) / (count - 1) if count > 1 else 0
+    angle = side * min(12, 3 * (count - 1), 96 / count)
+    drop = side ** 2 * min(8, 2 * (count - 1))
+    return f'--fan-angle:{angle:.2f}deg;--fan-drop:{drop:.1f}px'
 
 
 def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
     """Cards in the center of the table. seen: cards already shown by this browser.
-    All others have just been played and slide from their player into place."""
+    All others have just been played and fade into their slot."""
     finished = paused and not v['trick'] and bool(v['last_trick'])
     plays: list[Play] = v['last_trick'] if finished else v['trick']
     if not plays:
@@ -163,23 +179,20 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
                 text = 'Wins' if finished else 'Leading'
             tag = f'<span class="tag">{text}</span>'
         else:
-            tag = '<span class="tag ghost">-</span>'
+            tag = ''
         note = ''
         if play.card.needs_role_choice:
             note = f'<span class="as">as {"Wizard" if play.as_wizard else "Jester"}</span>'
         x, y = _slot_position(v, play.player)
-        enter, start = '', ''
+        enter = ''
         if seen is not None and play.card.id not in seen:
-            # Starting point: farther out toward the player who played the card
-            # (your own card comes up from your hand at the bottom).
-            fx, fy = (x - 50) * 4, (y - 50) * 4.5
-            if play.player == v['my_index']:
-                fy = 170
-            enter, start = ' enter', f'--fx:{fx:.0f}px;--fy:{fy:.0f}px;'
+            enter = ' enter'
             seen.add(play.card.id)
-        parts.append(f'<div class="tslot{enter}" style="{start}left:{x:.1f}%;top:{y:.1f}%;z-index:{pos + 1}" '
-                     f'title="{esc(_name(v, play.player))}">{tag}{card_html(play.card, "md", chosen=play.suit)}'
-                     f'{note}</div>')
+        caption = f'<span class="trick-caption">{tag}{note}</span>' if tag or note else ''
+        below = ' caption-below' if y <= 50 else ''
+        parts.append(f'<div class="tslot{enter}{below}" style="left:{x:.1f}%;top:{y:.1f}%;z-index:{pos + 1}" '
+                     f'title="{esc(_name(v, play.player))}">{card_html(play.card, "md", chosen=play.suit)}'
+                     f'{caption}</div>')
     return ''.join(parts)
 
 
@@ -238,13 +251,6 @@ def _phase_text(v: dict) -> str:
     return 'Round finished' if phase == 'round_over' else 'Game over'
 
 
-def _me_html(v: dict) -> str:
-    me = v['my_index']
-    p = v['players'][me]
-    return (f'<div class="me">{_avatar(v, me)}<span class="pname">{esc(p["name"])} (you)</span>'
-            f'<span class="badge">{_badge(v, p)}</span></div>')
-
-
 # ------------------------------------------------------------------- The table
 
 def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[], None],
@@ -254,7 +260,6 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     paused = lobby.is_paused()
     n, me = len(v['players']), v['my_index']
     others = [(me + k) % n for k in range(1, n)]
-    left, right, top = others[0], others[-1], others[1:-1]
 
     # Did the player receive a Juggler card? Show a brief notification.
     if v['pass_count'] != state.get('seen_pass', v['pass_count']) and v['received'] is not None:
@@ -309,7 +314,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
         state[key] = value
         refresh_self()
 
-    # --- Panels in the center of the table ---
+    # --- Decisions before and during a round ---
     def werewolf_panel() -> None:
         with ui.element('div').classes('panel'):
             ui.html(f'<h2>You drew the Werewolf</h2><p>It swaps places with the trump card '
@@ -360,14 +365,14 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                            cls='numbtn wide', marker='adjust')
 
     # --- Card with a choice (Juggler, Cloud, Shapeshifter) ---
-    def choice_sheet(card: Card, declare: bool = False) -> None:
+    def choice_panel(card: Card, declare: bool = False) -> None:
         def pick(**choice) -> None:
             if declare:
                 act('declare', **choice)
             else:
                 act('play', card_id=card.id, **choice)
 
-        with ui.element('div').classes('sheet'), ui.element('div').classes('panel'):
+        with ui.element('div').classes('panel'):
             if card.needs_suit_choice:
                 value = '7½' if card.kind == Kind.JUGGLER else '9¾'
                 ui.html(f'<h2>Play the {KIND_LABEL[card.kind]} ({value}) as…</h2>'
@@ -387,34 +392,33 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
 
     # --- player hand ---
     def hand() -> None:
-        can_play = v['phase'] == 'playing' and v['my_turn']
-        with ui.element('div').classes('hand'):
+        can_play = v['phase'] == 'playing' and v['my_turn'] and not decision
+        with ui.element('div').classes('hand'), ui.element('div').classes('handrow') \
+                .props('role=group aria-label="Your hand" tabindex=0'):
             if v['my_hand'] is None:  # Clairvoyance: own card is hidden
-                with ui.element('div').classes('handrow'):
-                    for _ in range(v['my_hand_size']):
-                        element = ui.html(back_html('lg', '?'), sanitize=False).classes('hcard')
-                        if can_play and v['playable']:
-                            element.classes('playable')
-                            element.on('click', partial(act, 'play', card_id=v['playable'][0])).mark('playable')
+                for _ in range(v['my_hand_size']):
+                    element = ui.html(back_html('lg', '?'), sanitize=False).classes('hcard')
+                    if can_play and v['playable']:
+                        element.classes('playable')
+                        element.on('click', partial(act, 'play', card_id=v['playable'][0])).mark('playable')
                 return
-            # All cards in one row. If there is not enough room, CSS makes them overlap.
-            with ui.element('div').classes('handrow'):
-                for card in sorted(v['my_hand'], key=_hand_order):
-                        element = ui.html(card_html(card, 'lg'), sanitize=False).classes('hcard') \
-                            .props(f'data-card={card.id}')
-                        if card.id == state.get('selected'):
-                            element.classes('selected')
-                        if v['must_pass']:
-                            element.classes('playable')
-                            element.on('click', partial(pass_card, card.id)).mark('pass')
-                        elif can_play:
-                            if card.id in v['playable']:
-                                element.classes('playable')
-                                if card.id == state.get('pending'):
-                                    element.classes('picked')
-                                element.on('click', partial(choose, card.id)).mark('playable')
-                            else:
-                                element.classes('dim')
+            cards = sorted(v['my_hand'], key=_hand_order)
+            for index, card in enumerate(cards):
+                element = ui.html(card_html(card, 'lg'), sanitize=False).classes('hcard') \
+                    .props(f'data-card={card.id}').style(_fan_style(index, len(cards)))
+                if card.id == state.get('selected'):
+                    element.classes('selected')
+                if card.id == state.get('pending'):
+                    element.classes('picked')
+                if v['must_pass']:
+                    element.classes('playable')
+                    element.on('click', partial(pass_card, card.id)).mark('pass')
+                elif can_play:
+                    if card.id in v['playable']:
+                        element.classes('playable')
+                        element.on('click', partial(choose, card.id)).mark('playable')
+                    else:
+                        element.classes('dim')
 
     # --- Results, scoreboard, leave ---
     def results_overlay() -> None:
@@ -477,44 +481,64 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
 
     # --- complete table ---
     with ui.element('div').classes('topbar game-topbar'):
-        icon_button(ICON_EXIT, 'Leave game', partial(set_state, 'confirm_leave', True))
+        icon_button(ICON_EXIT, 'Leave game', partial(set_state, 'confirm_leave', True)).classes('game-exit')
         ui.html(f'<div class="rinfo"><b>Round {v["round"]} of {v["total_rounds"]}</b>'
-                f'<span>{_phase_text(v)}</span></div>', sanitize=False)
+                f'<span>{_phase_text(v)}</span></div>', sanitize=False).classes('game-round')
         with ui.element('div').classes('game-topbar-actions'):
             icon_button(ICON_SCORES, 'Scoreboard', partial(set_state, 'scores_open', True), marker='scoreboard')
             icon_button(ICON_INFO, 'Game rules', open_rules, marker='open-game-rules').props('title="Game rules"')
 
-    with ui.element('div').classes('board'):
         ui.html(_trump_html(v), sanitize=False).classes('a-trump')
-        ui.html('<div class="topseats">' + ''.join(_seat_html(v, i, lobby) for i in top) + '</div>',
-                sanitize=False).classes('a-top')
         ui.html(_lead_html(v), sanitize=False).classes('a-lead')
-        ui.html(_seat_html(v, left, lobby), sanitize=False).classes('a-left')
-        with ui.element('div').classes('a-trick'):
-            phase = v['phase']
-            if phase == 'werewolf' and v['my_turn']:
-                werewolf_panel()
-            elif phase == 'choosing_trump' and v['my_turn']:
-                trump_panel()
-            elif phase == 'bidding' and v['my_turn']:
-                bid_panel()
-            elif phase == 'adjusting' and v['my_turn']:
-                adjust_panel()
-            else:
-                # Which cards has this browser already seen? On the first render (e.g. after a reload)
-                # nothing slides; afterwards, only the newly played card does.
-                shown = [p.card.id for p in (v['trick'] or v['last_trick'])]
-                if 'seen_trick' not in state:
-                    state['seen_trick'] = set(shown)
-                state['seen_trick'] &= set(shown)
-                ui.html(_trick_html(v, paused, state['seen_trick']), sanitize=False).classes('trick')
-        ui.html(_seat_html(v, right, lobby), sanitize=False).classes('a-right')
 
-    # A selected card (phone) stays selected only while it can be played or passed.
+    # Validate remembered card choices when the browser redraws after a turn or timeout.
+    phase_decision = {
+        'werewolf': werewolf_panel, 'choosing_trump': trump_panel,
+        'bidding': bid_panel, 'adjusting': adjust_panel,
+    }.get(v['phase']) if v['my_turn'] else None
+    decision = phase_decision
+    pending = state.get('pending')
+    if v['must_declare']:
+        state['pending'] = None
+        decision = partial(choice_panel, v['trick'][-1].card, declare=True)
+    elif pending and v['phase'] == 'playing' and v['my_turn'] and pending in v['playable']:
+        decision = partial(choice_panel, next(c for c in v['my_hand'] if c.id == pending))
+    else:
+        state['pending'] = None
+
+    # Discard stale touch selection before rendering the hand in either position.
     selectable = v['playable'] if (v['phase'] == 'playing' and v['my_turn']) else (
         [c.id for c in v['my_hand'] or []] if v['must_pass'] else [])
-    if state.get('selected') not in selectable:
+    if state.get('selected') not in selectable or decision:
         state['selected'] = None
+
+    board_class = f'board board-{n}-seats'
+    if v['clairvoyance']:
+        board_class += ' clairvoyance'
+    with ui.element('div').classes('table-stage'):
+        with ui.element('div').classes('table-field'), \
+                ui.element('div').classes(board_class).props('role=region aria-label="Game table"'):
+            ui.html('<span></span><span></span><span></span>', sanitize=False) \
+                .classes('table-engraving').props('aria-hidden=true')
+            for index in others:
+                x, y = _seat_vector(v, index)
+                side = 'seat-left' if x < -.1 else 'seat-right' if x > .1 else 'seat-north'
+                upper = ' seat-upper' if y < -.1 else ''
+                ui.html(_seat_html(v, index, lobby), sanitize=False).classes(f'table-seat {side}{upper}') \
+                    .style(f'--seat-x:{x:.4f};--seat-y:{y:.4f}')
+            ui.html(_seat_html(v, me, lobby), sanitize=False).classes('table-self')
+            if not phase_decision:
+                with ui.element('div').classes('a-trick'):
+                    # On a reload all cards are visible. On later updates only new cards fade in.
+                    shown = [p.card.id for p in (v['trick'] or v['last_trick'])]
+                    if 'seen_trick' not in state:
+                        state['seen_trick'] = set(shown)
+                    state['seen_trick'] &= set(shown)
+                    ui.html(_trick_html(v, paused, state['seen_trick']), sanitize=False).classes('trick')
+        if decision:
+            with ui.element('div').classes('table-decision'):
+                decision()
+
     text, mine = _status(v, paused)
     if state.get('selected'):
         chosen = next(c for c in v['my_hand'] if c.id == state['selected'])
@@ -532,21 +556,16 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
         if away:
             text = 'Waiting for ' + ', '.join(away) + ' · away'
 
-    # Bottom: player info and status line (side by side on wide screens to save height)
-    with ui.element('div').classes('bottombar'):
-        ui.html(f'<span class="status{"" if mine else " wait"}">{esc(text)}</span>',
-                sanitize=False).classes('statusrow')
-        ui.html(_me_html(v), sanitize=False).classes('mewrap')
+    ui.html(f'<span class="status{"" if mine else " wait"}">{esc(text)}</span>',
+            sanitize=False).classes('statusrow')
     hand()
 
     pending = state.get('pending')
-    if v['must_declare']:
-        state['pending'] = None
-        choice_sheet(v['trick'][-1].card, declare=True)
-    elif pending and v['phase'] == 'playing' and v['my_turn'] and pending in v['playable']:
-        choice_sheet(next(c for c in v['my_hand'] if c.id == pending))
-    else:
-        state['pending'] = None
+    if pending and state.get('revealed_pending') != pending:
+        ui.context.client.run_javascript(
+            "requestAnimationFrame(() => document.querySelector('.handrow .hcard.picked')"
+            "?.scrollIntoView({block:'nearest',inline:'nearest'}))")
+    state['revealed_pending'] = pending
 
     if state.get('confirm_leave'):
         leave_overlay()

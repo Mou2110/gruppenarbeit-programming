@@ -260,7 +260,7 @@ async def lobby_page(code: str) -> None:
         render_table(lobby, pid, state, table_part.refresh, open_rules)
 
     def turn_timer() -> None:
-        """Bottom right: a countdown in the last 30 seconds of a move, so nobody waits forever."""
+        """Place the countdown in the chat row so it cannot cover a card."""
         label = ui.html('', sanitize=False).classes('turntimer').mark('turn-timer')
         label.set_visibility(False)
 
@@ -287,12 +287,16 @@ async def lobby_page(code: str) -> None:
     @ui.refreshable
     def content() -> None:
         state['mode'] = mode()
-        with page_frame():
+        with page_frame() as column:
             if state['mode'] == 'game':
+                column.classes('game-table-theme')
+                ui.html(
+                    '<span class="table-mote"></span>' * 6,
+                    sanitize=False,
+                ).classes('table-atmosphere').props('aria-hidden=true').mark('table-atmosphere')
                 # Keep the open dialog outside the table refreshed by moves and bot turns.
                 rules = game_rules_dialog()
                 table_part(rules.open)
-                turn_timer()
             else:
                 waiting_room()
 
@@ -357,6 +361,7 @@ async def lobby_page(code: str) -> None:
             chat_input.on('keydown.enter', send_message)
             chat_input.on('focus', js_handler="() => setTimeout(() => { const l = document.querySelector('.chatlog');"
                                                " if (l) l.scrollTop = l.scrollHeight; }, 30)")
+            turn_timer()
             send = ui.element('button').classes('chatsend').props('type=button aria-label="Send message"')
             with send:
                 ui.html(svg(ICON_SEND, 'i'), sanitize=False).classes('btnc')
