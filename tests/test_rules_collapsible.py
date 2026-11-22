@@ -43,3 +43,9 @@ def test_the_extra_special_card_sits_inside_the_special_cards_block():
     assert html.endswith('</details></div>')
     block = html[html.index('<h3>Special cards (optional)</h3>'):]
     assert block.index('<details class="rule extra">') < block.index('</details></div>')
+
+
+def test_the_rules_say_how_to_see_what_a_special_card_does_during_a_game():
+    html = rules_content()
+    block = html[html.index('<h3>Special cards (optional)</h3>'):]
+    assert 'Click a special card' in block and '?' in block

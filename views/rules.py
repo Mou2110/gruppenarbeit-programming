@@ -59,7 +59,9 @@ def rules_content() -> str:
     specials = ''.join(_card_row(kind, text) for kind, text in SPECIALS)
     bonus = ''.join(_card_row(kind, text) for kind, text in BONUS)
     # The extra card sits inside the special cards block, so it stays in that column right under them.
-    return (f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}'
+    tip = ('<p class="rule-tip">During a game: Click a special card on the table, or the <b>?</b> on a special '
+           'card in your hand, to see what it does.</p>')
+    return (f'{deck}{rules}<div class="rule"><h3>Special cards (optional)</h3>{specials}{tip}'
             f'<details class="rule extra"><summary><h3>(Extra special card)</h3></summary>{bonus}</details></div>')
 
 

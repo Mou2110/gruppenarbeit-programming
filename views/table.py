@@ -68,13 +68,15 @@ def fx_js(call: str) -> str:
 
 
 def hand_card_html(card: Card) -> str:
-    """A card in the hand. Special cards get a small "?" that explains them instead of playing them."""
-    info = ''
-    if not card.is_number and card.kind.value in CARD_INFO:
-        name = CARD_INFO[card.kind.value][0]
-        info = (f'<button type="button" class="card-info" data-kind="{card.kind.value}" '
-                f'aria-label="What does the {name} do?">?</button>')
-    return card_html(card, 'lg') + info
+    """A card in the hand. Special cards get a small "?" that explains them instead of playing them.
+    The "?" sits inside the card, so it grows and turns together with the card (hover, tap, any hand size)."""
+    face = card_html(card, 'lg')
+    if card.is_number or card.kind.value not in CARD_INFO:
+        return face
+    name = CARD_INFO[card.kind.value][0]
+    info = (f'<button type="button" class="card-info" data-kind="{card.kind.value}" '
+            f'aria-label="What does the {name} do?">?</button>')
+    return face[:-len('</div>')] + info + '</div>'
 
 
 def _name(v: dict, index: int | None) -> str:

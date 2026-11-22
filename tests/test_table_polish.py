@@ -26,6 +26,13 @@ def test_special_cards_in_the_hand_get_a_question_mark_number_cards_do_not():
     assert 'card-info' not in hand_card_html(num(Suit.SUN, 3))
 
 
+def test_the_question_mark_sits_inside_the_card_so_it_grows_with_it():
+    # Inside the card it is scaled together with the card (hover, phone tap, every hand size).
+    html = hand_card_html(Card('bomb', Kind.BOMB))
+    assert html.startswith('<div class="card') and html.endswith('</button></div>')
+    assert html.count('<div') == html.count('</div>')
+
+
 def test_trump_card_and_suit_lie_in_the_middle_of_the_table():
     assert 'Trump: Sea' in _table_trump_html(view())
     assert 'No trump' in _table_trump_html(view(trump=None, trump_card=Card('jester', Kind.JESTER)))

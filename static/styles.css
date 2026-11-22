@@ -207,12 +207,18 @@ body { margin: 0; background: #18284F; }
 @media (max-width: 899px) {
   .game-table-theme .handrow { padding-top: 16px; margin-top: -14px; min-height: calc(var(--hand-cw, 72px) * 1.5 + 36px); }
 }
-/* "?" on special cards in the hand: opens the explanation instead of playing the card. */
-.hcard .card-info {
-  position: absolute; z-index: 3; top: -9px; left: -5px; width: 22px; height: 22px; padding: 0;
+/* "?" on special cards in the hand: opens the explanation instead of playing the card.
+   It sits inside the card under the rank and is sized from the card's own index size (--idx),
+   so it grows and turns with the card for every hand size, on hover and when tapped. */
+.hcard .card .card-info {
+  position: absolute; z-index: 3; left: 3%; top: 24%; display: grid; place-items: center;
+  width: calc(var(--idx, 15px) * 1.3); height: calc(var(--idx, 15px) * 1.3); padding: 0; box-sizing: border-box;
   border-radius: 50%; border: 1px solid #efd4a2; background: linear-gradient(#e2c698, #c4a16a); color: #20170c;
-  font: 700 13px/20px Inter, sans-serif; text-align: center; cursor: help; box-shadow: 0 2px 6px #0008;
-  rotate: var(--fan-angle, 0deg);
+  font: 700 calc(var(--idx, 15px) * .85)/1 Inter, sans-serif; cursor: help; box-shadow: 0 1px 4px #0008;
+}
+/* Phones with big hands: a bit smaller and lower, so the next card never covers it (checked for 1 to 20 cards). */
+@media (max-width: 899px) {
+  .hcard .card .card-info { left: 1%; top: 34%; width: calc(var(--idx, 15px) * 1.15); height: calc(var(--idx, 15px) * 1.15); }
 }
 .board .card.special-face { cursor: help; }
 
@@ -1197,6 +1203,7 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
 /* The hidden extra special card in the rules: its own small box that has to be opened separately */
 details.rule.extra { border: 1px dashed #B58A49; border-radius: 10px; padding: 8px 12px; }
 .rule > details.rule.extra { margin-top: 14px; }
+.rule .rule-tip { margin-top: 10px; font-size: 12px; font-style: italic; opacity: .85; }
 details.rule.extra > summary { list-style: none; cursor: pointer; }
 details.rule.extra > summary::-webkit-details-marker { display: none; }
 details.rule.extra > summary h3 { margin: 0; font-style: italic; color: #8A6A35; }
