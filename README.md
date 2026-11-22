@@ -100,6 +100,8 @@ The Wizard cards (`static/card-art/wizard-moritz.jpg`) show team member Moritz a
 portrait made with ChatGPT from his own photo, with his consent.
 The Shapeshifter card (`static/card-art/shapeshifter-keno.jpg`) shows team member Keno, half man and half wolf
 spirit: also an AI-generated portrait made with ChatGPT from his own photo, with his consent.
+The Jester cards (`static/card-art/jester-erik.jpg`) show team member Erik as a jester: a complete AI-generated card
+(frame, "J" and name included) made with ChatGPT from his own photo, with his consent.
 
 ## Features
 
