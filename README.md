@@ -134,6 +134,8 @@ The Shapeshifter card (`static/card-art/shapeshifter-keno.jpg`) shows team membe
 spirit: also an AI-generated portrait made with ChatGPT from his own photo, with his consent.
 The Jester cards (`static/card-art/jester-erik.jpg`) show team member Erik as a jester: a complete AI-generated card
 (frame, "J" and name included) made with ChatGPT from his own photo, with his consent.
+The Fairy cards (`static/card-art/fairy-jakob.jpg`) show team member Jakob as the Fairy: an AI-generated portrait,
+used with his consent.
 
 ## Features
 
@@ -156,4 +158,4 @@ The Jester cards (`static/card-art/jester-erik.jpg`) show team member Erik as a 
 
 **Look**
 - One dark and gold design on every page, for phones and laptops (also checked in Safari)
-- AI-generated card artwork, with three team members as the Wizard, the Jester and the Shapeshifter
+- AI-generated card artwork, with all four team members on cards: the Wizard, the Jester, the Shapeshifter and the Fairy
