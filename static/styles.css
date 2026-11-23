@@ -1505,6 +1505,20 @@ body:has(.game-table-theme) :is(.chatsend, .turntimer.mine) {
 }
 .game-table-theme .table-decision .notrumpbtn:hover { background: #b990561f; }
 .game-table-theme .table-decision .ghostbtn { color: #5b4524; border-width: 1.5px !important; border-color: #b99056 !important; }
+/* Shapeshifter: each choice shows a small picture of the card it becomes. */
+.game-table-theme .table-decision .suitbtn.k-wizard::before,
+.game-table-theme .table-decision .suitbtn.k-jester::before {
+  content: ''; width: 22px; height: 32px; flex: none; margin-right: 8px; border-radius: 4px;
+  box-shadow: 0 0 0 1px #b99056, 0 2px 4px #0006; background: center / cover no-repeat;
+}
+.game-table-theme .table-decision .suitbtn.k-wizard::before { background-image: url("card-art/wizard-moritz.jpg"); }
+.game-table-theme .table-decision .suitbtn.k-jester::before { background-image: url("card-art/jester-erik.jpg"); }
+/* Cloud: "change your bid" buttons in the same card style. */
+.game-table-theme .table-decision .numbtn.wide {
+  height: 48px; border-radius: 10px; border: 1.5px solid #b99056; background: linear-gradient(#fffaf0, #f3e4c6);
+  color: #5b4524; box-shadow: 0 2px 0 #d8c39e, 0 6px 14px #0b0f1822; transition: transform .15s ease, background .15s ease;
+}
+.game-table-theme .table-decision .numbtn.wide:hover { transform: translateY(-2px); background: #5b4524; color: #fff8ea; }
 body:has(.game-table-theme) :is(.chatrow, .chatlog, .turntimer:not(.mine)) {
   background: var(--table-night);
   border-color: var(--table-line);
