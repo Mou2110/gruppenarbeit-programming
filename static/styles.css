@@ -385,7 +385,6 @@ body { margin: 0; background: #18284F; }
 .art-wizard { --art-size: 538.95% 239.25%; --art-position: 26.06% 12.75%; }
 .art-jester { --art-size: 535.19% 239.25%; --art-position: 50.20% 12.75%; }
 .art-dragon { --art-size: 527.84% 238.69%; --art-position: 74.38% 12.61%; }
-.art-fairy { --art-size: 524.23% 239.25%; --art-position: 99.12% 12.75%; }
 .art-shapeshifter { --art-size: 524.23% 231.67%; --art-position: 0.97% 92.27%; }
 .art-bomb { --art-size: 540.85% 231.67%; --art-position: 25.80% 92.27%; }
 .art-werewolf { --art-size: 527.84% 231.67%; --art-position: 50.04% 92.27%; }
@@ -1219,6 +1218,7 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
 .art-shapeshifter .special-art { background: url("card-art/shapeshifter-keno.jpg") 50% 35% / auto 125% no-repeat; }
 /* Bonus: the Jester cards show Erik as a jester (AI-generated portrait, made with his consent). */
 .art-jester .special-art { background: url("card-art/jester-erik.jpg") center / 100% 100% no-repeat; }
+.art-fairy .special-art { background: url("card-art/fairy-jakob.jpg") center / cover no-repeat; }
 /* The portrait is a whole card with its own frame, "J" and name, so the drawn corner label is not needed. */
 .card.art-jester { border-color: #1C111C; }
 .art-jester .card-rank { display: none; }
