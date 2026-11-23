@@ -79,3 +79,23 @@ def test_when_only_special_cards_win_it_uses_the_weakest_of_them():
 def test_a_bot_that_wants_no_tricks_loses_with_a_number_card_and_keeps_its_jester():
     view = make_view(['jester-1', 'sea-2'], NEEDS_NONE, trick=[(1, 'sea-13')])
     assert played(view) == 'sea-2'                   # the 2 loses just as well
+
+
+# ---------------------------------------------------------------- the Cloud changed the bid
+# Play-testing, 23.11.: "Thiago needed one more trick and played last, but played his Shapeshifter as a
+# Jester although it would have won as a Wizard." His bid had been raised by one through the Cloud.
+
+def test_a_bot_whose_bid_the_cloud_raised_still_wants_the_missing_trick():
+    view = make_view(['shapeshifter', 'sea-2'], [(1, 1, 0), (1, 0, 0), (1, 1, 0)],
+                     trick=[(1, 'sea-9'), (2, 'olive-4')])
+    view['players'][0]['bid_change'] = 1             # bid 1, raised to 2 by the Cloud, 1 trick won
+    for level in bots.LEVELS:
+        card_id, _, as_wizard = bots.choose_card(view, level)
+        assert (card_id, as_wizard) == ('shapeshifter', True), level
+
+
+def test_a_bot_whose_bid_the_cloud_lowered_does_not_want_another_trick():
+    view = make_view(['wizard-1', 'sea-2'], [(2, 1, 0), (1, 0, 0), (1, 1, 0)],
+                     trick=[(1, 'sea-9'), (2, 'olive-4')])
+    view['players'][0]['bid_change'] = -1            # bid 2, lowered to 1 by the Cloud, 1 trick won
+    assert played(view) == 'sea-2'
