@@ -18,7 +18,7 @@ from game.engine import GameError
 from game.lobby import Lobby
 from game.rules import trick_has_bomb, Play, lead_suit, trick_winner
 
-from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_icon
+from .cards import KIND_LABEL, SUIT_LABEL, SUIT_PATHS, back_html, card_html, card_name, suit_icon
 from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 from .rules import BONUS, SPECIALS
 
@@ -404,9 +404,9 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                     sanitize=False)
             with ui.element('div').classes('suitgrid'):
                 for suit in Suit:
-                    button(SUIT_LABEL[suit], partial(act, 'trump', suit=suit), cls=f'suitbtn s-{suit.value}',
-                           icon=None, marker='trump')
-            button('No trump', partial(act, 'trump', suit=None), marker='trump')
+                    button(SUIT_LABEL[suit], partial(act, 'trump', suit=suit), cls=f'suitbtn s-{suit.value}', icon=SUIT_PATHS[suit],
+                           marker='trump')
+            button('No trump', partial(act, 'trump', suit=None), cls='primary notrumpbtn', marker='trump')
 
     def trump_panel() -> None:
         with ui.element('div').classes('panel'):
@@ -414,7 +414,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                     f'so the dealer picks.</p>', sanitize=False)
             with ui.element('div').classes('suitgrid'):
                 for suit in Suit:
-                    button(SUIT_LABEL[suit], partial(act, 'trump', suit=suit), cls=f'suitbtn s-{suit.value}',
+                    button(SUIT_LABEL[suit], partial(act, 'trump', suit=suit), cls=f'suitbtn s-{suit.value}', icon=SUIT_PATHS[suit],
                            marker='trump')
 
     def bid_panel() -> None:
@@ -462,7 +462,7 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
                 with ui.element('div').classes('suitgrid'):
                     for suit in Suit:
                         button(SUIT_LABEL[suit], partial(pick, suit=suit),
-                               cls=f'suitbtn s-{suit.value}', marker='choice')
+                               cls=f'suitbtn s-{suit.value}', icon=SUIT_PATHS[suit], marker='choice')
             else:
                 ui.html('<h2>Play the Shapeshifter as…</h2><p>It then counts exactly like that card.</p>',
                         sanitize=False)
