@@ -160,16 +160,14 @@ def test_ruthless_gives_the_cloud_to_a_leader_who_needs_one_more_trick():
 def test_ruthless_wins_cheaply_when_it_plays_last():
     view = make_view(['sea-13', 'sea-9', 'sea-1'], [(1, 0, 0), (0, 0, 100), (0, 0, 50)],
                      trick=[(1, 'sea-5'), (2, 'sea-8')])
-    # Since play-testing (23.11.) every level wins as cheaply as possible (see test_bot_play.py).
-    assert bots.choose_card(view, 'normal')[0] == 'sea-9'
+    assert bots.choose_card(view, 'normal')[0] == 'sea-13'
     assert bots.choose_card(view, 'ruthless')[0] == 'sea-9'   # Sea 9 is enough, the 13 is kept
 
 
 def test_ruthless_dumps_its_highest_safe_card_when_it_wants_to_lose():
     view = make_view(['sea-13', 'sea-9', 'sea-1'], [(0, 0, 0), (0, 0, 100), (0, 0, 50)],
                      trick=[(1, 'sea-10')])
-    # Since play-testing (23.11.) every level gets rid of its highest card that still loses (see test_bot_play.py).
-    assert bots.choose_card(view, 'normal')[0] == 'sea-9'
+    assert bots.choose_card(view, 'normal')[0] == 'sea-1'
     assert bots.choose_card(view, 'ruthless')[0] == 'sea-9'   # loses as well, and gets rid of the 9
 
 

@@ -1,8 +1,9 @@
 """Bots do not waste their strong cards (play-testing, 23.11.: "the bots play their specials far too early,
 and when one plays a Wizard the next one just adds another").
 
-All levels: a bot that still needs tricks wins as cheaply as possible, and throws its weakest card when it
-cannot win the trick anyway; a bot that leads keeps its Wizards and Dragon while a sure number card will do.
+All levels: a bot never throws a strong card into a trick it cannot win, and uses number cards before
+Wizards and the Dragon. Only Ruthless plays really cleverly (cheapest winner, dumps dangerous losers,
+keeps its Jester), so the levels stay clearly different in strength.
 """
 from game import bots
 from game.cards import Card, Kind, Suit
@@ -31,8 +32,8 @@ NEEDS_TWO = [(2, 0, 0), (1, 0, 0), (1, 0, 0)]      # seat 0 (the bot) bid 2 and 
 NEEDS_NONE = [(0, 0, 0), (1, 0, 0), (1, 0, 0)]
 
 
-def played(view):
-    return bots.choose_card(view)[0]
+def played(view, level='normal'):
+    return bots.choose_card(view, level)[0]
 
 
 def test_no_second_wizard_on_a_trick_that_a_wizard_already_wins():
@@ -45,9 +46,14 @@ def test_when_it_cannot_win_it_throws_its_weakest_number_card():
     assert played(view) == 'sea-3'                   # nothing beats the Dragon here: keep the Wizard and the 9
 
 
-def test_it_wins_with_the_cheapest_card_that_is_enough():
+def test_normal_wins_with_a_number_card_before_a_wizard():
     view = make_view(['wizard-2', 'sea-13', 'sea-11'], NEEDS_TWO, trick=[(1, 'sea-5')])
-    assert played(view) == 'sea-11'                  # the 11 already beats the 5, keep the 13 and the Wizard
+    assert played(view) == 'sea-13'                  # a number card that wins, the Wizard is kept
+
+
+def test_ruthless_wins_with_the_cheapest_card_that_is_enough():
+    view = make_view(['wizard-2', 'sea-13', 'sea-11'], NEEDS_TWO, trick=[(1, 'sea-5')])
+    assert played(view, 'ruthless') == 'sea-11'      # the 11 already beats the 5, keep the 13 and the Wizard
 
 
 def test_when_leading_it_plays_a_sure_number_card_before_a_wizard():
@@ -55,11 +61,11 @@ def test_when_leading_it_plays_a_sure_number_card_before_a_wizard():
     assert played(view) == 'olive-13'
 
 
-def test_a_bot_that_wants_no_tricks_gets_rid_of_a_wizard_that_loses_anyway():
+def test_ruthless_wanting_no_tricks_gets_rid_of_a_wizard_that_loses_anyway():
     view = make_view(['wizard-2', 'jester-1', 'sea-12'], NEEDS_NONE, trick=[(1, 'wizard-1')])
-    assert played(view) == 'wizard-2'                # the earlier Wizard wins, so this one is safe to dump
+    assert played(view, 'ruthless') == 'wizard-2'    # the earlier Wizard wins, so this one is safe to dump
 
 
-def test_a_bot_that_wants_no_tricks_leads_a_low_card_and_keeps_its_jester():
+def test_ruthless_wanting_no_tricks_leads_a_low_card_and_keeps_its_jester():
     view = make_view(['jester-1', 'sea-2', 'olive-12'], NEEDS_NONE)
-    assert played(view) == 'sea-2'
+    assert played(view, 'ruthless') == 'sea-2'

@@ -3,18 +3,20 @@
 The bots get exactly the same view as a human (game.view_for),
 so they cannot see anyone else's cards. Their strategy is deliberately simple:
 - Bidding: Dragon, Wizards, Shapeshifter, high trumps and 13s count as safe tricks.
-- Playing: if the bot still needs tricks, it wins the trick as cheaply as possible and keeps its strong
-  cards when it cannot win anyway; when it leads, a sure number card comes before a Wizard or Dragon.
-  If it needs no more tricks, it gets rid of the most dangerous card that still loses.
+- Playing: if the bot still needs tricks, it plays a card that wins (number cards before Wizards and the
+  Dragon) and keeps its strong cards when it cannot win anyway; when it leads, a sure number card comes
+  before a Wizard or Dragon. If it needs no more tricks, it plays the card most likely to lose.
 
 Three levels, chosen when a bot is added (see LEVELS):
 - normal:   the strategy above, only looks at its own bid.
 - spiteful: like normal while its own bid can still be made. Once it is lost, it works against the
             best other player (the leader, or the closest chaser if the bot leads): it takes tricks
             the target needs and leaves tricks to a target who already has enough.
-- ruthless: spiteful, plus: bombs a trick the target needs, gives the target the Cloud when they need
-            exactly one more trick, passes the target bad cards with the Juggler, and as last bidder
-            steers the round to "over" or "under" against the target.
+- ruthless: spiteful, plus: plays its cards more cleverly (wins with the cheapest card that is enough,
+            gets rid of dangerous cards that still lose, keeps its Jesters), bombs a trick the target
+            needs, gives the target the Cloud when they need exactly one more trick, passes the target
+            bad cards with the Juggler, and as last bidder steers the round to "over" or "under"
+            against the target.
 Bots only use what a human could see as well (no card counting over earlier tricks).
 """
 from __future__ import annotations
@@ -129,7 +131,7 @@ def choose_card(view: dict, level: str = 'normal') -> tuple[str, Suit | None, bo
             wants = spite
     card = _ruthless_card(view, cards, wants) if level == 'ruthless' and view['trick'] else None
     if card is None:
-        card = _normal_card(view, cards, wants)
+        card = _normal_card(view, cards, wants, smart=level == 'ruthless')
 
     suit, as_wizard = choose_declaration(view, card, view['trick'], wants)
     return card.id, suit, as_wizard
@@ -140,30 +142,38 @@ def _is_sure_number(card: Card, trump: Suit | None) -> bool:
     return card.is_number and (card.value == 13 or (trump is not None and card.suit == trump and card.value >= 10))
 
 
-def _normal_card(view: dict, cards: list[Card], wants: bool) -> Card:
+def _normal_card(view: dict, cards: list[Card], wants: bool, smart: bool = False) -> Card:
     """The card a bot plays (all levels, unless Ruthless found something better).
 
-    It does not waste strong cards: a second Wizard cannot beat the first one, and a 11 is enough
-    to beat a 5. (Play-testing found the bots threw all their special cards in the first tricks.)
+    Every level avoids wasting cards (play-testing: bots threw their special cards in the first tricks,
+    and a second Wizard onto a trick that a Wizard already wins): it never throws a card into a trick
+    it cannot win, and it uses number cards before Wizards and the Dragon.
+    smart (Ruthless only) plays more cleverly: it wins with the cheapest card that is enough, gets rid of
+    its most dangerous card that still loses, and keeps its Jesters for later.
     """
     trump, me = view['trump'], view['my_index']
     strength = lambda c: _win_strength(c, trump)            # noqa: E731
+    numbers_first = lambda c: (c.is_number, strength(c))    # noqa: E731
     if view['trick']:
         winners = [c for c in cards if _winner_after(view, c, wants) == me]
         if wants:
             if winners:
-                return min(winners, key=strength)            # win, but as cheaply as possible
+                if smart:
+                    return min(winners, key=strength)        # win, but as cheaply as possible
+                return max(winners, key=numbers_first)       # the strongest number card that wins, else a special
             # Cannot win this trick anyway: throw the weakest card, number cards before special cards.
             return min(cards, key=lambda c: (not c.is_number, strength(c)))
-        losers = [c for c in cards if c not in winners and c.kind != Kind.FAIRY]   # a later Dragon makes the Fairy win
-        if losers:
-            return max(losers, key=strength)                 # get rid of the most dangerous card that still loses
+        if smart:
+            losers = [c for c in cards if c not in winners and c.kind != Kind.FAIRY]   # a later Dragon makes the Fairy win
+            if losers:
+                return max(losers, key=strength)             # get rid of the most dangerous card that still loses
         return min(cards, key=lambda c: _lose_risk(c, trump))
     if wants:
         sure = [c for c in cards if _is_sure_number(c, trump)]
         return max(sure or cards, key=strength)             # lead a sure number card before a Wizard or Dragon
-    # Leading without wanting tricks: a low number card first, keep the Jester and friends for later.
-    return min(cards, key=lambda c: (not c.is_number, _lose_risk(c, trump)))
+    if smart:
+        return min(cards, key=lambda c: (not c.is_number, _lose_risk(c, trump)))   # keep the Jester for later
+    return min(cards, key=lambda c: _lose_risk(c, trump))
 
 
 # ---------------------------------------------------------------- Spiteful and Ruthless
