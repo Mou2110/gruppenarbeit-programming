@@ -29,8 +29,8 @@ LEVEL_NAMES = {'normal': 'Normal', 'spiteful': 'Spiteful', 'ruthless': 'Ruthless
 
 
 def _needs_tricks(view: dict) -> bool:
-    me = view['players'][view['my_index']]
-    return (me['bid'] or 0) > me['tricks_won']
+    """Does the bot still need tricks? Counts a bid changed by the Cloud as well."""
+    return _missing(view['players'][view['my_index']]) > 0
 
 
 def _win_strength(card: Card, trump: Suit | None) -> float:
