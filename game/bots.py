@@ -153,20 +153,24 @@ def _normal_card(view: dict, cards: list[Card], wants: bool, smart: bool = False
     """
     trump, me = view['trump'], view['my_index']
     strength = lambda c: _win_strength(c, trump)            # noqa: E731
-    numbers_first = lambda c: (c.is_number, strength(c))    # noqa: E731
     if view['trick']:
         winners = [c for c in cards if _winner_after(view, c, wants) == me]
         if wants:
             if winners:
                 if smart:
                     return min(winners, key=strength)        # win, but as cheaply as possible
-                return max(winners, key=numbers_first)       # the strongest number card that wins, else a special
+                numbers = [c for c in winners if c.is_number]
+                if numbers:
+                    return max(numbers, key=strength)        # the strongest number card that wins
+                return min(winners, key=strength)            # else the weakest special card that is enough
             # Cannot win this trick anyway: throw the weakest card, number cards before special cards.
             return min(cards, key=lambda c: (not c.is_number, strength(c)))
-        if smart:
-            losers = [c for c in cards if c not in winners and c.kind != Kind.FAIRY]   # a later Dragon makes the Fairy win
-            if losers:
-                return max(losers, key=strength)             # get rid of the most dangerous card that still loses
+        losers = [c for c in cards if c not in winners and c.kind != Kind.FAIRY]   # a later Dragon makes the Fairy win
+        if smart and losers:
+            return max(losers, key=strength)                 # get rid of the most dangerous card that still loses
+        if losers:
+            # A card that loses this trick anyway: a number card first, keep the Jester and friends for later.
+            return min(losers, key=lambda c: (not c.is_number, _lose_risk(c, trump)))
         return min(cards, key=lambda c: _lose_risk(c, trump))
     if wants:
         sure = [c for c in cards if _is_sure_number(c, trump)]

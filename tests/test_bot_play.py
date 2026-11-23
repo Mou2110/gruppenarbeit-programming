@@ -69,3 +69,13 @@ def test_ruthless_wanting_no_tricks_gets_rid_of_a_wizard_that_loses_anyway():
 def test_ruthless_wanting_no_tricks_leads_a_low_card_and_keeps_its_jester():
     view = make_view(['jester-1', 'sea-2', 'olive-12'], NEEDS_NONE)
     assert played(view, 'ruthless') == 'sea-2'
+
+
+def test_when_only_special_cards_win_it_uses_the_weakest_of_them():
+    view = make_view(['cr7', 'wizard-2', 'sea-3'], NEEDS_TWO, trick=[(1, 'sea-13')])
+    assert played(view) == 'wizard-2'                # the Wizard is enough, CR7 is kept
+
+
+def test_a_bot_that_wants_no_tricks_loses_with_a_number_card_and_keeps_its_jester():
+    view = make_view(['jester-1', 'sea-2'], NEEDS_NONE, trick=[(1, 'sea-13')])
+    assert played(view) == 'sea-2'                   # the 2 loses just as well
