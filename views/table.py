@@ -183,7 +183,7 @@ def _trump_html(v: dict) -> str:
             f'<span class="tl">Trump</span>{symbol}<span class="ts">{status}</span></div></div>')
 
 
-def _table_trump_html(v: dict) -> str:
+def _table_trump_html(v: dict, *, waiting_for_bids: bool = False) -> str:
     """The trump card lies in the middle of the table, with the trump suit written under it."""
     card = v['trump_card']
     face = card_html(card, 'md') if card is not None else '<div class="card card--md no-trump-card"></div>'
@@ -194,7 +194,8 @@ def _table_trump_html(v: dict) -> str:
     else:
         label = 'No trump'
     suit = f' s-{v["trump"].value}' if v['trump'] else ''
-    return f'{face}<span class="table-trump-label{suit}">{esc(label)}</span>'
+    waiting = '<span class="table-bid-hint">Waiting for bids…</span>' if waiting_for_bids else ''
+    return f'{waiting}{face}<span class="table-trump-label{suit}">{esc(label)}</span>'
 
 
 def _lead_html(v: dict) -> str:
@@ -233,8 +234,6 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
     finished = paused and not v['trick'] and bool(v['last_trick'])
     plays: list[Play] = v['last_trick'] if finished else v['trick']
     if not plays:
-        if v['phase'] in ('werewolf', 'choosing_trump', 'bidding'):
-            return '<span class="hint">Waiting for bids…</span>'
         return ''
     best = trick_winner(plays, v['trump'])
     bombed = trick_bombed(plays)
@@ -606,12 +605,14 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     board_class = f'board board-{n}-seats'
     if v['clairvoyance']:
         board_class += ' clairvoyance'
+    waiting_for_bids = not v['my_turn'] and v['phase'] in ('werewolf', 'choosing_trump', 'bidding')
     with ui.element('div').classes('table-stage'):
         with ui.element('div').classes('table-field'), \
                 ui.element('div').classes(board_class).props('role=region aria-label="Game table"'):
             ui.html('<span></span><span></span><span></span>', sanitize=False) \
                 .classes('table-engraving').props('aria-hidden=true')
-            ui.html(_table_trump_html(v), sanitize=False).classes('table-trump').mark('table-trump')
+            ui.html(_table_trump_html(v, waiting_for_bids=waiting_for_bids), sanitize=False) \
+                .classes('table-trump').mark('table-trump')
             leader = _leader(v, paused)
             for index in others:
                 x, y = _seat_vector(v, index)
