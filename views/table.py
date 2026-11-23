@@ -256,6 +256,28 @@ def _trick_html(v: dict, paused: bool, seen: set | None = None) -> str:
     return ''.join(parts)
 
 
+def standings(players: list[dict]) -> list[tuple[int, dict]]:
+    """Final places by total score, best first. Equal scores share a place (1, 1, 3)."""
+    ordered = sorted(players, key=lambda p: -p['score'])
+    return [(1 + sum(1 for other in ordered if other['score'] > p['score']), p) for p in ordered]
+
+
+def podium_html(places: list[tuple[int, dict]], me: str) -> str:
+    """The first three on a podium: 2nd on the left, the winner in the middle with a crown, 3rd on the right."""
+    spots = []
+    for index in (1, 0, 2):
+        if index >= len(places):
+            continue
+        place, p = places[index]
+        name = 'You' if p['id'] == me else esc(p['name'])
+        crown = '<span class="podium-crown" aria-hidden="true">♛</span>' if place == 1 else ''
+        spots.append(f'<div class="podium-spot place-{min(place, 3)}">{crown}'
+                     f'<div class="podium-avatar">{esc(p["name"][:1].upper() or "?")}</div>'
+                     f'<b class="podium-name">{name}</b><span class="podium-score">{p["score"]} pts</span>'
+                     f'<div class="podium-step">{place}</div></div>')
+    return f'<div class="podium" role="img" aria-label="Podium">{"".join(spots)}</div>'
+
+
 def scoreboard_html(v: dict) -> str:
     """Points per round for every player. Your own column is highlighted and called "You"."""
     players = v['players']
@@ -505,22 +527,25 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     # --- Results, scoreboard, leave ---
     def results_overlay() -> None:
         over = v['phase'] == 'game_over'
-        # Sort by total score: the leader is at the top (ties keep the seating order).
-        rows = sorted(v['players'], key=lambda p: -p['score'])
+        # Sort by total score: the leader is at the top (equal scores share a place).
+        places = standings(v['players'])
+        rows = [p for _, p in places]
         lines = []
-        for rank, p in enumerate(rows):
+        for rank, (place, p) in enumerate(places):
             points = p['round_scores'][-1] if p['round_scores'] else 0
             css = 'pos' if points > 0 else 'neg'
             top_row = ' class="top"' if rank == 0 else ''
             name = esc(p['name']) + (' (you)' if p['id'] == pid else '')
             bid = str(p['bid']) + (f'→{p["bid"] + p["bid_change"]}' if p['bid_change'] else '')
-            lines.append(f'<tr{top_row}><td>{name}</td><td class="r">{bid}</td><td class="r">{p["tricks_won"]}</td>'
+            lines.append(f'<tr{top_row}><td class="place">{place}.</td><td>{name}</td><td class="r">{bid}</td>'
+                         f'<td class="r">{p["tricks_won"]}</td>'
                          f'<td class="r {css}">{points:+d}</td><td class="r">{p["score"]}</td></tr>')
         title = 'Final standings' if over else f'Round {v["round"]} results'
-        table = ('<table class="restbl"><tr><th>Player</th><th class="r">Bid</th><th class="r">Won</th>'
+        table = ('<table class="restbl"><tr><th>#</th><th>Player</th><th class="r">Bid</th><th class="r">Won</th>'
                  '<th class="r">Round</th><th class="r">Total</th></tr>' + ''.join(lines) + '</table>')
-        with ui.element('div').classes('overlay'), ui.element('div').classes('panel'):
-            ui.html(f'<h2>{title}</h2>{table}', sanitize=False)
+        podium = podium_html(places, pid) if over else ''
+        with ui.element('div').classes('overlay'), ui.element('div').classes('panel' + (' final-panel' if over else '')):
+            ui.html(f'<h2>{title}</h2>{podium}{table}', sanitize=False)
             if over:
                 winner = rows[0]
                 who = 'You win' if winner['id'] == pid else f'{esc(winner["name"])} wins'
