@@ -102,7 +102,7 @@ uv run --python 3.13 --with-requirements requirements.txt pytest
 
 GitHub runs all tests on every push and pull request (tab "Actions", badge at the top). All tests pass on `main`.
 
-**What the tests cover:** 311 test functions in 32 files (441 test cases, because many run with several
+**What the tests cover:** 320 test functions in 33 files (450 test cases, because many run with several
 inputs, e.g. for 3, 4, 5 and 6 players): the game rules and scoring, special cards, bots and their levels, accounts
 and passwords, lobbies (joining, ready, leaving, removing players, bots taking over, chat limits, time limit),
 saving and restoring games, friends and invitations, and the leaderboard and stats numbers. For each of these there
