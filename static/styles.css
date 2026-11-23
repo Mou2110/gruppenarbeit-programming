@@ -436,6 +436,27 @@ body { margin: 0; background: #18284F; }
 .restbl .r { text-align: right; }
 .restbl tr.top td { font-weight: 700; }
 .restbl .me { background: #f2c14e2e; font-weight: 700; color: #6b4a12; }  /* your own column in the scoreboard */
+.restbl td.place { width: 28px; color: #8a7c66; font-weight: 700; }
+/* End of the game: podium for the first three, the winner in the middle with a crown. */
+.podium { display: flex; justify-content: center; align-items: flex-end; gap: 10px; margin: 6px 0 4px; }
+.podium-spot { display: flex; flex-direction: column; align-items: center; gap: 4px; width: min(30%, 140px); }
+.podium-avatar {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  background: #29344a; color: #f2dfbd; font: 700 18px/1 Inter, sans-serif; box-shadow: 0 0 0 2px #b99056;
+}
+.podium-spot.place-1 .podium-avatar { width: 56px; height: 56px; font-size: 22px; box-shadow: 0 0 0 3px #e2c698, 0 0 18px #f2c14e88; }
+.podium-crown { font-size: 34px; line-height: 1; color: #d9a640; text-shadow: 0 2px 4px #0004; animation: crownin .6s cubic-bezier(.2, .8, .2, 1) both; }
+.podium-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: #212f4b; }
+.podium-score { font-size: 12px; color: #6b6253; }
+.podium-step {
+  display: grid; place-items: center; width: 100%; border-radius: 8px 8px 0 0;
+  font: 700 28px/1 'Cormorant Garamond', Georgia, serif; color: #20170c; font-variant-numeric: lining-nums;
+}
+.podium-spot.place-1 .podium-step { height: 84px; background: linear-gradient(#f3d299, #c4a16a); }
+.podium-spot.place-2 .podium-step { height: 60px; background: linear-gradient(#e6e8ec, #b9bec8); }
+.podium-spot.place-3 .podium-step { height: 44px; background: linear-gradient(#e7b98a, #b8804e); }
+@keyframes crownin { from { opacity: 0; transform: translateY(-12px) scale(.6); } }
+@media (prefers-reduced-motion: reduce) { .podium-crown { animation: none; } }
 .pos { color: #3A6E35; font-weight: 700; }
 .neg { color: #A8322A; font-weight: 700; }
 
