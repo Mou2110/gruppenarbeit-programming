@@ -136,17 +136,6 @@ body { margin: 0; background: #18284F; }
 .seen { display: flex; gap: 4px; justify-content: center; min-height: 60px; }
 .cardsleft { min-height: 14px; line-height: 14px; }
 
-.trump-display { display: flex; align-items: center; gap: 8px; }
-.trump-display > .card { width: 34px; height: 51px; --idx: 9px; --lbl: 5px; }
-.trump { display: grid; grid-template-columns: auto auto; align-items: center; column-gap: 8px; }
-.trump .tl { grid-area: 1 / 2; align-self: end; font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #C9D3EA; }
-.trump .ts { grid-area: 2 / 2; align-self: start; font-size: 12px; font-weight: 700; }
-.trump-symbol {
-  grid-area: 1 / 1 / span 2; display: grid; place-items: center; box-sizing: border-box; width: 56px; height: 56px;
-  border: 1px solid var(--suit-ink); border-radius: 50%; color: var(--suit-ink);
-}
-.trump-symbol .suit-emblem { width: 100%; border-radius: inherit; background: #FFF1D6; }
-.trump-symbol .ico { width: 22px; height: 22px; }
 .chip {
   display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border-radius: 999px;
   background: #2C3D6B; font-size: 11px; font-weight: 600;
@@ -891,8 +880,6 @@ body:has(.lobby-theme) .chatsend { background: var(--lobby-gold); color: #20170c
   .rinfo span { font-size: 14px; }
   .status { font-size: 15px; padding: 9px 22px; }
   .statusrow { height: 44px; }
-  .trump .tl { font-size: 12px; }
-  .trump .ts { font-size: 15px; }
   .tag { font-size: 10px; padding: 2px 8px; }
   .hand { padding: 18px 0 0; min-height: 162px; }
   .card--sm { width: 48px; height: 72px; --num: 22px; --ico: 14px; --idx: 11px; --lbl: 6px; border-radius: 7px; }
@@ -1118,11 +1105,6 @@ html:has(.board), body:has(.board) { overflow: hidden; height: 100%; overscroll-
   .hand .special-face .card-rank { justify-items: start; padding-left: 2px; }
   .hcard.playable { transform: translateY(-8px); }
   .hcard.picked { transform: translateY(-18px); }
-  .trump .tl { font-size: 9px; }
-  .trump .ts { font-size: 11px; }
-  .trump-display { gap: 4px; }
-  .trump-display > .card { width: 27px; height: 41px; --idx: 8px; --lbl: 4px; }
-  .trump-symbol { width: 49px; height: 49px; }
 }
 
 /* Selected hand card (phone): lift it above the others so it can be tapped again reliably */
@@ -1475,11 +1457,6 @@ body:has(.game-table-theme) {
 }
 @keyframes turn-ring-pulse {
   50% { border-color: #ffed5f; box-shadow: 0 0 17px 3px #ffd72cab; }
-}
-.game-table-theme .trump .tl { color: #e8cca1; }
-.game-table-theme .trump-symbol {
-  border-color: #f4d596;
-  box-shadow: 0 0 12px #ebb35f51;
 }
 .game-table-theme .back,
 .game-table-theme .back .q {
