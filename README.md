@@ -102,7 +102,7 @@ uv run --python 3.13 --with-requirements requirements.txt pytest
 
 GitHub runs all tests on every push and pull request (tab "Actions", badge at the top). All tests pass on `main`.
 
-**What the tests cover:** 307 test functions in 31 files (437 test cases, because many run with several
+**What the tests cover:** 311 test functions in 32 files (441 test cases, because many run with several
 inputs, e.g. for 3, 4, 5 and 6 players): the game rules and scoring, special cards, bots and their levels, accounts
 and passwords, lobbies (joining, ready, leaving, removing players, bots taking over, chat limits, time limit),
 saving and restoring games, friends and invitations, and the leaderboard and stats numbers. For each of these there
@@ -146,7 +146,7 @@ used with his consent.
 - A clear note while players are missing (a game needs 3 to 6 players)
 - Practice against bots: pick the table size and the bot level, the game starts right away
 - Time limit per move: off or 0:30–5:00 in half minutes (default 2:00), countdown in the last 30 seconds, none against bots only
-- At the table: the trump card in the middle, the seat order, the card that is winning the trick and its player, an explanation pop-up for every special card, the rules during the game, a scoreboard with your own column highlighted, and "Play again" at the end
+- At the table: the trump card in the middle, the seat order, the card that is winning the trick and its player, an explanation pop-up for every special card, the rules during the game, a scoreboard with your own column highlighted, card-style buttons when choosing a suit, and at the end a podium for the first three (crown for the winner) with "Play again"
 - Games survive server restarts; a player who leaves is replaced by a bot and counts as last place
 - Chat in the lobby and at the table
 
