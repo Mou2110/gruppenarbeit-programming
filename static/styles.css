@@ -1483,6 +1483,28 @@ body:has(.game-table-theme) :is(.chatsend, .turntimer.mine) {
 .game-table-theme .numbtn { font-family: Inter, sans-serif; font-size: 16px; font-weight: 700; }
 .game-table-theme .numbtn:not(.off, :disabled) { background: #304767; color: #fff4df; }
 .game-table-theme .numbtn:not(.off, :disabled):hover { background: #435b7d; }
+/* Choosing a suit (trump, Werewolf, Juggler, Cloud) and the Shapeshifter's role: buttons look like small cards,
+   cream with the suit's own ink colour and symbol, instead of flat coloured blocks. */
+.game-table-theme .table-decision .suitgrid { gap: 8px; }
+.game-table-theme .table-decision .suitbtn {
+  height: 48px; border-radius: 10px; border: 1.5px solid var(--suit-ink, #b99056);
+  background: linear-gradient(#fffaf0, #f3e4c6); color: var(--suit-ink, #2b2013);
+  font: 700 15px/1 Inter, sans-serif; letter-spacing: .01em;
+  box-shadow: 0 2px 0 #d8c39e, 0 6px 14px #0b0f1822;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+}
+.game-table-theme .table-decision .suitbtn svg { width: 20px; height: 20px; }
+.game-table-theme .table-decision .suitbtn:hover {
+  transform: translateY(-2px); background: var(--suit-ink, #2b2013); color: #fff8ea;
+  box-shadow: 0 4px 0 #b99056, 0 10px 18px #0b0f1833;
+}
+.game-table-theme .table-decision .suitbtn.k-wizard,
+.game-table-theme .table-decision .suitbtn.k-jester { --suit-ink: #5b4524; border: 1.5px solid #b99056; }
+.game-table-theme .table-decision .notrumpbtn {
+  height: 44px; background: transparent; color: #5b4524; border: 1.5px dashed #b99056; border-radius: 10px;
+}
+.game-table-theme .table-decision .notrumpbtn:hover { background: #b990561f; }
+.game-table-theme .table-decision .ghostbtn { color: #5b4524; border-width: 1.5px !important; border-color: #b99056 !important; }
 body:has(.game-table-theme) :is(.chatrow, .chatlog, .turntimer:not(.mine)) {
   background: var(--table-night);
   border-color: var(--table-line);
