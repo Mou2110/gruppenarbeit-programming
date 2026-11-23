@@ -18,7 +18,7 @@ from game.engine import GameError
 from game.lobby import Lobby
 from game.rules import trick_has_bomb, Play, lead_suit, trick_winner
 
-from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_emblem, suit_icon
+from .cards import KIND_LABEL, SUIT_LABEL, back_html, card_html, card_name, suit_icon
 from .common import ICON_EXIT, ICON_INFO, ICON_SCORES, button, esc, icon_button
 from .rules import BONUS, SPECIALS
 
@@ -164,23 +164,6 @@ def _seat_html(v: dict, index: int, lobby: Lobby, leader: int | None = None) -> 
     return (f'<div class="seat"><div class="avwrap">{avatar}{mark}</div><div class="player-label">'
             f'<span class="pname" title="{name}">{label}</span>'
             f'<div class="player-stats">{bid}{won}</div>{extra}</div></div>')
-
-
-def _trump_html(v: dict) -> str:
-    """Show the revealed card beside the current trump suit or selection status."""
-    card = v['trump_card']
-    revealed = card_html(card, 'sm') if card is not None else ''
-    symbol = ''
-    if v['phase'] in ('werewolf', 'choosing_trump'):
-        status = 'Choosing…'
-    elif v['trump']:
-        trump = v['trump']
-        status = SUIT_LABEL[trump]
-        symbol = f'<span class="trump-symbol s-{trump.value}">{suit_emblem(trump)}</span>'
-    else:
-        status = 'No trump'
-    return (f'<div class="trump-display">{revealed}<div class="trump">'
-            f'<span class="tl">Trump</span>{symbol}<span class="ts">{status}</span></div></div>')
 
 
 def _table_trump_html(v: dict) -> str:
@@ -360,13 +343,13 @@ def render_table(lobby: Lobby, pid: str, state: dict, refresh_self: Callable[[],
     # Did the player receive a Juggler card? Show a brief notification.
     if v['pass_count'] != state.get('seen_pass', v['pass_count']) and v['received'] is not None:
         text = json.dumps(f'You received {card_name(v["received"])}')
-        ui.run_javascript(fx_js(f'fx.received({json.dumps(card_html(v["received"], "lg"))}, {text});'))
+        ui.context.client.run_javascript(fx_js(f'fx.received({json.dumps(card_html(v["received"], "lg"))}, {text});'))
     state['seen_pass'] = v['pass_count']
     if not state.get('fx_loaded'):  # the explanation pop-up for special cards
-        ui.run_javascript(fx_js(''))
+        ui.context.client.run_javascript(fx_js(''))
         state['fx_loaded'] = True
     if cheer_for_cr7(v, state, lobby.game_number):
-        ui.run_javascript(SIUUU_JS)
+        ui.context.client.run_javascript(SIUUU_JS)
 
     def act(action: str, **kwargs) -> None:
         state['pending'] = None
